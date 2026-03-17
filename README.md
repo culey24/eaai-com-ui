@@ -2,6 +2,10 @@
 
 Ứng dụng Web UI Chatbot đa nhiệm dành cho sinh viên, sử dụng React + Vite + Tailwind CSS, mang phong cách ChatGPT với bộ nhận diện thương hiệu Đại học Bách Khoa.
 
+## TÀI KHOẢN ADMIN
+admin
+admin123
+
 ## Công nghệ
 
 - **React 19** + **Vite 7**

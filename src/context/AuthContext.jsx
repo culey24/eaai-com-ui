@@ -24,6 +24,9 @@ export function AuthProvider({ children }) {
       userToSet = {
         id: 'guest',
         email: 'guest@hcmut.edu.vn',
+        studentId: 'Chưa cập nhật',
+        major: 'Chưa cập nhật',
+        subject: 'Chưa cập nhật',
         name: 'Khách',
         role: 'ADMIN_FULL',
         avatar: null,
@@ -37,6 +40,9 @@ export function AuthProvider({ children }) {
     const newUser = {
       id: Date.now().toString(),
       email,
+      studentId: studentId || 'Chưa cập nhật',
+      major: major || 'Chưa cập nhật',
+      subject: subject || 'Chưa cập nhật',
       name: email.split('@')[0],
       role: role || ROLES.CHATBOT_ONLY,
       avatar: null,
@@ -50,6 +56,9 @@ export function AuthProvider({ children }) {
     const newUser = {
       id: Date.now().toString(),
       email,
+      studentId: 'Chưa cập nhật',
+      major: 'Chưa cập nhật',
+      subject: 'Chưa cập nhật',
       name: name || email.split('@')[0],
       role: role || ROLES.CHATBOT_ONLY,
       avatar: null,

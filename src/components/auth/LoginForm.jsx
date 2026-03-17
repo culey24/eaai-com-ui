@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
+import { LogIn, Mail, Lock, AlertCircle, User, GraduationCap, BookOpen } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { ROLES } from '../../constants/roles'
 
@@ -8,6 +8,9 @@ export default function LoginForm() {
   const navigate = useNavigate()
   const { login } = useAuth()
   const [email, setEmail] = useState('')
+  const [studentId, setStudentId] = useState('')
+  const [major, setMajor] = useState('')
+  const [subject, setSubject] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState(ROLES.CHATBOT_ONLY)
   const [errors, setErrors] = useState({})
@@ -32,85 +35,117 @@ export default function LoginForm() {
     e.preventDefault()
     if (!validate()) return
 
-    login(email, password, role)
+    login(email, password, studentId, major, subject, role)
     navigate('/')
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <h2 className="text-xl font-semibold text-slate-800 text-center tracking-tight">Đăng nhập</h2>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">Email</label>
-        <div className="relative">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border ${
-              errors.email ? 'border-red-300' : 'border-slate-200'
-            } focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200`}
-            placeholder="your@email.com"
-          />
-        </div>
-        {errors.email && (
-          <p className="flex items-center gap-1.5 mt-1.5 text-red-500 text-sm">
-            <AlertCircle className="w-3.5 h-3.5" />
-            {errors.email}
-          </p>
-        )}
+    <div className="flex flex-col space-y-6">
+      <div className="text-center mb-2">
+        <h2 className="text-2xl font-bold text-slate-800">Đăng nhập</h2>
+        <p className="text-slate-500 mt-2">Vui lòng điền thông tin sinh viên</p>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">Mật khẩu</label>
-        <div className="relative">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border ${
-              errors.password ? 'border-red-300' : 'border-slate-200'
-            } focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200`}
-            placeholder="••••••••"
-          />
-        </div>
-        {errors.password && (
-          <p className="flex items-center gap-1.5 mt-1.5 text-red-500 text-sm">
-            <AlertCircle className="w-3.5 h-3.5" />
-            {errors.password}
-          </p>
-        )}
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
 
-      <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">Loại tài khoản (Mock)</label>
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200 text-slate-700"
+        {/* Ô nhập Mã số sinh viên */}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 mb-1.5">Mã số sinh viên</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <User className="w-5 h-5 text-slate-400" />
+            </div>
+            <input
+              type="text"
+              value={studentId}
+              onChange={(e) => setStudentId(e.target.value)}
+              placeholder="Ví dụ: 2012345"
+              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200 text-slate-700"
+            />
+          </div>
+        </div>
+
+        {/* Ô nhập Chuyên ngành */}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 mb-1.5">Chuyên ngành</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <GraduationCap className="w-5 h-5 text-slate-400" />
+            </div>
+            <input
+              type="text"
+              value={major}
+              onChange={(e) => setMajor(e.target.value)}
+              placeholder="Ví dụ: Khoa học Máy tính"
+              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200 text-slate-700"
+            />
+          </div>
+        </div>
+
+        {/* Ô nhập Môn học */}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 mb-1.5">Môn học quan tâm</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <BookOpen className="w-5 h-5 text-slate-400" />
+            </div>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Ví dụ: Trí tuệ nhân tạo"
+              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200 text-slate-700"
+            />
+          </div>
+        </div>
+
+        {/* Ô nhập Email */}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 mb-1.5">Email trường</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Mail className="w-5 h-5 text-slate-400" />
+            </div>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="sv@hcmut.edu.vn"
+              className={`w-full pl-11 pr-4 py-3 rounded-2xl border ${errors.email ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-primary'
+                } outline-none transition-all duration-200 text-slate-700`}
+            />
+          </div>
+          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+        </div>
+
+        {/* Ô nhập Mật khẩu */}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 mb-1.5">Mật khẩu</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Lock className="w-5 h-5 text-slate-400" />
+            </div>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className={`w-full pl-11 pr-4 py-3 rounded-2xl border ${errors.password ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-primary'
+                } outline-none transition-all duration-200 text-slate-700`}
+            />
+          </div>
+          {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+        </div>
+
+        {/* Nút Đăng nhập */}
+        <button
+          type="submit"
+          className="w-full flex items-center justify-center gap-2 py-3.5 mt-2 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold transition-all duration-200 shadow-glow-primary"
         >
-          <option value={ROLES.CHATBOT_ONLY}>Chat với AI</option>
-          <option value={ROLES.HUMAN_CHAT}>Chat với Tư vấn viên</option>
-          <option value={ROLES.ADMIN_FULL}>Quản trị viên</option>
-        </select>
-      </div>
-
-      <button
-        type="submit"
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold transition-all duration-200 shadow-glow-primary hover:shadow-glow-primary/80 active:scale-[0.98]"
-      >
-        <LogIn className="w-4 h-4" />
-        Đăng nhập
-      </button>
-
-      <p className="text-center text-slate-500 text-sm">
-        Chưa có tài khoản?{' '}
-        <Link to="/register" className="text-primary font-semibold hover:underline">
-          Đăng ký ngay
-        </Link>
-      </p>
-    </form>
+          <LogIn className="w-5 h-5" />
+          Đăng nhập
+        </button>
+      </form>
+    </div>
   )
 }

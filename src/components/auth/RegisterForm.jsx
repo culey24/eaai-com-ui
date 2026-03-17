@@ -1,28 +1,28 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { UserPlus, Mail, Lock, User, AlertCircle } from 'lucide-react'
+import { UserPlus, User, Lock, AlertCircle, BookMarked } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { ROLES } from '../../constants/roles'
+import { VALID_CLASS_CODES } from '../../constants/roles'
 
 export default function RegisterForm() {
   const navigate = useNavigate()
   const { register } = useAuth()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [classCode, setClassCode] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [role, setRole] = useState(ROLES.CHATBOT_ONLY)
   const [errors, setErrors] = useState({})
+  const [registerError, setRegisterError] = useState('')
 
   const validate = () => {
     const newErrors = {}
-    if (!name.trim()) {
-      newErrors.name = 'Vui lòng nhập họ tên'
+    if (!classCode.trim()) {
+      newErrors.classCode = 'Vui lòng nhập mã lớp'
+    } else if (!VALID_CLASS_CODES.includes(classCode.trim().toUpperCase())) {
+      newErrors.classCode = `Mã lớp không hợp lệ. Các mã hợp lệ: ${VALID_CLASS_CODES.join(', ')}`
     }
-    if (!email.trim()) {
-      newErrors.email = 'Vui lòng nhập email'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Email không hợp lệ'
+    if (!username.trim()) {
+      newErrors.username = 'Vui lòng nhập tài khoản'
     }
     if (!password) {
       newErrors.password = 'Vui lòng nhập mật khẩu'
@@ -38,56 +38,68 @@ export default function RegisterForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    setRegisterError('')
     if (!validate()) return
 
-    register(email, password, name, role)
-    navigate('/')
+    const result = register(username.trim(), password, classCode.trim())
+    if (result && !result.error) {
+      navigate('/')
+    } else {
+      setRegisterError(result?.error || 'Đăng ký thất bại')
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <h2 className="text-xl font-semibold text-slate-800 text-center tracking-tight">Đăng ký tài khoản</h2>
 
+      {registerError && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 text-red-600 text-sm">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          {registerError}
+        </div>
+      )}
+
       <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">Họ tên</label>
+        <label className="block text-sm font-medium text-slate-600 mb-1.5">Mã lớp <span className="text-red-500">*</span></label>
         <div className="relative">
-          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <BookMarked className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={classCode}
+            onChange={(e) => setClassCode(e.target.value)}
             className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border ${
-              errors.name ? 'border-red-300' : 'border-slate-200'
+              errors.classCode ? 'border-red-300' : 'border-slate-200'
             } focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200`}
-            placeholder="Nguyễn Văn A"
+            placeholder="Ví dụ: IS-1, IS-2, IS-3"
           />
         </div>
-        {errors.name && (
+        {errors.classCode && (
           <p className="flex items-center gap-1.5 mt-1.5 text-red-500 text-sm">
             <AlertCircle className="w-3.5 h-3.5" />
-            {errors.name}
+            {errors.classCode}
           </p>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">Email</label>
+        <label className="block text-sm font-medium text-slate-600 mb-1.5">Tài khoản</label>
         <div className="relative">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border ${
-              errors.email ? 'border-red-300' : 'border-slate-200'
+              errors.username ? 'border-red-300' : 'border-slate-200'
             } focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200`}
-            placeholder="your@email.com"
+            placeholder="Nhập tài khoản"
           />
         </div>
-        {errors.email && (
+        {errors.username && (
           <p className="flex items-center gap-1.5 mt-1.5 text-red-500 text-sm">
             <AlertCircle className="w-3.5 h-3.5" />
-            {errors.email}
+            {errors.username}
           </p>
         )}
       </div>
@@ -134,19 +146,6 @@ export default function RegisterForm() {
             {errors.confirmPassword}
           </p>
         )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">Loại tài khoản (Mock)</label>
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200 text-slate-700"
-        >
-          <option value={ROLES.CHATBOT_ONLY}>Chat với AI</option>
-          <option value={ROLES.HUMAN_CHAT}>Chat với Tư vấn viên</option>
-          <option value={ROLES.ADMIN_FULL}>Quản trị viên</option>
-        </select>
       </div>
 
       <button

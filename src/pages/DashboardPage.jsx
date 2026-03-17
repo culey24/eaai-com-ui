@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
 import ChatWindow from '../components/chat/ChatWindow'
+import ProfileCompleteBanner from '../components/ProfileCompleteBanner'
 import { useMessages } from '../hooks/useMessages'
 import { CHANNELS_BY_ROLE } from '../constants/roles'
 import { useAuth } from '../context/AuthContext'
@@ -37,7 +38,8 @@ export default function DashboardPage() {
         activeChannelId={activeChannel?.id}
         onSelectChannel={setActiveChannel}
       />
-      <main className="flex-1 flex flex-col min-w-0 bg-white">
+      <main className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900">
+        <ProfileCompleteBanner />
         <ChatWindow
           channel={activeChannel}
           messages={messages}

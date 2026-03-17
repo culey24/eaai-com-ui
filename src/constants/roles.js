@@ -16,20 +16,24 @@ export const ROLE_LABELS = {
   [ROLES.ADMIN_FULL]: 'Quản trị viên',
 }
 
+/** Mã lớp hợp lệ khi đăng ký */
+export const VALID_CLASS_CODES = ['IS-1', 'IS-2', 'IS-3']
+
 /**
  * Các kênh chat tương ứng với từng role
+ * Mỗi Agent dùng cho 1 lớp: IS-1, IS-2, IS-3
  */
 export const CHANNELS_BY_ROLE = {
   [ROLES.CHATBOT_ONLY]: [
-    { id: 'ai-chat', label: 'Chat với AI', icon: 'Bot' },
+    { id: 'ai-chat', label: 'Chat với Agent (IS-1)', icon: 'Bot' },
   ],
   [ROLES.HUMAN_CHAT]: [
-    { id: 'ai-chat', label: 'Chat với AI', icon: 'Bot' },
-    { id: 'human-chat', label: 'Chat với Tư vấn viên', icon: 'UserCircle' },
+    { id: 'ai-chat', label: 'Chat với Agent (IS-1)', icon: 'Bot' },
+    { id: 'human-chat', label: 'Chat với Agent (IS-2)', icon: 'UserCircle' },
   ],
   [ROLES.ADMIN_FULL]: [
-    { id: 'ai-chat', label: 'Chat với AI', icon: 'Bot' },
-    { id: 'human-chat', label: 'Chat với Tư vấn viên', icon: 'UserCircle' },
-    { id: 'internal-chat', label: 'Chat nội bộ', icon: 'Shield' },
+    { id: 'ai-chat', label: 'Chat với Agent (IS-1)', icon: 'Bot' },
+    { id: 'human-chat', label: 'Chat với Agent (IS-2)', icon: 'UserCircle' },
+    { id: 'internal-chat', label: 'Chat với Agent (IS-3)', icon: 'Shield' },
   ],
 }

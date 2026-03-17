@@ -1,12 +1,29 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, User, Mail, Shield, Sun, Moon } from 'lucide-react'
+import { ArrowLeft, User, Mail, Shield, Sun, Moon, GraduationCap, BookOpen } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { ROLE_LABELS } from '../constants/roles'
 
+const PLACEHOLDER = 'Chưa cập nhật'
+
 export default function SettingsPage() {
-  const { user } = useAuth()
+  const { user, updateProfile } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const [editing, setEditing] = useState(false)
+  const [studentId, setStudentId] = useState(user?.studentId === PLACEHOLDER ? '' : user?.studentId || '')
+  const [faculty, setFaculty] = useState(user?.faculty === PLACEHOLDER ? '' : user?.faculty || '')
+  const [major, setMajor] = useState(user?.major === PLACEHOLDER ? '' : user?.major || '')
+  const [subject, setSubject] = useState(user?.subject === PLACEHOLDER ? '' : user?.subject || '')
+
+  useEffect(() => {
+    if (editing) {
+      setStudentId(user?.studentId === PLACEHOLDER ? '' : user?.studentId || '')
+      setFaculty(user?.faculty === PLACEHOLDER ? '' : user?.faculty || '')
+      setMajor(user?.major === PLACEHOLDER ? '' : user?.major || '')
+      setSubject(user?.subject === PLACEHOLDER ? '' : user?.subject || '')
+    }
+  }, [editing, user])
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
@@ -37,19 +54,28 @@ export default function SettingsPage() {
               </p>
             </div>
             <div className="p-6 space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-xl">
-                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-xl">
+                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </div>
+                  <div>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">Tài khoản</p>
+                    <p className="font-medium text-slate-800 dark:text-white">{user?.name || '—'}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">Họ tên</p>
-                  <p className="font-medium text-slate-800 dark:text-white">{user?.name || '—'}</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditing(!editing)}
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  {editing ? 'Hủy' : 'Chỉnh sửa thông tin'}
+                </button>
               </div>
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">Email</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">Email / Tài khoản</p>
                   <p className="font-medium text-slate-800 dark:text-white">{user?.email || '—'}</p>
                 </div>
               </div>
@@ -62,6 +88,104 @@ export default function SettingsPage() {
                   </p>
                 </div>
               </div>
+
+              {editing && (
+                <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700 space-y-4">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Thông tin sinh viên</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">MSSV</label>
+                      <input
+                        type="text"
+                        value={studentId}
+                        onChange={(e) => setStudentId(e.target.value)}
+                        placeholder="Mã số sinh viên"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Khoa</label>
+                      <input
+                        type="text"
+                        value={faculty}
+                        onChange={(e) => setFaculty(e.target.value)}
+                        placeholder="Ví dụ: Khoa Khoa học Máy tính"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Chuyên ngành</label>
+                      <input
+                        type="text"
+                        value={major}
+                        onChange={(e) => setMajor(e.target.value)}
+                        placeholder="Ví dụ: Khoa học Máy tính"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Môn học quan tâm</label>
+                      <input
+                        type="text"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder="Tùy chọn"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateProfile({
+                        studentId: studentId.trim() || PLACEHOLDER,
+                        faculty: faculty.trim() || PLACEHOLDER,
+                        major: major.trim() || PLACEHOLDER,
+                        subject: subject.trim() || PLACEHOLDER,
+                      })
+                      setEditing(false)
+                    }}
+                    className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90"
+                  >
+                    Lưu thay đổi
+                  </button>
+                </div>
+              )}
+
+              {!editing && (user?.studentId !== PLACEHOLDER || user?.faculty !== PLACEHOLDER || user?.major !== PLACEHOLDER) && (
+                <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <GraduationCap className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">MSSV</p>
+                      <p className="font-medium text-slate-800 dark:text-white">{user?.studentId || '—'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <GraduationCap className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">Khoa</p>
+                      <p className="font-medium text-slate-800 dark:text-white">{user?.faculty || '—'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <BookOpen className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">Chuyên ngành</p>
+                      <p className="font-medium text-slate-800 dark:text-white">{user?.major || '—'}</p>
+                    </div>
+                  </div>
+                  {user?.subject && user?.subject !== PLACEHOLDER && (
+                    <div className="flex items-start gap-3">
+                      <BookOpen className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">Môn học quan tâm</p>
+                        <p className="font-medium text-slate-800 dark:text-white">{user?.subject}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </section>
 

@@ -1,11 +1,13 @@
+import logo from '../../assets/hcmut_logo/logo.png'
+
 export default function AuthLayout({ children }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary/5 p-6">
       <div className="w-full max-w-md">
         {/* Logo & Brand */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-secondary mb-6 shadow-glow-secondary">
-            <span className="text-white text-4xl font-bold">BK</span>
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl overflow-hidden mb-6 shadow-soft">
+            <img src={logo} alt="Logo Bách Khoa" className="w-full h-full object-contain p-2" />
           </div>
           <h1 className="text-secondary text-xl font-bold uppercase tracking-tight">
             ĐẠI HỌC QUỐC GIA TP.HỒ CHÍ MINH

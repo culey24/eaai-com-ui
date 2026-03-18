@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { UserPlus, User, Lock, AlertCircle, BookMarked } from 'lucide-react'
+import { UserPlus, User, Lock, AlertCircle, BookMarked, Info } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { VALID_CLASS_CODES } from '../../constants/roles'
 
@@ -13,6 +13,7 @@ export default function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState({})
   const [registerError, setRegisterError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const validate = () => {
     const newErrors = {}
@@ -41,11 +42,14 @@ export default function RegisterForm() {
     setRegisterError('')
     if (!validate()) return
 
+    setIsSubmitting(true)
     const result = register(username.trim(), password, classCode.trim())
     if (result && !result.error) {
-      navigate('/')
+      // Đăng ký thành công — user đã được set, chuyển vào dashboard ngay
+      setTimeout(() => navigate('/', { replace: true }), 0)
     } else {
       setRegisterError(result?.error || 'Đăng ký thất bại')
+      setIsSubmitting(false)
     }
   }
 
@@ -150,10 +154,20 @@ export default function RegisterForm() {
 
       <button
         type="submit"
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold transition-all duration-200 shadow-glow-primary hover:shadow-glow-primary/80 active:scale-[0.98]"
+        disabled={isSubmitting}
+        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold transition-all duration-200 shadow-glow-primary hover:shadow-glow-primary/80 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
       >
-        <UserPlus className="w-4 h-4" />
-        Đăng ký
+        {isSubmitting ? (
+          <>
+            <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+            Đang tạo tài khoản...
+          </>
+        ) : (
+          <>
+            <UserPlus className="w-4 h-4" />
+            Đăng ký
+          </>
+        )}
       </button>
 
       <p className="text-center text-slate-500 text-sm">
@@ -162,6 +176,13 @@ export default function RegisterForm() {
           Đăng nhập
         </Link>
       </p>
+
+      <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+        <p className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mb-1">
+          <Info className="w-3.5 h-3.5" />
+          Demo: Mã lớp hợp lệ — {VALID_CLASS_CODES.join(', ')}
+        </p>
+      </div>
     </form>
   )
 }

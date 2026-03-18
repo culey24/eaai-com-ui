@@ -4,8 +4,11 @@ import { ROLES, VALID_CLASS_CODES } from '../constants/roles'
 const AUTH_STORAGE_KEY = 'eeai_chatbot_user'
 const REGISTERED_USERS_KEY = 'eeai_registered_users'
 
-/** Tài khoản admin để test: admin / admin123 */
-const ADMIN_CREDENTIALS = { username: 'admin', password: 'admin123' }
+/** Tài khoản demo (MOCKUP) */
+const DEMO_CREDENTIALS = {
+  admin: { username: 'admin', password: 'admin123', role: 'ADMIN_FULL' },
+  demo: { username: 'demo', password: 'demo123', role: 'CHATBOT_ONLY', classCode: 'IS-1' },
+}
 
 const AuthContext = createContext(null)
 
@@ -66,12 +69,14 @@ export function AuthProvider({ children }) {
     code && VALID_CLASS_CODES.includes(String(code).trim().toUpperCase())
 
   const login = (username, password) => {
-    // Kiểm tra admin
-    if (
-      username === ADMIN_CREDENTIALS.username &&
-      password === ADMIN_CREDENTIALS.password
-    ) {
-      const newUser = createUserObject(username, ROLES.ADMIN_FULL)
+    // Kiểm tra tài khoản demo (admin, demo)
+    const demo = Object.values(DEMO_CREDENTIALS).find(
+      (d) => d.username === username && d.password === password
+    )
+    if (demo) {
+      const newUser = createUserObject(demo.username, ROLES[demo.role] || ROLES.CHATBOT_ONLY, {
+        classCode: demo.classCode || 'Chưa cập nhật',
+      })
       setUser(newUser)
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
       return newUser

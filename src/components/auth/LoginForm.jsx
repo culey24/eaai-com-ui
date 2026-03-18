@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
+import { LogIn, Mail, Lock, AlertCircle, Info } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 export default function LoginForm() {
@@ -106,6 +106,19 @@ export default function LoginForm() {
           Đăng ký
         </Link>
       </p>
+
+      <div className="mt-4 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+        <p className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mb-2">
+          <Info className="w-3.5 h-3.5" />
+          Demo (MOCKUP)
+        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-500">
+          Admin: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">admin</code> / <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">admin123</code>
+        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
+          Sinh viên: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">demo</code> / <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">demo123</code>
+        </p>
+      </div>
     </div>
   )
 }

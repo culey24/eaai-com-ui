@@ -4,6 +4,7 @@ import Sidebar from '../components/layout/Sidebar'
 import ChatWindow from '../components/chat/ChatWindow'
 import ProfileCompleteBanner from '../components/ProfileCompleteBanner'
 import { useMessages } from '../hooks/useMessages'
+import { useReports } from '../hooks/useReports'
 import { CHANNELS_BY_ROLE } from '../constants/roles'
 import { useAuth } from '../context/AuthContext'
 
@@ -13,6 +14,7 @@ export default function DashboardPage() {
   const channels = CHANNELS_BY_ROLE[user?.role] || []
   const [activeChannel, setActiveChannel] = useState(null)
   const { addMessage, getMessagesForChannel } = useMessages()
+  const { addReport } = useReports()
 
   useEffect(() => {
     if (channels.length > 0) {
@@ -44,6 +46,8 @@ export default function DashboardPage() {
           channel={activeChannel}
           messages={messages}
           onSendMessage={handleSendMessage}
+          onReport={addReport}
+          userId={user?.id}
         />
       </main>
     </div>

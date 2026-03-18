@@ -8,7 +8,7 @@ import { ROLE_LABELS } from '../constants/roles'
 const PLACEHOLDER = 'Chưa cập nhật'
 
 export default function SettingsPage() {
-  const { user, updateProfile } = useAuth()
+  const { user, updateProfile, isProfileComplete } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const [editing, setEditing] = useState(false)
   const [studentId, setStudentId] = useState(user?.studentId === PLACEHOLDER ? '' : user?.studentId || '')
@@ -24,6 +24,11 @@ export default function SettingsPage() {
       setSubject(user?.subject === PLACEHOLDER ? '' : user?.subject || '')
     }
   }, [editing, user])
+
+  // Tự mở form chỉnh sửa khi profile chưa đầy đủ (vd: vừa đăng ký, vào từ banner)
+  useEffect(() => {
+    if (user && !isProfileComplete()) setEditing(true)
+  }, [user])
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">

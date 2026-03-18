@@ -1,10 +1,12 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { MessageSquare, Flag } from 'lucide-react'
 import MessageItem from './MessageItem'
 import ChatInput from './ChatInput'
+import ReportModal from './ReportModal'
 
-export default function ChatWindow({ channel, messages, onSendMessage }) {
+export default function ChatWindow({ channel, messages, onSendMessage, onReport, userId }) {
   const scrollRef = useRef(null)
+  const [reportOpen, setReportOpen] = useState(false)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -17,6 +19,10 @@ export default function ChatWindow({ channel, messages, onSendMessage }) {
     onSendMessage(channel?.id, content, file)
   }
 
+  const handleReportSubmit = (report) => {
+    onReport?.({ ...report, userId })
+  }
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
       {/* Chat header */}
@@ -24,11 +30,23 @@ export default function ChatWindow({ channel, messages, onSendMessage }) {
         <h2 className="font-semibold text-slate-800 dark:text-white text-lg tracking-tight">
           {channel?.label || 'Chọn kênh chat'}
         </h2>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium">
+        <button
+          type="button"
+          onClick={() => setReportOpen(true)}
+          disabled={!channel}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Flag className="w-4 h-4" />
-          Report
+          Báo cáo
         </button>
       </div>
+
+      <ReportModal
+        isOpen={reportOpen}
+        onClose={() => setReportOpen(false)}
+        channel={channel}
+        onSubmit={handleReportSubmit}
+      />
 
       {/* Messages area */}
       <div

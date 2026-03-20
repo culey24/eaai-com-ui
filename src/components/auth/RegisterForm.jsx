@@ -2,12 +2,15 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserPlus, User, Lock, AlertCircle, BookMarked, Info } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useLanguage } from '../../context/LanguageContext'
 import { VALID_CLASS_CODES } from '../../constants/roles'
 
 export default function RegisterForm() {
   const navigate = useNavigate()
   const { register } = useAuth()
+  const { t } = useLanguage()
   const [classCode, setClassCode] = useState('')
+  const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -17,22 +20,14 @@ export default function RegisterForm() {
 
   const validate = () => {
     const newErrors = {}
-    if (!classCode.trim()) {
-      newErrors.classCode = 'Vui lòng nhập mã lớp'
-    } else if (!VALID_CLASS_CODES.includes(classCode.trim().toUpperCase())) {
-      newErrors.classCode = `Mã lớp không hợp lệ. Các mã hợp lệ: ${VALID_CLASS_CODES.join(', ')}`
+    if (!classCode.trim()) newErrors.classCode = t('auth.classCodeRequired')
+    else if (!VALID_CLASS_CODES.includes(classCode.trim().toUpperCase())) {
+      newErrors.classCode = t('auth.invalidClassCode', { codes: VALID_CLASS_CODES.join(', ') })
     }
-    if (!username.trim()) {
-      newErrors.username = 'Vui lòng nhập tài khoản'
-    }
-    if (!password) {
-      newErrors.password = 'Vui lòng nhập mật khẩu'
-    } else if (password.length < 4) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 4 ký tự'
-    }
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp'
-    }
+    if (!username.trim()) newErrors.username = t('auth.usernameRequired')
+    if (!password) newErrors.password = t('auth.passwordRequired')
+    else if (password.length < 4) newErrors.password = t('auth.passwordMinLength')
+    if (password !== confirmPassword) newErrors.confirmPassword = t('auth.passwordMismatch')
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -43,19 +38,19 @@ export default function RegisterForm() {
     if (!validate()) return
 
     setIsSubmitting(true)
-    const result = register(username.trim(), password, classCode.trim())
+    const result = register(username.trim(), password, classCode.trim(), fullName.trim())
     if (result && !result.error) {
       // Đăng ký thành công — user đã được set, chuyển vào dashboard ngay
       setTimeout(() => navigate('/', { replace: true }), 0)
     } else {
-      setRegisterError(result?.error || 'Đăng ký thất bại')
+      setRegisterError(result?.error || t('auth.accountExists'))
       setIsSubmitting(false)
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <h2 className="text-xl font-semibold text-slate-800 text-center tracking-tight">Đăng ký tài khoản</h2>
+      <h2 className="text-xl font-semibold text-slate-800 text-center tracking-tight">{t('auth.register')}</h2>
 
       {registerError && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 text-red-600 text-sm">
@@ -65,7 +60,7 @@ export default function RegisterForm() {
       )}
 
       <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">Mã lớp <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-slate-600 mb-1.5">{t('auth.classCode')} <span className="text-red-500">*</span></label>
         <div className="relative">
           <BookMarked className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -87,7 +82,21 @@ export default function RegisterForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">Tài khoản</label>
+        <label className="block text-sm font-medium text-slate-600 mb-1.5">{t('auth.fullName')}</label>
+        <div className="relative">
+          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200"
+            placeholder={t('auth.fullNamePlaceholder')}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-600 mb-1.5">{t('auth.username')}</label>
         <div className="relative">
           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -109,7 +118,7 @@ export default function RegisterForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">Mật khẩu</label>
+        <label className="block text-sm font-medium text-slate-600 mb-1.5">{t('auth.password')}</label>
         <div className="relative">
           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -131,7 +140,7 @@ export default function RegisterForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1.5">Xác nhận mật khẩu</label>
+        <label className="block text-sm font-medium text-slate-600 mb-1.5">{t('auth.confirmPassword')}</label>
         <div className="relative">
           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -160,27 +169,27 @@ export default function RegisterForm() {
         {isSubmitting ? (
           <>
             <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-            Đang tạo tài khoản...
+            {t('auth.creatingAccount')}
           </>
         ) : (
           <>
             <UserPlus className="w-4 h-4" />
-            Đăng ký
+            {t('auth.register')}
           </>
         )}
       </button>
 
       <p className="text-center text-slate-500 text-sm">
-        Đã có tài khoản?{' '}
+        {t('auth.hasAccount')}{' '}
         <Link to="/login" className="text-primary font-semibold hover:underline">
-          Đăng nhập
+          {t('auth.login')}
         </Link>
       </p>
 
       <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
         <p className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mb-1">
           <Info className="w-3.5 h-3.5" />
-          Demo: Mã lớp hợp lệ — {VALID_CLASS_CODES.join(', ')}
+          Demo: {t('auth.classCode')} — {VALID_CLASS_CODES.join(', ')}
         </p>
       </div>
     </form>

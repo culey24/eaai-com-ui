@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, Mail, Lock, AlertCircle, Info } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default function LoginForm() {
   const navigate = useNavigate()
   const { login } = useAuth()
+  const { t } = useLanguage()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
@@ -13,14 +15,9 @@ export default function LoginForm() {
 
   const validate = () => {
     const newErrors = {}
-    if (!username.trim()) {
-      newErrors.username = 'Vui lòng nhập tài khoản'
-    }
-    if (!password) {
-      newErrors.password = 'Vui lòng nhập mật khẩu'
-    } else if (password.length < 4) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 4 ký tự'
-    }
+    if (!username.trim()) newErrors.username = t('auth.usernameRequired')
+    if (!password) newErrors.password = t('auth.passwordRequired')
+    else if (password.length < 4) newErrors.password = t('auth.passwordMinLength')
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -31,18 +28,15 @@ export default function LoginForm() {
     if (!validate()) return
 
     const user = login(username.trim(), password)
-    if (user) {
-      navigate('/')
-    } else {
-      setLoginError('Tài khoản hoặc mật khẩu không đúng')
-    }
+    if (user) navigate('/')
+    else setLoginError(t('auth.invalidCredentials'))
   }
 
   return (
     <div className="flex flex-col space-y-6">
       <div className="text-center mb-2">
-        <h2 className="text-2xl font-bold text-slate-800">Đăng nhập</h2>
-        <p className="text-slate-500 mt-2">Vui lòng nhập tài khoản và mật khẩu</p>
+        <h2 className="text-2xl font-bold text-slate-800">{t('auth.login')}</h2>
+        <p className="text-slate-500 mt-2">{t('auth.loginPrompt')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -54,7 +48,7 @@ export default function LoginForm() {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-slate-600 mb-1.5">Tài khoản</label>
+          <label className="block text-sm font-medium text-slate-600 mb-1.5">{t('auth.username')}</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Mail className="w-5 h-5 text-slate-400" />
@@ -73,7 +67,7 @@ export default function LoginForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-600 mb-1.5">Mật khẩu</label>
+          <label className="block text-sm font-medium text-slate-600 mb-1.5">{t('auth.password')}</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Lock className="w-5 h-5 text-slate-400" />
@@ -96,14 +90,14 @@ export default function LoginForm() {
           className="w-full flex items-center justify-center gap-2 py-3.5 mt-2 rounded-2xl bg-primary hover:bg-primary/90 text-white font-semibold transition-all duration-200 shadow-glow-primary"
         >
           <LogIn className="w-5 h-5" />
-          Đăng nhập
+          {t('auth.login')}
         </button>
       </form>
 
       <p className="text-center text-slate-500 text-sm">
-        Chưa có tài khoản?{' '}
+        {t('auth.noAccount')}{' '}
         <Link to="/register" className="text-primary font-semibold hover:underline">
-          Đăng ký
+          {t('auth.register')}
         </Link>
       </p>
 
@@ -113,10 +107,13 @@ export default function LoginForm() {
           Demo (MOCKUP)
         </p>
         <p className="text-xs text-slate-500 dark:text-slate-500">
-          Admin: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">admin</code> / <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">admin123</code>
+          {t('auth.demoAdmin')}: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">admin</code> / <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">admin123</code>
         </p>
         <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
-          Sinh viên: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">demo</code> / <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">demo123</code>
+          {t('auth.demoLearner')}: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">demo</code> / <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">demo123</code>
+        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">
+          {t('auth.demoAssistant')}: <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">assistant1</code> / <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">assistant123</code>
         </p>
       </div>
     </div>

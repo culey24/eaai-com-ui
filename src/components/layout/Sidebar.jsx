@@ -9,9 +9,16 @@ import {
   MessageSquare,
   PanelLeftClose,
   PanelLeft,
+  Flag,
+  Users,
+  FileText,
+  LayoutDashboard,
+  UserCog,
+  UserPlus,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { CHANNELS_BY_ROLE, ROLE_LABELS } from '../../constants/roles'
+import { useLanguage } from '../../context/LanguageContext'
+import { getChannelsByUser, ROLES } from '../../constants/roles'
 import logo from '../../assets/hcmut_logo/logo.png'
 
 const ICON_MAP = {
@@ -31,16 +38,26 @@ function Tooltip({ children, label }) {
   )
 }
 
-export default function Sidebar({ activeChannelId, onSelectChannel }) {
+export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode }) {
   const { user, logout } = useAuth()
+  const { t } = useLanguage()
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const channels = CHANNELS_BY_ROLE[user?.role] || []
+  const channels = getChannelsByUser(user) || []
   const isSettingsPage = location.pathname === '/settings'
+  const isReportsPage = location.pathname === '/reports'
+  const isClassesPage = location.pathname === '/classes'
+  const isJournalPage = location.pathname === '/journal'
+  const isAssistant = user?.role === ROLES.ASSISTANT
+  const isAdmin = user?.role === ROLES.ADMIN
+  const isLearner = user?.role === ROLES.LEARNER
+  const isAdminArea = isAdminMode || location.pathname.startsWith('/admin')
+
+  const getChannelLabel = (ch) => (ch.labelKey ? t(ch.labelKey, { code: ch.code }) : ch.label)
 
   const handleChannelClick = (ch) => {
-    if (isSettingsPage) {
+    if (isSettingsPage || isReportsPage || isClassesPage || isJournalPage) {
       navigate('/', { state: { channel: ch } })
     } else {
       onSelectChannel?.(ch)
@@ -81,17 +98,193 @@ export default function Sidebar({ activeChannelId, onSelectChannel }) {
         )}
       </div>
 
-      {/* Channel list */}
+      {/* Nav list */}
       <div className="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin">
-        {!collapsed && (
-          <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 py-2.5">
-            Kênh chat
-          </p>
+        {/* Admin: Dashboard, Kênh chat, Lớp, Tài khoản, Yêu cầu supporter */}
+        {isAdmin && isAdminArea && (
+          <>
+            {!collapsed && (
+              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 py-2.5">
+                {t('roles.admin')}
+              </p>
+            )}
+            <div className="space-y-1">
+              <Link
+                to="/admin"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  location.pathname === '/admin' || location.pathname === '/admin/'
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{t('admin.dashboardNav')}</span>}
+              </Link>
+              <Link
+                to="/admin/chats"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  location.pathname === '/admin/chats'
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <MessageSquare className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{t('admin.chatChannels')}</span>}
+              </Link>
+              <Link
+                to="/admin/classes"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  location.pathname === '/admin/classes'
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <Users className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{t('admin.classList')}</span>}
+              </Link>
+              <Link
+                to="/admin/accounts"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  location.pathname === '/admin/accounts'
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <UserCog className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{t('admin.accountManagement')}</span>}
+              </Link>
+              <Link
+                to="/admin/support-requests"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  location.pathname === '/admin/support-requests'
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <UserPlus className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{t('admin.supportRequests')}</span>}
+              </Link>
+            </div>
+          </>
         )}
-        <div className="space-y-1">
+
+        {/* Admin: link to Admin khi đang ở trang khác */}
+        {isAdmin && !isAdminArea && (
+          <div className="space-y-1 mt-2">
+            <Link
+              to="/admin"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary"
+            >
+              <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
+              {!collapsed && <span className="text-sm font-medium truncate">{t('roles.admin')}</span>}
+            </Link>
+          </div>
+        )}
+
+        {/* Assistant: Kênh chat */}
+        {isAssistant && !isAdminArea && (
+          <div className="space-y-1 mb-2">
+            <Link
+              to="/chats"
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                collapsed ? 'justify-center' : ''
+              } ${
+                location.pathname === '/chats'
+                  ? 'bg-primary text-white shadow-glow-primary'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+              }`}
+            >
+              <MessageSquare className="w-5 h-5 flex-shrink-0" />
+              {!collapsed && <span className="text-sm font-medium truncate">{t('admin.chatChannels')}</span>}
+            </Link>
+          </div>
+        )}
+
+        {/* Assistant/Admin (non-admin-area): Báo cáo, Quản lý lớp */}
+        {(isAssistant || isAdmin) && !isAdminArea && (
+          <>
+            {!collapsed && (
+              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 py-2.5">
+                {t('sidebar.management')}
+              </p>
+            )}
+            <div className="space-y-1">
+              <Link
+                to="/reports"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  isReportsPage
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <Flag className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{t('sidebar.reports')}</span>}
+              </Link>
+              <Link
+                to="/classes"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  isClassesPage
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <Users className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{t('sidebar.classManagement')}</span>}
+              </Link>
+            </div>
+          </>
+        )}
+
+        {/* Journal Upload - cho Learner */}
+        {isLearner && (
+          <div className="space-y-1 mt-2">
+            {!collapsed && (
+              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 py-2.5">
+                {t('sidebar.journalUpload')}
+              </p>
+            )}
+            <Link
+              to="/journal"
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                collapsed ? 'justify-center' : ''
+              } ${
+                isJournalPage
+                  ? 'bg-primary text-white shadow-glow-primary'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+              }`}
+            >
+              <FileText className="w-5 h-5 flex-shrink-0" />
+              {!collapsed && <span className="text-sm font-medium truncate">{t('sidebar.journalUpload')}</span>}
+            </Link>
+          </div>
+        )}
+
+        {/* Kênh chat */}
+        {channels.length > 0 && (
+          <>
+            {!collapsed && (
+              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 py-2.5 mt-2">
+                {t('sidebar.chatChannels')}
+              </p>
+            )}
+            <div className="space-y-1">
           {channels.map((ch) => {
             const Icon = ICON_MAP[ch.icon] || MessageSquare
-            const isActive = !isSettingsPage && activeChannelId === ch.id
+            const isActive = !isSettingsPage && !isReportsPage && !isClassesPage && !isJournalPage && activeChannelId === ch.id
 
             const btn = (
               <button
@@ -106,19 +299,21 @@ export default function Sidebar({ activeChannelId, onSelectChannel }) {
                 }`}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span className="text-sm font-medium truncate">{ch.label}</span>}
+                {!collapsed && <span className="text-sm font-medium truncate">{getChannelLabel(ch)}</span>}
               </button>
             )
 
             return collapsed ? (
-              <Tooltip key={ch.id} label={ch.label}>
+              <Tooltip key={ch.id} label={getChannelLabel(ch)}>
                 {btn}
               </Tooltip>
             ) : (
               btn
             )
           })}
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* User section - Cài đặt & Đăng xuất hiển thị trực tiếp */}
@@ -150,14 +345,14 @@ export default function Sidebar({ activeChannelId, onSelectChannel }) {
                 }`}
               >
                 <Settings className="w-4 h-4" />
-                Cài đặt
+                {t('common.settings')}
               </Link>
               <button
                 onClick={logout}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors text-sm font-medium"
               >
                 <LogOut className="w-4 h-4" />
-                Đăng xuất
+                {t('common.logout')}
               </button>
             </div>
             <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/50">
@@ -169,7 +364,7 @@ export default function Sidebar({ activeChannelId, onSelectChannel }) {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold truncate text-slate-800 dark:text-white">{user?.name}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                  {ROLE_LABELS[user?.role] || user?.role}
+                  {t(`roles.${user?.role?.toLowerCase()}`) || user?.role}
                 </p>
               </div>
             </div>

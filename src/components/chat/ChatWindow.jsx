@@ -3,8 +3,11 @@ import { MessageSquare, Flag } from 'lucide-react'
 import MessageItem from './MessageItem'
 import ChatInput from './ChatInput'
 import ReportModal from './ReportModal'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default function ChatWindow({ channel, messages, onSendMessage, onReport, userId }) {
+  const { t } = useLanguage()
+  const channelLabel = channel?.labelKey ? t(channel.labelKey, { code: channel.code }) : channel?.label
   const scrollRef = useRef(null)
   const [reportOpen, setReportOpen] = useState(false)
 
@@ -28,7 +31,7 @@ export default function ChatWindow({ channel, messages, onSendMessage, onReport,
       {/* Chat header */}
       <div className="flex-shrink-0 px-8 py-5 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/50 flex items-center justify-between">
         <h2 className="font-semibold text-slate-800 dark:text-white text-lg tracking-tight">
-          {channel?.label || 'Chọn kênh chat'}
+          {channelLabel || t('chat.selectChannel')}
         </h2>
         <button
           type="button"
@@ -37,7 +40,7 @@ export default function ChatWindow({ channel, messages, onSendMessage, onReport,
           className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Flag className="w-4 h-4" />
-          Báo cáo
+          {t('chat.report')}
         </button>
       </div>
 
@@ -59,10 +62,10 @@ export default function ChatWindow({ channel, messages, onSendMessage, onReport,
               <MessageSquare className="w-10 h-10 text-primary" />
             </div>
             <p className="text-lg font-semibold text-slate-600 dark:text-slate-300 mb-2">
-              Chào mừng đến với Chatbot Bách Khoa
+              {t('chat.welcomeTitle')}
             </p>
             <p className="text-slate-500 dark:text-slate-400 max-w-sm">
-              Chọn một kênh chat ở bên trái để bắt đầu cuộc trò chuyện.
+              {t('chat.welcomeDesc')}
             </p>
           </div>
         ) : messages.length === 0 ? (
@@ -70,8 +73,8 @@ export default function ChatWindow({ channel, messages, onSendMessage, onReport,
             <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mb-4">
               <MessageSquare className="w-8 h-8 text-primary" />
             </div>
-            <p className="text-slate-500 dark:text-slate-400 font-medium">Chưa có tin nhắn nào</p>
-            <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Hãy gửi tin nhắn hoặc đính kèm file để bắt đầu!</p>
+            <p className="text-slate-500 dark:text-slate-400 font-medium">{t('chat.noMessages')}</p>
+            <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">{t('chat.noMessagesHint')}</p>
           </div>
         ) : (
           <div className="max-w-3xl mx-auto space-y-6">

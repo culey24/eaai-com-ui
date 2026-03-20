@@ -3,11 +3,33 @@ import { ROLES, VALID_CLASS_CODES } from '../constants/roles'
 
 const AUTH_STORAGE_KEY = 'eeai_chatbot_user'
 const REGISTERED_USERS_KEY = 'eeai_registered_users'
+const ADMIN_USERS_KEY = 'eeai_admin_users'
 
-/** Tài khoản demo (MOCKUP) */
-const DEMO_CREDENTIALS = {
-  admin: { username: 'admin', password: 'admin123', role: 'ADMIN_FULL' },
-  demo: { username: 'demo', password: 'demo123', role: 'CHATBOT_ONLY', classCode: 'IS-1' },
+/** Tài khoản demo (MOCKUP) - Assistants & Admin được cấp riêng, không đăng ký */
+const PROVISIONED_ACCOUNTS = {
+  admin: {
+    username: 'admin',
+    password: 'admin123',
+    role: 'ADMIN',
+  },
+  assistant1: {
+    username: 'assistant1',
+    password: 'assistant123',
+    role: 'ASSISTANT',
+    managedClasses: ['IS-1', 'IS-2'],
+  },
+  assistant2: {
+    username: 'assistant2',
+    password: 'assistant123',
+    role: 'ASSISTANT',
+    managedClasses: ['IS-2', 'IS-3'],
+  },
+  demo: {
+    username: 'demo',
+    password: 'demo123',
+    role: 'LEARNER',
+    classCode: 'IS-1',
+  },
 }
 
 const AuthContext = createContext(null)
@@ -21,10 +43,19 @@ function getRegisteredUsers() {
   }
 }
 
-function saveRegisteredUser(username, password, classCode) {
+function getAdminUsers() {
+  try {
+    const stored = localStorage.getItem(ADMIN_USERS_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+function saveRegisteredUser(username, password, classCode, fullName = '') {
   const users = getRegisteredUsers()
   if (users.some((u) => u.username === username)) return false
-  users.push({ username, password, classCode })
+  users.push({ username, password, classCode, fullName: fullName?.trim() || '' })
   localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users))
   return true
 }
@@ -39,9 +70,18 @@ export function AuthProvider({ children }) {
     if (stored) {
       try {
         userToSet = JSON.parse(stored)
-        if (userToSet && userToSet.faculty === undefined) {
-          userToSet = { ...userToSet, faculty: 'Chưa cập nhật' }
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userToSet))
+        if (userToSet) {
+          let updated = false
+          if (userToSet.faculty === undefined) {
+            userToSet = { ...userToSet, faculty: 'Chưa cập nhật' }
+            updated = true
+          }
+          if (!userToSet.stableId && userToSet.name) {
+            const src = userToSet.role === 'LEARNER' ? 'reg' : 'prov'
+            userToSet = { ...userToSet, stableId: `${src}-${userToSet.name}` }
+            updated = true
+          }
+          if (updated) localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userToSet))
         }
       } catch {
         localStorage.removeItem(AUTH_STORAGE_KEY)
@@ -51,8 +91,11 @@ export function AuthProvider({ children }) {
     setIsLoading(false)
   }, [])
 
-  const createUserObject = (username, role, extra = {}) => ({
+  const createUserObject = (username, role, extra = {}, source = 'provisioned') => {
+    const stableId = source === 'registered' ? `reg-${username}` : source === 'admin' ? `admin-${username}` : `prov-${username}`
+    return {
     id: Date.now().toString(),
+    stableId,
     email: username,
     studentId: 'Chưa cập nhật',
     faculty: 'Chưa cập nhật',
@@ -63,33 +106,48 @@ export function AuthProvider({ children }) {
     avatar: null,
     classCode: 'Chưa cập nhật',
     ...extra,
-  })
+  }
+  }
 
   const isClassCodeValid = (code) =>
     code && VALID_CLASS_CODES.includes(String(code).trim().toUpperCase())
 
   const login = (username, password) => {
-    // Kiểm tra tài khoản demo (admin, demo)
-    const demo = Object.values(DEMO_CREDENTIALS).find(
+    // Kiểm tra tài khoản admin tạo
+    const adminUsers = getAdminUsers()
+    const adminUser = adminUsers.find((u) => u.username === username && u.password === password)
+    if (adminUser) {
+      const newUser = createUserObject(username, ROLES[adminUser.role] || ROLES.LEARNER, {
+        classCode: adminUser.classCode || 'Chưa cập nhật',
+        managedClasses: adminUser.managedClasses || [],
+      }, 'admin')
+      setUser(newUser)
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
+      return newUser
+    }
+    // Kiểm tra tài khoản được cấp (admin, assistant, demo learner)
+    const provisioned = Object.values(PROVISIONED_ACCOUNTS).find(
       (d) => d.username === username && d.password === password
     )
-    if (demo) {
-      const newUser = createUserObject(demo.username, ROLES[demo.role] || ROLES.CHATBOT_ONLY, {
-        classCode: demo.classCode || 'Chưa cập nhật',
+    if (provisioned) {
+      const newUser = createUserObject(provisioned.username, ROLES[provisioned.role], {
+        classCode: provisioned.classCode || 'Chưa cập nhật',
+        managedClasses: provisioned.managedClasses || [],
       })
       setUser(newUser)
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
       return newUser
     }
-    // Kiểm tra user đã đăng ký
+    // Kiểm tra Learner đã đăng ký
     const users = getRegisteredUsers()
     const found = users.find(
       (u) => u.username === username && u.password === password
     )
     if (found) {
-      const newUser = createUserObject(username, ROLES.CHATBOT_ONLY, {
+      const newUser = createUserObject(username, ROLES.LEARNER, {
         classCode: found.classCode || 'Chưa cập nhật',
-      })
+        name: found.fullName?.trim() || username,
+      }, 'registered')
       setUser(newUser)
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
       return newUser
@@ -97,11 +155,14 @@ export function AuthProvider({ children }) {
     return null
   }
 
-  const register = (username, password, classCode) => {
+  const register = (username, password, classCode, fullName = '') => {
     if (!isClassCodeValid(classCode)) return { error: 'Mã lớp không hợp lệ' }
-    if (!saveRegisteredUser(username, password, classCode)) return { error: 'Tài khoản này đã tồn tại' }
+    if (!saveRegisteredUser(username, password, classCode, fullName)) return { error: 'Tài khoản này đã tồn tại' }
     const classCodeNorm = String(classCode).trim().toUpperCase()
-    const newUser = createUserObject(username, ROLES.CHATBOT_ONLY, { classCode: classCodeNorm })
+    const newUser = createUserObject(username, ROLES.LEARNER, {
+      classCode: classCodeNorm,
+      name: fullName?.trim() || username,
+    }, 'registered')
     setUser(newUser)
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
     return newUser
@@ -122,6 +183,7 @@ export function AuthProvider({ children }) {
 
   const isProfileComplete = (u = user) => {
     if (!u) return true
+    if (u.role === ROLES.ASSISTANT || u.role === ROLES.ADMIN) return true
     const empty = (v) => !v || v.trim() === '' || v === 'Chưa cập nhật'
     return !empty(u.studentId) && !empty(u.faculty) && !empty(u.major)
   }

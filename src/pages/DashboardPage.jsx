@@ -4,14 +4,14 @@ import Sidebar from '../components/layout/Sidebar'
 import ChatWindow from '../components/chat/ChatWindow'
 import ProfileCompleteBanner from '../components/ProfileCompleteBanner'
 import { useMessages } from '../hooks/useMessages'
-import { useReports } from '../hooks/useReports'
-import { CHANNELS_BY_ROLE } from '../constants/roles'
+import { useReports } from '../context/ReportsContext'
+import { getChannelsByUser } from '../constants/roles'
 import { useAuth } from '../context/AuthContext'
 
 export default function DashboardPage() {
   const { user } = useAuth()
   const location = useLocation()
-  const channels = CHANNELS_BY_ROLE[user?.role] || []
+  const channels = getChannelsByUser(user) || []
   const [activeChannel, setActiveChannel] = useState(null)
   const { addMessage, getMessagesForChannel } = useMessages()
   const { addReport } = useReports()
@@ -28,10 +28,11 @@ export default function DashboardPage() {
     }
   }, [channels, location.state?.channel])
 
-  const messages = getMessagesForChannel(activeChannel?.id)
+  const userId = user?.stableId || (user?.name ? `reg-${user.name}` : null)
+  const messages = getMessagesForChannel(activeChannel?.id, userId)
 
   const handleSendMessage = (channelId, content, file) => {
-    addMessage(channelId, content, file)
+    addMessage(channelId, content, file, 'user', userId)
   }
 
   return (

@@ -1,15 +1,12 @@
 import { useState } from 'react'
 import { X, Flag, CheckCircle } from 'lucide-react'
+import { useLanguage } from '../../context/LanguageContext'
 
-const REPORT_TYPES = [
-  { id: 'inappropriate', label: 'Nội dung không phù hợp' },
-  { id: 'spam', label: 'Spam' },
-  { id: 'technical', label: 'Lỗi kỹ thuật' },
-  { id: 'wrong_info', label: 'Sai thông tin' },
-  { id: 'other', label: 'Khác' },
-]
+const REPORT_TYPE_KEYS = ['inappropriate', 'spam', 'technical', 'wrong_info', 'other']
 
 export default function ReportModal({ isOpen, onClose, channel, onSubmit }) {
+  const { t } = useLanguage()
+  const channelLabel = channel?.labelKey ? t(channel.labelKey, { code: channel.code }) : channel?.label
   const [type, setType] = useState('')
   const [detail, setDetail] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -20,9 +17,9 @@ export default function ReportModal({ isOpen, onClose, channel, onSubmit }) {
 
     onSubmit?.({
       channelId: channel?.id,
-      channelLabel: channel?.label,
+      channelLabel,
       type: type,
-      typeLabel: REPORT_TYPES.find((t) => t.id === type)?.label || type,
+      typeLabel: t(`report.types.${type}`) || type,
       detail: detail.trim() || null,
       timestamp: Date.now(),
     })
@@ -61,7 +58,7 @@ export default function ReportModal({ isOpen, onClose, channel, onSubmit }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
           <h2 id="report-title" className="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
             <Flag className="w-5 h-5 text-amber-500" />
-            Báo cáo
+            {t('report.title')}
           </h2>
           <button
             type="button"
@@ -79,29 +76,27 @@ export default function ReportModal({ isOpen, onClose, channel, onSubmit }) {
             <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
               <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
-            <p className="font-semibold text-slate-800 dark:text-white">Đã gửi báo cáo</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Cảm ơn bạn đã phản hồi. Chúng tôi sẽ xem xét sớm.
-            </p>
+            <p className="font-semibold text-slate-800 dark:text-white">{t('report.success')}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('report.successDesc')}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             {channel && (
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                Báo cáo về: <span className="font-medium text-slate-700 dark:text-slate-300">{channel.label}</span>
+                {t('report.about')}: <span className="font-medium text-slate-700 dark:text-slate-300">{channelLabel}</span>
               </p>
             )}
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Lý do báo cáo <span className="text-red-500">*</span>
+                {t('report.reason')} <span className="text-red-500">*</span>
               </label>
               <div className="space-y-2">
-                {REPORT_TYPES.map((t) => (
+                {REPORT_TYPE_KEYS.map((id) => (
                   <label
-                    key={t.id}
+                    key={id}
                     className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-                      type === t.id
+                      type === id
                         ? 'border-primary bg-primary/5 dark:bg-primary/10'
                         : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
                     }`}
@@ -109,12 +104,12 @@ export default function ReportModal({ isOpen, onClose, channel, onSubmit }) {
                     <input
                       type="radio"
                       name="reportType"
-                      value={t.id}
-                      checked={type === t.id}
+                      value={id}
+                      checked={type === id}
                       onChange={(e) => setType(e.target.value)}
                       className="sr-only"
                     />
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.label}</span>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t(`report.types.${id}`)}</span>
                   </label>
                 ))}
               </div>
@@ -122,7 +117,7 @@ export default function ReportModal({ isOpen, onClose, channel, onSubmit }) {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Mô tả chi tiết (tùy chọn)
+                {t('report.detail')}
               </label>
               <textarea
                 value={detail}
@@ -139,14 +134,14 @@ export default function ReportModal({ isOpen, onClose, channel, onSubmit }) {
                 onClick={handleClose}
                 className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                Hủy
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={!type}
                 className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Gửi báo cáo
+                {t('report.submitReport')}
               </button>
             </div>
           </form>

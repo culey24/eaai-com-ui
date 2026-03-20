@@ -1,39 +1,71 @@
 /**
- * Role-based access constants
- * CHATBOT_ONLY: Chỉ chat với AI
- * HUMAN_CHAT: Chat với AI + Tư vấn viên
- * ADMIN_FULL: Đầy đủ quyền (AI, Tư vấn, Nội bộ)
+ * RBAC: 2 vai trò chính
+ * - LEARNER: Người học (đăng ký)
+ * - ASSISTANT: Người quản lý lớp (cấp tài khoản riêng, không đăng ký)
+ * - ADMIN: Quản trị hệ thống (cấp riêng)
  */
 export const ROLES = {
-  CHATBOT_ONLY: 'CHATBOT_ONLY',
-  HUMAN_CHAT: 'HUMAN_CHAT',
-  ADMIN_FULL: 'ADMIN_FULL',
+  LEARNER: 'LEARNER',
+  ASSISTANT: 'ASSISTANT',
+  ADMIN: 'ADMIN',
 }
 
 export const ROLE_LABELS = {
-  [ROLES.CHATBOT_ONLY]: 'Chat với AI',
-  [ROLES.HUMAN_CHAT]: 'Chat với Tư vấn',
-  [ROLES.ADMIN_FULL]: 'Quản trị viên',
+  [ROLES.LEARNER]: 'Người học',
+  [ROLES.ASSISTANT]: 'Quản lý lớp',
+  [ROLES.ADMIN]: 'Quản trị viên',
 }
 
 /** Mã lớp hợp lệ khi đăng ký */
 export const VALID_CLASS_CODES = ['IS-1', 'IS-2', 'IS-3']
 
+/** Mapping mã lớp → kênh chat (labelKey dùng cho i18n) */
+const CLASS_TO_CHANNEL = {
+  'IS-1': { id: 'ai-chat', code: 'IS-1', labelKey: 'chat.agent', icon: 'Bot' },
+  'IS-2': { id: 'human-chat', code: 'IS-2', labelKey: 'chat.agent', icon: 'UserCircle' },
+  'IS-3': { id: 'internal-chat', code: 'IS-3', labelKey: 'chat.agent', icon: 'Shield' },
+}
+
+
 /**
- * Các kênh chat tương ứng với từng role
- * Mỗi Agent dùng cho 1 lớp: IS-1, IS-2, IS-3
+ * Kênh chat cho LEARNER: chỉ kênh của lớp họ đăng ký
  */
-export const CHANNELS_BY_ROLE = {
-  [ROLES.CHATBOT_ONLY]: [
-    { id: 'ai-chat', label: 'Chat với Agent (IS-1)', icon: 'Bot' },
-  ],
-  [ROLES.HUMAN_CHAT]: [
-    { id: 'ai-chat', label: 'Chat với Agent (IS-1)', icon: 'Bot' },
-    { id: 'human-chat', label: 'Chat với Agent (IS-2)', icon: 'UserCircle' },
-  ],
-  [ROLES.ADMIN_FULL]: [
-    { id: 'ai-chat', label: 'Chat với Agent (IS-1)', icon: 'Bot' },
-    { id: 'human-chat', label: 'Chat với Agent (IS-2)', icon: 'UserCircle' },
-    { id: 'internal-chat', label: 'Chat với Agent (IS-3)', icon: 'Shield' },
-  ],
+export function getChannelsForLearner(classCode) {
+  const code = classCode?.trim().toUpperCase()
+  if (!code || !CLASS_TO_CHANNEL[code]) return []
+  return [CLASS_TO_CHANNEL[code]]
+}
+
+/**
+ * Kênh chat cho ASSISTANT: tất cả lớp họ quản lý
+ */
+export function getChannelsForAssistant(managedClasses = []) {
+  if (!managedClasses.length) return Object.values(CLASS_TO_CHANNEL)
+  return managedClasses
+    .map((c) => CLASS_TO_CHANNEL[c?.trim?.()?.toUpperCase?.()])
+    .filter(Boolean)
+}
+
+/**
+ * Kênh chat cho ADMIN: không có (admin dùng Admin Chat Channels)
+ */
+export function getChannelsForAdmin() {
+  return []
+}
+
+/**
+ * Lấy danh sách kênh theo role và user
+ */
+export function getChannelsByUser(user) {
+  if (!user) return []
+  switch (user.role) {
+    case ROLES.LEARNER:
+      return getChannelsForLearner(user.classCode)
+    case ROLES.ASSISTANT:
+      return getChannelsForAssistant(user.managedClasses)
+    case ROLES.ADMIN:
+      return getChannelsForAdmin()
+    default:
+      return []
+  }
 }

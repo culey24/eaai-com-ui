@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, User, Mail, Shield, Sun, Moon, GraduationCap, BookOpen } from 'lucide-react'
+import { ArrowLeft, User, Mail, Shield, Sun, Moon, GraduationCap, BookOpen, Globe } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { ROLE_LABELS } from '../constants/roles'
+import { useLanguage } from '../context/LanguageContext'
 
 const PLACEHOLDER = 'Chưa cập nhật'
 
 export default function SettingsPage() {
   const { user, updateProfile, isProfileComplete } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { lang, setLang, t } = useLanguage()
   const [editing, setEditing] = useState(false)
   const [studentId, setStudentId] = useState(user?.studentId === PLACEHOLDER ? '' : user?.studentId || '')
   const [faculty, setFaculty] = useState(user?.faculty === PLACEHOLDER ? '' : user?.faculty || '')
@@ -41,7 +42,7 @@ export default function SettingsPage() {
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="font-semibold text-slate-800 dark:text-white text-lg">Cài đặt</h1>
+        <h1 className="font-semibold text-slate-800 dark:text-white text-lg">{t('settings.title')}</h1>
       </div>
 
       {/* Content */}
@@ -52,10 +53,10 @@ export default function SettingsPage() {
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
               <h2 className="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />
-                Thông tin chung
+                {t('settings.general')}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                Thông tin tài khoản đã đăng ký
+                {t('settings.account')}
               </p>
             </div>
             <div className="p-6 space-y-4">
@@ -65,7 +66,7 @@ export default function SettingsPage() {
                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
                   <div>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">Tài khoản</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.account')}</p>
                     <p className="font-medium text-slate-800 dark:text-white">{user?.name || '—'}</p>
                   </div>
                 </div>
@@ -74,32 +75,32 @@ export default function SettingsPage() {
                   onClick={() => setEditing(!editing)}
                   className="text-sm font-medium text-primary hover:underline"
                 >
-                  {editing ? 'Hủy' : 'Chỉnh sửa thông tin'}
+                  {editing ? t('common.cancel') : t('settings.editProfile')}
                 </button>
               </div>
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">Email / Tài khoản</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.account')}</p>
                   <p className="font-medium text-slate-800 dark:text-white">{user?.email || '—'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Shield className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">Quyền truy cập</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.role')}</p>
                   <p className="font-medium text-slate-800 dark:text-white">
-                    {ROLE_LABELS[user?.role] || user?.role || '—'}
+                    {t(`roles.${user?.role?.toLowerCase()}`) || user?.role || '—'}
                   </p>
                 </div>
               </div>
 
               {editing && (
                 <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700 space-y-4">
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Thông tin sinh viên</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{t('settings.studentInfo')}</p>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">MSSV</label>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('settings.mssv')}</label>
                       <input
                         type="text"
                         value={studentId}
@@ -109,7 +110,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Khoa</label>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('settings.faculty')}</label>
                       <input
                         type="text"
                         value={faculty}
@@ -119,7 +120,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Chuyên ngành</label>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('settings.major')}</label>
                       <input
                         type="text"
                         value={major}
@@ -129,7 +130,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Môn học quan tâm</label>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('settings.subject')}</label>
                       <input
                         type="text"
                         value={subject}
@@ -152,7 +153,7 @@ export default function SettingsPage() {
                     }}
                     className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90"
                   >
-                    Lưu thay đổi
+                    {t('common.save')}
                   </button>
                 </div>
               )}
@@ -162,21 +163,21 @@ export default function SettingsPage() {
                   <div className="flex items-start gap-3">
                     <GraduationCap className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm">MSSV</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.mssv')}</p>
                       <p className="font-medium text-slate-800 dark:text-white">{user?.studentId || '—'}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <GraduationCap className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm">Khoa</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.faculty')}</p>
                       <p className="font-medium text-slate-800 dark:text-white">{user?.faculty || '—'}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <BookOpen className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm">Chuyên ngành</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.major')}</p>
                       <p className="font-medium text-slate-800 dark:text-white">{user?.major || '—'}</p>
                     </div>
                   </div>
@@ -184,7 +185,7 @@ export default function SettingsPage() {
                     <div className="flex items-start gap-3">
                       <BookOpen className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm">Môn học quan tâm</p>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.subject')}</p>
                         <p className="font-medium text-slate-800 dark:text-white">{user?.subject}</p>
                       </div>
                     </div>
@@ -194,15 +195,54 @@ export default function SettingsPage() {
             </div>
           </section>
 
+          {/* Ngôn ngữ */}
+          <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+              <h2 className="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+                <Globe className="w-5 h-5 text-primary" />
+                {t('settings.language')}
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                {t('settings.languageDesc')}
+              </p>
+            </div>
+            <div className="p-6">
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLang('en')}
+                  className={`flex-1 py-2.5 px-4 rounded-xl border font-medium text-sm transition-colors ${
+                    lang === 'en'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  English
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLang('vi')}
+                  className={`flex-1 py-2.5 px-4 rounded-xl border font-medium text-sm transition-colors ${
+                    lang === 'vi'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  Tiếng Việt
+                </button>
+              </div>
+            </div>
+          </section>
+
           {/* Giao diện */}
           <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
               <h2 className="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
                 <Sun className="w-5 h-5 text-primary" />
-                Giao diện
+                {t('settings.theme')}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                Chọn giao diện sáng hoặc tối
+                {t('settings.themeDesc')}
               </p>
             </div>
             <div className="p-6">
@@ -215,10 +255,10 @@ export default function SettingsPage() {
                   )}
                   <div>
                     <p className="font-medium text-slate-800 dark:text-white">
-                      {theme === 'light' ? 'Chế độ sáng' : 'Chế độ tối'}
+                      {theme === 'light' ? t('settings.lightMode') : t('settings.darkMode')}
                     </p>
                     <p className="text-slate-500 dark:text-slate-400 text-sm">
-                      {theme === 'light' ? 'Giao diện sáng' : 'Giao diện tối'}
+                      {theme === 'light' ? t('settings.lightMode') : t('settings.darkMode')}
                     </p>
                   </div>
                 </div>

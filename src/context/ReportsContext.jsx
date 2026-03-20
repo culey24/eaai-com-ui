@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 
 const REPORTS_STORAGE_KEY = 'eeai_chatbot_reports'
 
@@ -11,15 +11,13 @@ function loadReports() {
   }
 }
 
-function saveReports(reports) {
-  localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(reports))
-}
+const ReportsContext = createContext(null)
 
-export function useReports() {
+export function ReportsProvider({ children }) {
   const [reports, setReports] = useState(loadReports)
 
   useEffect(() => {
-    saveReports(reports)
+    localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(reports))
   }, [reports])
 
   const addReport = useCallback((report) => {
@@ -36,5 +34,15 @@ export function useReports() {
     [reports]
   )
 
-  return { reports, addReport, getReportsForChannel }
+  return (
+    <ReportsContext.Provider value={{ reports, addReport, getReportsForChannel }}>
+      {children}
+    </ReportsContext.Provider>
+  )
+}
+
+export function useReports() {
+  const ctx = useContext(ReportsContext)
+  if (!ctx) throw new Error('useReports must be used within ReportsProvider')
+  return ctx
 }

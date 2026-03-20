@@ -1,16 +1,22 @@
 import { Bot, User, FileText } from 'lucide-react'
 
-export default function MessageItem({ message }) {
+export default function MessageItem({ message, agentLabel }) {
   const isUser = message.role === 'user'
+  const showAgentLabel = agentLabel && !isUser
 
   return (
     <div className={`flex gap-3.5 ${isUser ? 'flex-row-reverse' : ''}`}>
-      <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-glow-primary">
+      <div className="flex flex-col items-center gap-1">
+        {showAgentLabel && (
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{agentLabel}</span>
+        )}
+        <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-glow-primary">
         {isUser ? (
           <User className="w-4 h-4 text-white" />
         ) : (
           <Bot className="w-4 h-4 text-white" />
         )}
+        </div>
       </div>
 
       <div

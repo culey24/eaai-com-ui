@@ -2,14 +2,21 @@
 
 Ứng dụng Web UI Chatbot đa nhiệm dành cho sinh viên, sử dụng React + Vite + Tailwind CSS, mang phong cách ChatGPT với bộ nhận diện thương hiệu Đại học Bách Khoa.
 
+## RBAC: 2 vai trò chính
+
+- **Learner (Người học):** Đăng ký, chat theo lớp, báo cáo
+- **Assistant (Quản lý lớp):** Cấp tài khoản riêng, không đăng ký. Xem báo cáo, quản lý người học theo lớp
+
 ## Tài khoản Demo (MOCKUP)
 
-| Vai trò   | Tài khoản | Mật khẩu   |
-|-----------|-----------|------------|
-| Admin     | `admin`   | `admin123` |
-| Sinh viên | `demo`    | `demo123`  |
+| Vai trò    | Tài khoản    | Mật khẩu      |
+|------------|--------------|---------------|
+| Admin      | `admin`      | `admin123`    |
+| Assistant  | `assistant1` | `assistant123` |
+| Assistant  | `assistant2` | `assistant123` |
+| Learner    | `demo`       | `demo123`     |
 
-**Đăng ký:** Mã lớp hợp lệ: `IS-1`, `IS-2`, `IS-3`
+**Đăng ký (chỉ Learner):** Mã lớp hợp lệ: `IS-1`, `IS-2`, `IS-3`
 
 ## Công nghệ
 
@@ -29,7 +36,7 @@ npm run dev
 
 ## Tính năng
 
-- **Phân quyền (Role-based):** Mock 3 loại quyền: CHATBOT_ONLY, HUMAN_CHAT, ADMIN_FULL
+- **RBAC:** LEARNER (đăng ký), ASSISTANT (cấp riêng), ADMIN
 - **Đăng nhập/Đăng ký:** Form có validation cơ bản
 - **Dashboard:** Sidebar với danh sách kênh chat theo quyền, khu vực chat dạng bubble, input gửi tin nhắn
 - **Lưu trữ:** Sử dụng localStorage để mock trạng thái đăng nhập và tin nhắn

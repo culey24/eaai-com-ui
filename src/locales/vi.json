@@ -60,6 +60,9 @@
     "success": "Đã gửi báo cáo",
     "successDesc": "Cảm ơn bạn đã phản hồi. Chúng tôi sẽ xem xét sớm.",
     "noReports": "Chưa có báo cáo nào",
+    "reporter": "Người gửi",
+    "reporterMeta": "{fullName} (@{username})",
+    "reporterUnknown": "Không rõ (báo cáo trước khi cập nhật)",
     "types": {
       "inappropriate": "Nội dung không phù hợp",
       "spam": "Spam",
@@ -148,6 +151,8 @@
     "allRoles": "Tất cả vai trò",
     "allClasses": "Tất cả lớp",
     "nameOrId": "Tên / ID",
+    "fullName": "Họ và tên",
+    "fullNamePlaceholder": "Họ và tên (tùy chọn)",
     "class": "Lớp",
     "role": "Vai trò",
     "actions": "Thao tác",
@@ -194,9 +199,11 @@
       "titlePlaceholder": "Ví dụ: Submission 1",
       "descriptionLabel": "Mô tả",
       "descriptionPlaceholder": "Mô tả chi tiết về đợt nộp này...",
-      "deadlineLabel": "Hạn nộp",
+      "startsAtLabel": "Bắt đầu lúc",
+      "endsAtLabel": "Kết thúc lúc",
       "confirmDelete": "Xóa submission này? Dữ liệu đã nộp sẽ bị xóa.",
       "active": "Đang mở",
+      "scheduled": "Chưa mở",
       "ended": "Đã kết thúc",
       "noSubmissions": "Chưa có submission nào"
     }

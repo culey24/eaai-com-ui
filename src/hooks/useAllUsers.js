@@ -90,7 +90,7 @@ export function useAllUsers() {
     [registered, adminUsers, roleOverrides]
   )
 
-  const createUser = useCallback(({ username, password, role, classCode, managedClasses }) => {
+  const createUser = useCallback(({ username, password, role, classCode, managedClasses, fullName }) => {
     const next = [
       ...adminUsers,
       {
@@ -99,6 +99,7 @@ export function useAllUsers() {
         role: role || 'LEARNER',
         classCode: classCode || null,
         managedClasses: managedClasses || null,
+        fullName: fullName?.trim() || '',
       },
     ]
     setAdminUsers(next)

@@ -12,19 +12,27 @@ function loadJson(key, fallback) {
   }
 }
 
+/** Chuẩn hóa submission: startsAt, endsAt (legacy: deadline) */
+function normalizeSubmission(s) {
+  const endsAt = s.endsAt ?? s.deadline ?? Date.now() + 30 * 24 * 60 * 60 * 1000
+  const startsAt = s.startsAt !== undefined && s.startsAt !== null ? s.startsAt : s.createdAt ?? 0
+  return { ...s, endsAt, startsAt, deadline: endsAt }
+}
+
 function loadSubmissions() {
   const list = loadJson(SUBMISSIONS_STORAGE_KEY, [])
   if (list.length === 0) {
-    const defaultSub = {
+    const now = Date.now()
+    const defaultSub = normalizeSubmission({
       id: 'default',
       title: 'Submission 1',
       description: '',
-      deadline: Date.now() + 30 * 24 * 60 * 60 * 1000,
-      createdAt: Date.now(),
-    }
+      deadline: now + 30 * 24 * 60 * 60 * 1000,
+      createdAt: now,
+    })
     return [defaultSub]
   }
-  return list
+  return list.map(normalizeSubmission)
 }
 
 function loadJournals() {
@@ -41,14 +49,22 @@ export function JournalProvider({ children }) {
     localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(submissions))
   }, [submissions])
 
-  // Migrate submissions: add description if missing
+  // Migrate submissions: description, startsAt/endsAt
   useEffect(() => {
-    const needsMigrate = submissions.some((s) => s.description === undefined)
-    if (needsMigrate) {
-      setSubmissions((prev) =>
-        prev.map((s) => (s.description === undefined ? { ...s, description: '' } : s))
-      )
-    }
+    setSubmissions((prev) => {
+      let changed = false
+      const next = prev.map((s) => {
+        let u = { ...s }
+        if (u.description === undefined) {
+          u.description = ''
+          changed = true
+        }
+        const norm = normalizeSubmission(u)
+        if (norm.endsAt !== u.endsAt || norm.startsAt !== u.startsAt) changed = true
+        return norm
+      })
+      return changed ? next : prev
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -76,22 +92,56 @@ export function JournalProvider({ children }) {
 
   const getActiveSubmission = useCallback(() => {
     const now = Date.now()
-    const sorted = [...submissions].sort((a, b) => a.deadline - b.deadline)
-    return sorted.find((s) => s.deadline > now) || null
+    const open = submissions.filter((s) => s.startsAt <= now && s.endsAt > now)
+    open.sort((a, b) => a.endsAt - b.endsAt)
+    return open[0] || null
+  }, [submissions])
+
+  /** Submissions đã bắt đầu (learner được thấy) */
+  const getSubmissionsStartedForLearner = useCallback(() => {
+    const now = Date.now()
+    return submissions.filter((s) => s.startsAt <= now).sort((a, b) => a.endsAt - b.endsAt)
   }, [submissions])
 
   const getSubmissions = useCallback(() => submissions, [submissions])
 
-  const addSubmission = useCallback((title, description, deadline) => {
+  const addSubmission = useCallback((title, description, startsAt, endsAt) => {
     const id = `sub-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    const sub = { id, title, description: description || '', deadline: new Date(deadline).getTime(), createdAt: Date.now() }
-    setSubmissions((prev) => [...prev, sub].sort((a, b) => a.deadline - b.deadline))
+    const start = new Date(startsAt).getTime()
+    const end = new Date(endsAt).getTime()
+    const sub = normalizeSubmission({
+      id,
+      title,
+      description: description || '',
+      startsAt: start,
+      endsAt: end,
+      createdAt: Date.now(),
+    })
+    setSubmissions((prev) => [...prev, sub].sort((a, b) => a.endsAt - b.endsAt))
     return sub
   }, [])
 
   const updateSubmission = useCallback((id, updates) => {
     setSubmissions((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updates } : s)).sort((a, b) => a.deadline - b.deadline)
+      prev
+        .map((s) => {
+          if (s.id !== id) return s
+          const merged = { ...s, ...updates }
+          if (updates.startsAt !== undefined) {
+            merged.startsAt =
+              typeof updates.startsAt === 'number' ? updates.startsAt : new Date(updates.startsAt).getTime()
+          }
+          if (updates.endsAt !== undefined) {
+            merged.endsAt =
+              typeof updates.endsAt === 'number' ? updates.endsAt : new Date(updates.endsAt).getTime()
+          }
+          if (updates.deadline !== undefined) {
+            merged.endsAt =
+              typeof updates.deadline === 'number' ? updates.deadline : new Date(updates.deadline).getTime()
+          }
+          return normalizeSubmission(merged)
+        })
+        .sort((a, b) => a.endsAt - b.endsAt)
     )
   }, [])
 
@@ -197,7 +247,9 @@ export function JournalProvider({ children }) {
   const isSubmissionOpen = useCallback(
     (submissionId) => {
       const sub = submissions.find((s) => s.id === submissionId)
-      return sub ? sub.deadline > Date.now() : false
+      if (!sub) return false
+      const now = Date.now()
+      return sub.startsAt <= now && sub.endsAt > now
     },
     [submissions]
   )
@@ -206,6 +258,7 @@ export function JournalProvider({ children }) {
     journals,
     submissions,
     getSubmissions,
+    getSubmissionsStartedForLearner,
     getActiveSubmission,
     addSubmission,
     updateSubmission,

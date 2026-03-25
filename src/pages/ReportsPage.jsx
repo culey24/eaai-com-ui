@@ -61,6 +61,15 @@ export default function ReportsPage() {
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                         {r.channelLabel} • {r.timestamp && new Date(r.timestamp).toLocaleString('vi-VN')}
                       </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                        {t('report.reporter')}:{' '}
+                        {r.reporterFullName || r.reporterUsername
+                          ? t('report.reporterMeta', {
+                              fullName: r.reporterFullName || r.reporterUsername || '—',
+                              username: r.reporterUsername || '—',
+                            })
+                          : t('report.reporterUnknown')}
+                      </p>
                       {r.detail && (
                         <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">{r.detail}</p>
                       )}

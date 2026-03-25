@@ -9,7 +9,7 @@ export default function JournalUploadPage() {
   const { t } = useLanguage()
   const {
     getActiveSubmission,
-    getSubmissions,
+    getSubmissionsStartedForLearner,
     getJournalForUserAndSubmission,
     addJournal,
     updateJournal,
@@ -24,7 +24,11 @@ export default function JournalUploadPage() {
 
   const userId = user?.stableId || (user?.name ? `reg-${user.name}` : user?.id)
   const activeSub = getActiveSubmission()
-  const submissions = getSubmissions()
+  const startedSubs = getSubmissionsStartedForLearner()
+  const historySubs = startedSubs
+    .filter((s) => !isSubmissionOpen(s.id))
+    .slice()
+    .sort((a, b) => b.endsAt - a.endsAt)
   const currentEntry = activeSub ? getJournalForUserAndSubmission(userId, activeSub.id) : null
 
   const handleFileChange = (e) => {
@@ -98,7 +102,7 @@ export default function JournalUploadPage() {
                   </p>
                 )}
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                  {t('journal.deadline')}: {formatDate(activeSub.deadline)}
+                  {t('journal.deadline')}: {formatDate(activeSub.endsAt)}
                 </p>
               </div>
 
@@ -185,12 +189,11 @@ export default function JournalUploadPage() {
           )}
 
           {/* Past submissions - user's uploads */}
-          {submissions.filter((s) => !isSubmissionOpen(s.id)).length > 0 && (
+          {historySubs.length > 0 && (
             <div>
               <h2 className="font-semibold text-slate-800 dark:text-white mb-4">{t('journal.uploadHistory')}</h2>
               <div className="space-y-3">
-                {submissions
-                  .filter((s) => !isSubmissionOpen(s.id))
+                {historySubs
                   .map((sub) => {
                     const entry = getJournalForUserAndSubmission(userId, sub.id)
                     return (

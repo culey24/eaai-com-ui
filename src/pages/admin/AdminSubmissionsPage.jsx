@@ -14,7 +14,8 @@ export default function AdminSubmissionsPage() {
   const [showForm, setShowForm] = useState(false)
   const [formTitle, setFormTitle] = useState('')
   const [formDescription, setFormDescription] = useState('')
-  const [formDeadline, setFormDeadline] = useState('')
+  const [formStartsAt, setFormStartsAt] = useState('')
+  const [formEndsAt, setFormEndsAt] = useState('')
 
   const submissions = getSubmissions()
 
@@ -26,31 +27,38 @@ export default function AdminSubmissionsPage() {
       return { classCode, ...stats }
     }).filter((s) => s.total > 0)
 
-  const formatDeadline = (ts) =>
+  const formatTs = (ts) =>
     new Date(ts).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 
-  const isActive = (sub) => sub.deadline > Date.now()
+  const now = Date.now()
+  const isOpenWindow = (sub) => sub.startsAt <= now && sub.endsAt > now
+  const isScheduled = (sub) => sub.startsAt > now
 
   const handleCreate = () => {
-    if (!formTitle.trim() || !formDeadline) return
-    addSubmission(formTitle.trim(), formDescription.trim(), formDeadline)
+    if (!formTitle.trim() || !formStartsAt || !formEndsAt) return
+    if (new Date(formStartsAt).getTime() >= new Date(formEndsAt).getTime()) return
+    addSubmission(formTitle.trim(), formDescription.trim(), formStartsAt, formEndsAt)
     setFormTitle('')
     setFormDescription('')
-    setFormDeadline('')
+    setFormStartsAt('')
+    setFormEndsAt('')
     setShowForm(false)
   }
 
   const handleUpdate = () => {
-    if (!editingId || !formTitle.trim() || !formDeadline) return
+    if (!editingId || !formTitle.trim() || !formStartsAt || !formEndsAt) return
+    if (new Date(formStartsAt).getTime() >= new Date(formEndsAt).getTime()) return
     updateSubmission(editingId, {
       title: formTitle.trim(),
       description: formDescription.trim(),
-      deadline: new Date(formDeadline).getTime(),
+      startsAt: new Date(formStartsAt).getTime(),
+      endsAt: new Date(formEndsAt).getTime(),
     })
     setEditingId(null)
     setFormTitle('')
     setFormDescription('')
-    setFormDeadline('')
+    setFormStartsAt('')
+    setFormEndsAt('')
   }
 
   const handleDelete = (id) => {
@@ -61,16 +69,45 @@ export default function AdminSubmissionsPage() {
     setEditingId(sub.id)
     setFormTitle(sub.title)
     setFormDescription(sub.description || '')
-    setFormDeadline(new Date(sub.deadline).toISOString().slice(0, 16))
+    setFormStartsAt(new Date(sub.startsAt).toISOString().slice(0, 16))
+    setFormEndsAt(new Date(sub.endsAt).toISOString().slice(0, 16))
   }
 
   const cancelEdit = () => {
     setEditingId(null)
     setFormTitle('')
     setFormDescription('')
-    setFormDeadline('')
+    setFormStartsAt('')
+    setFormEndsAt('')
     setShowForm(false)
   }
+
+  const dateTimeFields = (
+    <>
+      <div>
+        <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
+          {t('admin.submissions.startsAtLabel')}
+        </label>
+        <input
+          type="datetime-local"
+          value={formStartsAt}
+          onChange={(e) => setFormStartsAt(e.target.value)}
+          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+        />
+      </div>
+      <div>
+        <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
+          {t('admin.submissions.endsAtLabel')}
+        </label>
+        <input
+          type="datetime-local"
+          value={formEndsAt}
+          onChange={(e) => setFormEndsAt(e.target.value)}
+          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+        />
+      </div>
+    </>
+  )
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
@@ -135,17 +172,7 @@ export default function AdminSubmissionsPage() {
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white resize-none"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
-                    {t('admin.submissions.deadlineLabel')}
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={formDeadline}
-                    onChange={(e) => setFormDeadline(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                  />
-                </div>
+                {dateTimeFields}
                 <div className="flex gap-2">
                   <button
                     onClick={handleCreate}
@@ -176,7 +203,8 @@ export default function AdminSubmissionsPage() {
             <div className="space-y-4">
               {submissions.map((sub) => {
                 const statsByClass = getStatsByClass(sub.id)
-                const active = isActive(sub)
+                const open = isOpenWindow(sub)
+                const scheduled = isScheduled(sub)
                 const isEditing = editingId === sub.id
 
                 return (
@@ -202,8 +230,14 @@ export default function AdminSubmissionsPage() {
                         />
                         <input
                           type="datetime-local"
-                          value={formDeadline}
-                          onChange={(e) => setFormDeadline(e.target.value)}
+                          value={formStartsAt}
+                          onChange={(e) => setFormStartsAt(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                        />
+                        <input
+                          type="datetime-local"
+                          value={formEndsAt}
+                          onChange={(e) => setFormEndsAt(e.target.value)}
                           className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
                         />
                         <div className="flex gap-2">
@@ -231,17 +265,26 @@ export default function AdminSubmissionsPage() {
                                 {sub.description}
                               </p>
                             )}
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1">
-                              {t('journal.deadline')}: {formatDeadline(sub.deadline)}
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                              {t('admin.submissions.startsAtLabel')}: {formatTs(sub.startsAt)}
+                            </p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                              {t('admin.submissions.endsAtLabel')}: {formatTs(sub.endsAt)}
                             </p>
                             <span
                               className={`inline-block mt-2 px-2 py-0.5 rounded text-xs font-medium ${
-                                active
+                                open
                                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                  : 'bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-400'
+                                  : scheduled
+                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                                    : 'bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-400'
                               }`}
                             >
-                              {active ? t('admin.submissions.active') : t('admin.submissions.ended')}
+                              {open
+                                ? t('admin.submissions.active')
+                                : scheduled
+                                  ? t('admin.submissions.scheduled')
+                                  : t('admin.submissions.ended')}
                             </span>
                             <div className="mt-2 space-y-1">
                               {statsByClass.map(({ classCode, submitted, total }) => (

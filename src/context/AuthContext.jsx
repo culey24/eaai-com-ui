@@ -90,6 +90,19 @@ export function AuthProvider({ children }) {
             userToSet = { ...userToSet, stableId: `${src}-${userToSet.name}` }
             updated = true
           }
+          if (userToSet.username === undefined && userToSet.stableId) {
+            const m = String(userToSet.stableId).match(/^(reg|prov|admin)-(.+)$/)
+            userToSet = { ...userToSet, username: m ? m[2] : userToSet.name }
+            updated = true
+          }
+          if (userToSet.fullName === undefined) {
+            userToSet = {
+              ...userToSet,
+              fullName:
+                userToSet.name && userToSet.name !== userToSet.username ? userToSet.name : '',
+            }
+            updated = true
+          }
           if (updated) localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userToSet))
         }
       } catch {
@@ -102,23 +115,29 @@ export function AuthProvider({ children }) {
 
   const createUserObject = (username, role, extra = {}, source = 'provisioned') => {
     const stableId = source === 'registered' ? `reg-${username}` : source === 'admin' ? `admin-${username}` : `prov-${username}`
-    return {
-    id: Date.now().toString(),
-    stableId,
-    email: extra.email ?? username,
-    studentId: 'Chưa cập nhật',
-    faculty: 'Chưa cập nhật',
-    major: 'Chưa cập nhật',
-    subject: 'Chưa cập nhật',
-    name: username,
-    role,
-    avatar: null,
-    classCode: 'Chưa cập nhật',
-    dateOfBirth: '',
-    gender: '',
-    trainingProgramType: '',
-    ...extra,
-  }
+    const merged = {
+      id: Date.now().toString(),
+      stableId,
+      username,
+      email: extra.email ?? username,
+      studentId: 'Chưa cập nhật',
+      faculty: 'Chưa cập nhật',
+      major: 'Chưa cập nhật',
+      subject: 'Chưa cập nhật',
+      name: username,
+      role,
+      avatar: null,
+      classCode: 'Chưa cập nhật',
+      dateOfBirth: '',
+      gender: '',
+      trainingProgramType: '',
+      ...extra,
+    }
+    if (merged.fullName === undefined || merged.fullName === null) {
+      merged.fullName =
+        merged.name && merged.name !== username ? String(merged.name).trim() : ''
+    }
+    return merged
   }
 
   const isClassCodeValid = (code) =>
@@ -129,9 +148,12 @@ export function AuthProvider({ children }) {
     const adminUsers = getAdminUsers()
     const adminUser = adminUsers.find((u) => u.username === username && u.password === password)
     if (adminUser) {
+      const fn = adminUser.fullName?.trim()
       const newUser = createUserObject(username, ROLES[adminUser.role] || ROLES.LEARNER, {
         classCode: adminUser.classCode || 'Chưa cập nhật',
         managedClasses: adminUser.managedClasses || [],
+        name: fn || username,
+        fullName: fn || '',
       }, 'admin')
       setUser(newUser)
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
@@ -156,9 +178,11 @@ export function AuthProvider({ children }) {
       (u) => u.username === username && u.password === password
     )
     if (found) {
+      const fn = found.fullName?.trim() || ''
       const newUser = createUserObject(username, ROLES.LEARNER, {
         classCode: found.classCode || 'Chưa cập nhật',
-        name: found.fullName?.trim() || username,
+        name: fn || username,
+        fullName: fn,
       }, 'registered')
       setUser(newUser)
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
@@ -171,9 +195,11 @@ export function AuthProvider({ children }) {
     if (!isClassCodeValid(classCode)) return { error: 'Mã lớp không hợp lệ' }
     if (!saveRegisteredUser(username, password, classCode, fullName)) return { error: 'Tài khoản này đã tồn tại' }
     const classCodeNorm = String(classCode).trim().toUpperCase()
+    const fn = fullName?.trim() || ''
     const newUser = createUserObject(username, ROLES.LEARNER, {
       classCode: classCodeNorm,
-      name: fullName?.trim() || username,
+      name: fn || username,
+      fullName: fn,
     }, 'registered')
     setUser(newUser)
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))

@@ -60,6 +60,9 @@
     "success": "Report submitted",
     "successDesc": "Thank you for your feedback. We will review it soon.",
     "noReports": "No reports yet",
+    "reporter": "Reporter",
+    "reporterMeta": "{fullName} (@{username})",
+    "reporterUnknown": "Unknown (submitted before this update)",
     "types": {
       "inappropriate": "Inappropriate content",
       "spam": "Spam",
@@ -148,6 +151,8 @@
     "allRoles": "All roles",
     "allClasses": "All classes",
     "nameOrId": "Name / ID",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Full name (optional)",
     "class": "Class",
     "role": "Role",
     "actions": "Actions",
@@ -194,9 +199,11 @@
       "titlePlaceholder": "e.g. Submission 1",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Describe this submission round...",
-      "deadlineLabel": "Deadline",
+      "startsAtLabel": "Starts at",
+      "endsAtLabel": "Ends at",
       "confirmDelete": "Delete this submission? Submitted data will be removed.",
       "active": "Open",
+      "scheduled": "Scheduled",
       "ended": "Ended",
       "noSubmissions": "No submissions yet"
     }

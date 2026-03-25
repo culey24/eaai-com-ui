@@ -35,6 +35,14 @@ export default function DashboardPage() {
     addMessage(channelId, content, file, 'user', userId)
   }
 
+  const handleReport = (report) => {
+    addReport({
+      ...report,
+      reporterUsername: user?.username ?? user?.name ?? '',
+      reporterFullName: (user?.fullName || user?.name || '').trim() || user?.username || '',
+    })
+  }
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar
@@ -47,7 +55,7 @@ export default function DashboardPage() {
           channel={activeChannel}
           messages={messages}
           onSendMessage={handleSendMessage}
-          onReport={addReport}
+          onReport={handleReport}
           userId={user?.id}
         />
       </main>

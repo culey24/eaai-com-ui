@@ -16,6 +16,7 @@ export default function AdminAccountsPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [newUser, setNewUser] = useState({
     username: '',
+    fullName: '',
     password: '',
     role: 'LEARNER',
     classCode: '',
@@ -45,12 +46,20 @@ export default function AdminAccountsPage() {
     if (newUser.role === 'LEARNER' && !VALID_CLASS_CODES.includes(newUser.classCode)) return
     createUser({
       username: newUser.username.trim(),
+      fullName: newUser.fullName.trim(),
       password: newUser.password,
       role: newUser.role,
       classCode: newUser.classCode || null,
       managedClasses: newUser.managedClasses.length ? newUser.managedClasses : null,
     })
-    setNewUser({ username: '', password: '', role: 'LEARNER', classCode: '', managedClasses: [] })
+    setNewUser({
+      username: '',
+      fullName: '',
+      password: '',
+      role: 'LEARNER',
+      classCode: '',
+      managedClasses: [],
+    })
     setShowCreate(false)
   }
 
@@ -107,6 +116,7 @@ export default function AdminAccountsPage() {
               <thead className="bg-slate-50 dark:bg-slate-800/50">
                 <tr>
                   <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.nameOrId')}</th>
+                  <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.fullName')}</th>
                   <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.class')}</th>
                   <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.role')}</th>
                   <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.supporter')}</th>
@@ -119,6 +129,9 @@ export default function AdminAccountsPage() {
                     <td className="px-6 py-4">
                       <span className="font-medium text-slate-800 dark:text-white">{u.username}</span>
                       <span className="block text-xs text-slate-500">{u.id}</span>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
+                      {u.fullName?.trim() || '—'}
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{u.classCode || '-'}</td>
                     <td className="px-6 py-4">
@@ -198,6 +211,13 @@ export default function AdminAccountsPage() {
                 placeholder={t('auth.username')}
                 value={newUser.username}
                 onChange={(e) => setNewUser((p) => ({ ...p, username: e.target.value }))}
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+              />
+              <input
+                type="text"
+                placeholder={t('admin.fullNamePlaceholder')}
+                value={newUser.fullName}
+                onChange={(e) => setNewUser((p) => ({ ...p, fullName: e.target.value }))}
                 className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
               />
               <input

@@ -6,16 +6,23 @@ import { prismaRoleToApi } from '../lib/roles.js'
 import { allocateStudentUserId } from '../lib/userId.js'
 import { parseUserClass } from '../lib/classCode.js'
 import { Gender, UserRole } from '@prisma/client'
+import { authRouteLimiter } from '../lib/rateLimits.js'
 
 const router = Router()
 
 const DEFAULT_MAJOR = '0000000'
 
+function userClassToApiLabel(uc) {
+  if (uc == null) return null
+  const m = { IS_1: 'IS-1', IS_2: 'IS-2', IS_3: 'IS-3' }
+  return m[uc] || String(uc)
+}
+
 /**
  * POST /api/auth/register
  * Đăng ký learner (student) — khớp form: username, password, classCode, fullName
  */
-router.post('/register', async (req, res) => {
+router.post('/register', authRouteLimiter, async (req, res) => {
   try {
     const { username, password, classCode, fullName } = req.body || {}
     const u = typeof username === 'string' ? username.trim() : ''
@@ -78,6 +85,7 @@ router.post('/register', async (req, res) => {
         role: prismaRoleToApi(user.userRole),
         fullname: user.fullname,
         classCode: user.userClass,
+        managedClasses: [],
       },
     })
   } catch (err) {
@@ -92,7 +100,7 @@ router.post('/register', async (req, res) => {
 /**
  * POST /api/auth/login
  */
-router.post('/login', async (req, res) => {
+router.post('/login', authRouteLimiter, async (req, res) => {
   try {
     const { username, password } = req.body || {}
     const u = typeof username === 'string' ? username.trim() : ''
@@ -117,6 +125,15 @@ router.post('/login', async (req, res) => {
       userRole: user.userRole,
     })
 
+    let managedClasses = []
+    if (user.userRole === 'teacher') {
+      const rows = await prisma.assistantManagedClass.findMany({
+        where: { teacherId: user.userId },
+        select: { userClass: true },
+      })
+      managedClasses = rows.map((r) => userClassToApiLabel(r.userClass)).filter(Boolean)
+    }
+
     return res.status(200).json({
       token,
       user: {
@@ -125,6 +142,7 @@ router.post('/login', async (req, res) => {
         role: prismaRoleToApi(user.userRole),
         fullname: user.fullname,
         classCode: user.userClass,
+        managedClasses,
       },
     })
   } catch (err) {

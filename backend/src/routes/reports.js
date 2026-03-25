@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
+import { reportPostLimiter } from '../lib/rateLimits.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -10,7 +11,7 @@ router.use(authMiddleware)
  * POST /api/reports
  * Body (khớp eeai_chatbot_reports / ReportModal): channelId, type | reportType, detail?, channelLabel?, typeLabel?, messageId?
  */
-router.post('/', async (req, res) => {
+router.post('/', reportPostLimiter, async (req, res) => {
   try {
     const body = req.body || {}
     const channelId =

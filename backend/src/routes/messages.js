@@ -6,6 +6,8 @@ import { canAccessConversation } from '../lib/access.js'
 import { jsonSafe } from '../lib/json.js'
 import { isMinimalChatBody } from '../lib/lobby.js'
 import { getMinimalMessages, postMinimalMessage } from './minimalMessagesHandlers.js'
+import { channelUsesIs2Agent, generateIs2AgentReply } from '../lib/is2AgentReply.js'
+import { minimalMessagePostLimiter, jwtMessagePostLimiter } from '../lib/rateLimits.js'
 
 const router = Router()
 
@@ -90,18 +92,19 @@ router.get('/:conversationId', authMiddleware, async (req, res) => {
  */
 router.post(
   '/',
-  async (req, res, next) => {
-    try {
-      if (isMinimalChatBody(req.body)) {
-        return await postMinimalMessage(req, res)
-      }
-    } catch (err) {
-      return next(err)
-    }
-    next()
+  (req, res, next) => {
+    if (!isMinimalChatBody(req.body)) return next()
+    return minimalMessagePostLimiter(req, res, (err) => {
+      if (err) return next(err)
+      postMinimalMessage(req, res).catch(next)
+    })
   },
   authMiddleware,
+  jwtMessagePostLimiter,
   async (req, res) => {
+    if (isMinimalChatBody(req.body)) {
+      return res.status(400).json({ error: 'Sai định dạng tin nhắn' })
+    }
     try {
       const { channelId, content, fileName, role, conversationId: bodyConvId } = req.body || {}
       const ch = typeof channelId === 'string' ? channelId.trim() : ''
@@ -166,6 +169,33 @@ router.post(
           metadata: {},
         },
       })
+
+      // Phản hồi assistant — kênh IS-2: OpenRouter + Gemini Flash, system = AGENT tư vấn + lịch sử hội thoại
+      if (userRole === 'student' && senderRole === MessageSender.user) {
+        let assistantContent = `Đã nhận tin nhắn của bạn. (Phản hồi từ ${ch})`
+        if (channelUsesIs2Agent(channel)) {
+          if (process.env.OPENROUTER_API_KEY?.trim()) {
+            try {
+              assistantContent = await generateIs2AgentReply(conversationId)
+            } catch (agentErr) {
+              console.error('[messages POST] IS-2 agent', agentErr)
+              assistantContent = `Trợ lý IS-2 tạm thời lỗi: ${agentErr instanceof Error ? agentErr.message : String(agentErr)}`
+            }
+          } else {
+            assistantContent =
+              'Trợ lý lớp IS-2 chưa được bật trên server (thiếu OPENROUTER_API_KEY). Liên hệ quản trị hoặc dùng kênh khác.'
+          }
+        }
+        await prisma.message.create({
+          data: {
+            conversationId,
+            senderRole: MessageSender.assistant,
+            senderUserId: null,
+            content: assistantContent,
+            metadata: { source: channelUsesIs2Agent(channel) ? 'openrouter_is2' : 'echo' },
+          },
+        })
+      }
 
       await prisma.conversation.update({
         where: { id: conversationId },

@@ -41,6 +41,7 @@ export function createApp() {
   app.get('/', (req, res) => {
     res.json({
       service: 'eaai-com-backend',
+      live: '/live',
       health: '/health',
       auth: '/api/auth',
     })

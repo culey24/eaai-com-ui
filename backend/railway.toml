@@ -1,0 +1,6 @@
+# Đặt Root Directory của service Railway = thư mục `backend` (chứa file này).
+# Nếu Root = repo gốc, tạo bản tương tự ở root với dockerfilePath = "backend/Dockerfile".
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"

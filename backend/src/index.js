@@ -2,18 +2,34 @@ import 'dotenv/config'
 import { createApp } from './app.js'
 import { prisma } from './lib/prisma.js'
 
+console.log('[eaai] boot — NODE_ENV=%s PORT=%s', process.env.NODE_ENV || '', process.env.PORT || '(default 3000)')
+
 const app = createApp()
 const PORT = Number(process.env.PORT) || 3000
 
+const DB_CHECK_MS = Math.min(Math.max(Number(process.env.HEALTH_DB_TIMEOUT_MS) || 4000, 500), 15000)
+
+/** Liveness — không gọi DB (Railway/proxy không bị treo chờ DB). */
+app.get('/live', (_req, res) => {
+  res.status(200).json({ ok: true, service: 'eaai-com-backend' })
+})
+
 app.get('/health', async (req, res) => {
   try {
-    await prisma.$queryRaw`SELECT 1`
+    await Promise.race([
+      prisma.$queryRaw`SELECT 1`,
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Database check timed out after ${DB_CHECK_MS}ms`)), DB_CHECK_MS)
+      }),
+    ])
     res.json({ ok: true, db: 'connected' })
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    const timedOut = msg.includes('timed out')
     res.status(503).json({
       ok: false,
-      db: 'error',
-      message: err instanceof Error ? err.message : String(err),
+      db: timedOut ? 'timeout' : 'error',
+      message: msg,
     })
   }
 })

@@ -27,12 +27,34 @@
 
 ## Cài đặt & Chạy
 
+Mã nguồn giao diện nằm trong thư mục **`frontend/`**.
+
 ```bash
+cd frontend
 npm install
 npm run dev
 ```
 
+Hoặc từ thư mục gốc repo (sau khi đã `npm install` trong `frontend/`):
+
+```bash
+npm run dev
+```
+
 Ứng dụng chạy tại http://localhost:5173
+
+## Cơ sở dữ liệu (PostgreSQL)
+
+Schema và Docker nằm trong **`backend/`** (chạy riêng với frontend). Tài liệu: **[docs/DATABASE.md](docs/DATABASE.md)**.
+
+```bash
+npm run db:up      # Postgres + script trong backend/init/ (hoặc: cd backend && npm run db:up)
+npm run db:logs    # xem log container
+npm run db:down    # tắt container (giữ volume)
+npm run db:reset   # xóa volume và tạo lại DB từ đầu
+```
+
+**API (Express + Prisma):** trong `backend/` — `cp backend/.env.example backend/.env`, `cd backend && npm install && npm run prisma:migrate && npm run dev`, hoặc từ root: `npm run backend:dev` (sau khi đã có `.env` trong `backend/`).
 
 ## Tính năng
 
@@ -44,12 +66,19 @@ npm run dev
 ## Cấu trúc thư mục
 
 ```
-src/
-├── components/     # Sidebar, ChatWindow, MessageItem, AuthLayout, ...
-├── context/       # AuthContext (đăng nhập/đăng xuất)
-├── constants/     # roles.js (định nghĩa quyền & kênh chat)
-├── hooks/         # useMessages (quản lý tin nhắn + localStorage)
-└── pages/         # DashboardPage
+frontend/              # React + Vite app
+├── public/
+├── src/
+│   ├── components/  # Sidebar, ChatWindow, MessageItem, AuthLayout, ...
+│   ├── context/     # Auth, theme, journal, ...
+│   ├── constants/
+│   ├── hooks/
+│   └── pages/
+├── index.html
+├── package.json
+└── vite.config.js
+backend/               # Docker Postgres + init SQL (workspace backend)
+docs/                  # DATABASE.md, recommended_table.sql, …
 ```
 
 ## Màu sắc (Tailwind)

@@ -1,0 +1,231 @@
+// PostgreSQL — căn theo backend/init/*.sql.
+// eeai_chatbot_messages (localStorage) → conversations + messages
+// eeai_chatbot_reports → content_reports
+// Admin: learner_supporter_assignments, support_requests, app_settings
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  teacher
+  student
+  admin
+
+  @@map("user_role_enum")
+}
+
+enum UserClass {
+  IS_1 @map("IS-1")
+  IS_2 @map("IS-2")
+  IS_3 @map("IS-3")
+
+  @@map("user_class_enum")
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+
+  @@map("gender_enum")
+}
+
+enum MessageSender {
+  user
+  assistant
+  system
+
+  @@map("message_sender_enum")
+}
+
+enum ReportStatus {
+  open
+  reviewed
+  dismissed
+
+  @@map("report_status_enum")
+}
+
+enum SupportRequestStatus {
+  pending
+  approved
+  rejected
+
+  @@map("support_request_status_enum")
+}
+
+enum TeachingMode {
+  AGENT
+  LLM
+  MANUAL
+
+  @@map("teaching_mode_enum")
+}
+
+model Major {
+  majorCode String @id @map("major_code") @db.VarChar(7)
+  majorName String @map("major_name") @db.VarChar(200)
+
+  users User[]
+
+  @@map("majors")
+}
+
+model User {
+  userId                String    @id @map("user_id") @db.VarChar(10)
+  username              String    @unique @db.VarChar(50)
+  pwd                   String    @db.VarChar(255)
+  fullname              String    @db.VarChar(100)
+  userRole              UserRole  @map("user_role")
+  dateOfBirth           DateTime  @map("date_of_birth") @db.Date
+  gender                Gender
+  majorCode             String    @map("major") @db.VarChar(7)
+  trainingProgramType   String    @map("training_program_type") @db.VarChar(100)
+  citizenIdentification String?   @unique @map("citizen_identification") @db.VarChar(20)
+  dateOfIssue           DateTime? @map("date_of_issue") @db.Date
+  placeOfIssue          String?   @map("place_of_issue") @db.VarChar(100)
+  ethnicity             String?   @db.VarChar(50)
+  religion              String?   @db.VarChar(50)
+  permanentAddress      String?   @map("permanent_address") @db.VarChar(255)
+  contactAddress        String?   @map("contact_address") @db.VarChar(255)
+  phoneNumber           String?   @map("phone_number") @db.VarChar(15)
+  email                 String?   @unique @db.VarChar(100)
+  userClass             UserClass? @map("user_class")
+
+  major Major @relation(fields: [majorCode], references: [majorCode])
+
+  assistantScopes            AssistantManagedClass[]       @relation("AssistantScopes")
+  conversationsAsLearner     Conversation[]              @relation("ConversationLearner")
+  messagesAsSender           Message[]                     @relation("MessageSender")
+  reportsAuthored            ContentReport[]               @relation("ReportReporter")
+  assignmentAsLearner        LearnerSupporterAssignment?   @relation("AssignmentLearner")
+  assignmentsAsSupporter     LearnerSupporterAssignment[]  @relation("AssignmentSupporter")
+  supportRequestsAsSupporter SupportRequest[]              @relation("SupportSupporter")
+  supportRequestsAsLearner   SupportRequest[]              @relation("SupportLearner")
+}
+
+model ChatChannel {
+  channelId    String    @id @map("channel_id") @db.VarChar(64)
+  userClass    UserClass @unique @map("user_class")
+  displayOrder Int       @default(0) @map("display_order")
+
+  conversations Conversation[]
+  reports       ContentReport[]
+
+  @@map("chat_channels")
+}
+
+model AssistantManagedClass {
+  id        Int       @id @default(autoincrement())
+  teacherId String    @map("teacher_id") @db.VarChar(10)
+  userClass UserClass @map("user_class")
+
+  teacher User @relation("AssistantScopes", fields: [teacherId], references: [userId], onDelete: Cascade)
+
+  @@unique([teacherId, userClass])
+  @@map("assistant_managed_classes")
+}
+
+model Conversation {
+  id        BigInt @id @default(autoincrement()) @map("conversation_id")
+  channelId String @map("channel_id") @db.VarChar(64)
+  learnerId String @map("learner_id") @db.VarChar(10)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  channel  ChatChannel @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
+  learner  User        @relation("ConversationLearner", fields: [learnerId], references: [userId], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([channelId, learnerId])
+  @@map("conversations")
+}
+
+model Message {
+  id             BigInt        @id @default(autoincrement()) @map("message_id")
+  conversationId BigInt        @map("conversation_id")
+  senderRole     MessageSender @map("sender_role")
+  senderUserId   String?       @map("sender_user_id") @db.VarChar(10)
+  content        String        @default("") @db.Text
+  fileName       String?       @map("file_name") @db.VarChar(512)
+  metadata       Json          @default("{}") @db.JsonB
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  conversation Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User?         @relation("MessageSender", fields: [senderUserId], references: [userId], onDelete: SetNull)
+  reports      ContentReport[]
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+model ContentReport {
+  id         BigInt       @id @default(autoincrement()) @map("report_id")
+  reporterId String       @map("reporter_id") @db.VarChar(10)
+  channelId  String?      @map("channel_id") @db.VarChar(64)
+  messageId  BigInt?      @map("message_id")
+  reportType String       @map("report_type") @db.VarChar(64)
+  detail     String?      @db.Text
+  status     ReportStatus @default(open)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  reporter User         @relation("ReportReporter", fields: [reporterId], references: [userId], onDelete: Cascade)
+  channel  ChatChannel? @relation(fields: [channelId], references: [channelId], onDelete: SetNull)
+  message  Message?     @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  @@map("content_reports")
+}
+
+model LearnerSupporterAssignment {
+  learnerId    String       @id @map("learner_id") @db.VarChar(10)
+  supporterId  String       @map("supporter_id") @db.VarChar(10)
+  teachingMode TeachingMode @default(MANUAL) @map("teaching_mode")
+  assignedAt   DateTime     @default(now()) @map("assigned_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  learner   User @relation("AssignmentLearner", fields: [learnerId], references: [userId], onDelete: Cascade)
+  supporter User @relation("AssignmentSupporter", fields: [supporterId], references: [userId], onDelete: Cascade)
+
+  @@map("learner_supporter_assignments")
+}
+
+model SupportRequest {
+  id          BigInt               @id @default(autoincrement()) @map("request_id")
+  supporterId String               @map("supporter_id") @db.VarChar(10)
+  learnerId   String               @map("learner_id") @db.VarChar(10)
+  classCode   UserClass            @map("class_code")
+  status      SupportRequestStatus @default(pending)
+  resolvedAt  DateTime?            @map("resolved_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  supporter User @relation("SupportSupporter", fields: [supporterId], references: [userId], onDelete: Cascade)
+  learner   User @relation("SupportLearner", fields: [learnerId], references: [userId], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@map("support_requests")
+}
+
+model AppSetting {
+  settingKey String @id @map("setting_key") @db.VarChar(128)
+  value      Json   @default("{}") @db.JsonB
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}

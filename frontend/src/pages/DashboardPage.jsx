@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
 import ChatWindow from '../components/chat/ChatWindow'
+import MinimalChatPanel from '../components/chat/MinimalChatPanel'
 import ProfileCompleteBanner from '../components/ProfileCompleteBanner'
 import { useMessages } from '../hooks/useMessages'
 import { useReports } from '../context/ReportsContext'
@@ -51,6 +52,7 @@ export default function DashboardPage() {
       />
       <main className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900">
         <ProfileCompleteBanner />
+        <MinimalChatPanel />
         <ChatWindow
           channel={activeChannel}
           messages={messages}

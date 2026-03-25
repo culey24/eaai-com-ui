@@ -5,9 +5,9 @@ import ChatInput from './ChatInput'
 import ReportModal from './ReportModal'
 import { useLanguage } from '../../context/LanguageContext'
 
-export default function ChatWindow({ channel, messages, onSendMessage, onReport, userId }) {
+export default function ChatWindow({ channel, messages, onSendMessage, onReport, userId, hideReport, customTitle }) {
   const { t } = useLanguage()
-  const channelLabel = channel?.labelKey ? t(channel.labelKey, { code: channel.code }) : channel?.label
+  const channelLabel = customTitle ?? (channel?.labelKey ? t(channel.labelKey, { code: channel.code }) : channel?.label)
   const scrollRef = useRef(null)
   const [reportOpen, setReportOpen] = useState(false)
 
@@ -33,15 +33,17 @@ export default function ChatWindow({ channel, messages, onSendMessage, onReport,
         <h2 className="font-semibold text-slate-800 dark:text-white text-lg tracking-tight">
           {channelLabel || t('chat.selectChannel')}
         </h2>
-        <button
-          type="button"
-          onClick={() => setReportOpen(true)}
-          disabled={!channel}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Flag className="w-4 h-4" />
-          {t('chat.report')}
-        </button>
+        {!hideReport && (
+          <button
+            type="button"
+            onClick={() => setReportOpen(true)}
+            disabled={!channel}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Flag className="w-4 h-4" />
+            {t('chat.report')}
+          </button>
+        )}
       </div>
 
       <ReportModal

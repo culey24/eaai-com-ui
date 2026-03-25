@@ -12,7 +12,7 @@ export const ROLES = {
 
 export const ROLE_LABELS = {
   [ROLES.LEARNER]: 'Người học',
-  [ROLES.ASSISTANT]: 'Quản lý lớp',
+  [ROLES.ASSISTANT]: 'Supporter',
   [ROLES.ADMIN]: 'Quản trị viên',
 }
 
@@ -20,7 +20,7 @@ export const ROLE_LABELS = {
 export const VALID_CLASS_CODES = ['IS-1', 'IS-2', 'IS-3']
 
 /** Mapping mã lớp → kênh chat (labelKey dùng cho i18n) */
-const CLASS_TO_CHANNEL = {
+export const CLASS_TO_CHANNEL = {
   'IS-1': { id: 'ai-chat', code: 'IS-1', labelKey: 'chat.agent', icon: 'Bot' },
   'IS-2': { id: 'human-chat', code: 'IS-2', labelKey: 'chat.agent', icon: 'UserCircle' },
   'IS-3': { id: 'internal-chat', code: 'IS-3', labelKey: 'chat.agent', icon: 'Shield' },

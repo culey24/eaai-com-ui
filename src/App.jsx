@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { AdminProvider } from './context/AdminContext'
 import { ReportsProvider } from './context/ReportsContext'
 import { JournalProvider } from './context/JournalContext'
+import { SupporterChatProvider } from './context/SupporterChatContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { ThemeProvider } from './context/ThemeContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -20,13 +21,13 @@ import AdminLayout from './components/layout/AdminLayout'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminChatsPage from './pages/admin/AdminChatsPage'
 import AdminClassesPage from './pages/admin/AdminClassesPage'
+import AdminAccountsLayout from './pages/admin/AdminAccountsLayout'
 import AdminAccountsPage from './pages/admin/AdminAccountsPage'
 import AdminSupportRequestsPage from './pages/admin/AdminSupportRequestsPage'
+import AdminSubmissionsPage from './pages/admin/AdminSubmissionsPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
-import SupportingChatsPage from './pages/supporter/SupportingChatsPage'
 import ClassesWithWidget from './components/supporter/ClassesWithWidget'
 import Sidebar from './components/layout/Sidebar'
-import SupporterLayout from './components/layout/SupporterLayout'
 import { ROLES } from './constants/roles'
 
 function HomeOrRedirect() {
@@ -107,9 +108,7 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={[ROLES.ASSISTANT]}>
-              <SupporterLayout>
-                <SupportingChatsPage />
-              </SupporterLayout>
+              <Navigate to="/" replace />
             </RoleRoute>
           </ProtectedRoute>
         }
@@ -142,8 +141,11 @@ function AppRoutes() {
         <Route index element={<AdminDashboardPage />} />
         <Route path="chats" element={<AdminChatsPage />} />
         <Route path="classes" element={<AdminClassesPage />} />
-        <Route path="accounts" element={<AdminAccountsPage />} />
-        <Route path="support-requests" element={<AdminSupportRequestsPage />} />
+        <Route path="accounts" element={<AdminAccountsLayout />}>
+          <Route index element={<AdminAccountsPage />} />
+          <Route path="support-requests" element={<AdminSupportRequestsPage />} />
+        </Route>
+        <Route path="submissions" element={<AdminSubmissionsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -159,7 +161,9 @@ export default function App() {
             <JournalProvider>
               <LanguageProvider>
                 <ThemeProvider>
-                  <AppRoutes />
+                  <SupporterChatProvider>
+                    <AppRoutes />
+                  </SupporterChatProvider>
                 </ThemeProvider>
               </LanguageProvider>
             </JournalProvider>

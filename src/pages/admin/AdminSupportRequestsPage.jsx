@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, UserPlus, Check, X, UserMinus, Zap } from 'lucide-react'
+import { Check, X, UserMinus, Zap } from 'lucide-react'
 import { useAdmin } from '../../context/AdminContext'
 import { useAllUsers } from '../../hooks/useAllUsers'
 import { useLanguage } from '../../context/LanguageContext'
@@ -31,20 +30,8 @@ export default function AdminSupportRequestsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900">
-      <div className="flex-shrink-0 px-8 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link
-            to="/admin"
-            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <h1 className="font-semibold text-slate-800 dark:text-white text-lg flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-primary" />
-            {t('admin.supportRequests')}
-          </h1>
-        </div>
+    <div className="flex flex-col h-full overflow-y-auto">
+      <div className="flex-shrink-0 px-8 py-5 flex items-center justify-end">
         <label className="flex items-center gap-2 cursor-pointer">
           <Zap className="w-5 h-5 text-amber-500" />
           <span className="text-sm">{t('admin.autoMode')}</span>
@@ -56,8 +43,7 @@ export default function AdminSupportRequestsPage() {
           />
         </label>
       </div>
-
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 px-8 pb-8">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Pending requests */}
           <div>

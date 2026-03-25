@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, MessageSquare, User, Search, FileText } from 'lucide-react'
+import { VALID_CLASS_CODES } from '../../constants/roles'
 import { useMessages } from '../../hooks/useMessages'
 import { useAllUsers } from '../../hooks/useAllUsers'
 import { useJournal } from '../../context/JournalContext'
@@ -22,12 +23,18 @@ export default function AdminChatsPage() {
   const [search, setSearch] = useState('')
 
   const allLearners = getLearners()
-  const users = search.trim()
+  const filteredUsers = search.trim()
     ? allLearners.filter((u) =>
         u.username.toLowerCase().includes(search.toLowerCase().trim()) ||
         (u.classCode && u.classCode.toLowerCase().includes(search.toLowerCase().trim()))
       )
     : allLearners
+
+  const usersByClass = VALID_CLASS_CODES.reduce((acc, code) => {
+    acc[code] = filteredUsers.filter((u) => u.classCode === code)
+    return acc
+  }, {})
+  const usersWithoutClass = filteredUsers.filter((u) => !u.classCode || !VALID_CLASS_CODES.includes(u.classCode))
 
   const channelId = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
   const messages = channelId && selectedUser
@@ -61,36 +68,82 @@ export default function AdminChatsPage() {
       </div>
 
       <div className="flex-1 flex min-h-0">
-        {/* User list */}
+        {/* User list - grouped by class */}
         <div className="w-56 border-r border-slate-100 dark:border-slate-700 p-4 overflow-y-auto">
-          {users.length === 0 ? (
+          {filteredUsers.length === 0 ? (
             <p className="text-slate-500 dark:text-slate-400 text-sm py-4">{t('admin.noMembers')}</p>
           ) : (
-            <div className="space-y-1">
-              {users.map((u) => {
-                const chId = u.classCode ? CLASS_TO_CHANNEL[u.classCode] : null
-                const msgCount = chId ? getMessagesForChannel(chId, u.id).length : 0
-                const isActive = selectedUser?.id === u.id
+            <div className="space-y-4">
+              {VALID_CLASS_CODES.map((classCode) => {
+                const usersInClass = usersByClass[classCode] || []
+                if (usersInClass.length === 0) return null
                 return (
-                  <button
-                    key={u.id}
-                    onClick={() => setSelectedUser(u)}
-                    className={`w-full text-left px-4 py-3 rounded-xl transition-colors flex items-center gap-2 ${
-                      isActive
-                        ? 'bg-primary text-white'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <User className="w-4 h-4 flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <span className="font-medium block truncate">{u.username}</span>
-                      <span className="text-xs opacity-75">
-                        {u.classCode && `${u.classCode} · `}{t('admin.messageCount', { count: msgCount })}
-                      </span>
+                  <div key={classCode}>
+                    <p className="px-2 py-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      {t('admin.classLabel', { code: classCode })}
+                    </p>
+                    <div className="space-y-1 mt-1">
+                      {usersInClass.map((u) => {
+                        const chId = u.classCode ? CLASS_TO_CHANNEL[u.classCode] : null
+                        const msgCount = chId ? getMessagesForChannel(chId, u.id).length : 0
+                        const isActive = selectedUser?.id === u.id
+                        return (
+                          <button
+                            key={u.id}
+                            onClick={() => setSelectedUser(u)}
+                            className={`w-full text-left px-4 py-3 rounded-xl transition-colors flex items-center gap-2 ${
+                              isActive
+                                ? 'bg-primary text-white'
+                                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            <User className="w-4 h-4 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <span className="font-medium block truncate">{u.username}</span>
+                              <span className="text-xs opacity-75">
+                                {t('admin.messageCount', { count: msgCount })}
+                              </span>
+                            </div>
+                          </button>
+                        )
+                      })}
                     </div>
-                  </button>
+                  </div>
                 )
               })}
+              {usersWithoutClass.length > 0 && (
+                <div>
+                  <p className="px-2 py-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                    {t('admin.other')}
+                  </p>
+                  <div className="space-y-1 mt-1">
+                    {usersWithoutClass.map((u) => {
+                      const chId = u.classCode ? CLASS_TO_CHANNEL[u.classCode] : null
+                      const msgCount = chId ? getMessagesForChannel(chId, u.id).length : 0
+                      const isActive = selectedUser?.id === u.id
+                      return (
+                        <button
+                          key={u.id}
+                          onClick={() => setSelectedUser(u)}
+                          className={`w-full text-left px-4 py-3 rounded-xl transition-colors flex items-center gap-2 ${
+                            isActive
+                              ? 'bg-primary text-white'
+                              : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <User className="w-4 h-4 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium block truncate">{u.username}</span>
+                            <span className="text-xs opacity-75">
+                              {t('admin.messageCount', { count: msgCount })}
+                            </span>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -11,13 +11,16 @@ import {
   PanelLeft,
   Flag,
   Users,
+  User,
   FileText,
   LayoutDashboard,
   UserCog,
-  UserPlus,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { useAdmin } from '../../context/AdminContext'
+import { useSupporterChat } from '../../context/SupporterChatContext'
+import { useAllUsers } from '../../hooks/useAllUsers'
 import { getChannelsByUser, ROLES } from '../../constants/roles'
 import logo from '../../assets/hcmut_logo/logo.png'
 
@@ -41,10 +44,21 @@ function Tooltip({ children, label }) {
 export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode }) {
   const { user, logout } = useAuth()
   const { t } = useLanguage()
+  const { assignments } = useAdmin()
+  const { allUsers } = useAllUsers()
+  const supporterChat = useSupporterChat()
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+
   const channels = getChannelsByUser(user) || []
+  const supporterId = user?.stableId || (user?.name ? `prov-${user.name}` : null)
+  const assignedUserIds = Object.entries(assignments)
+    .filter(([, a]) => a.supporterId === supporterId)
+    .map(([uid]) => uid)
+  const assignedUsers = allUsers.filter((u) => assignedUserIds.includes(u.id))
+  const getUserDisplayName = (u) =>
+    u.fullName?.trim() ? `${u.fullName.trim()} (${u.username})` : (u.username || u.id)
   const isSettingsPage = location.pathname === '/settings'
   const isReportsPage = location.pathname === '/reports'
   const isClassesPage = location.pathname === '/classes'
@@ -153,7 +167,7 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
                   collapsed ? 'justify-center' : ''
                 } ${
-                  location.pathname === '/admin/accounts'
+                  location.pathname.startsWith('/admin/accounts')
                     ? 'bg-primary text-white shadow-glow-primary'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
                 }`}
@@ -162,17 +176,30 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
                 {!collapsed && <span className="text-sm font-medium truncate">{t('admin.accountManagement')}</span>}
               </Link>
               <Link
-                to="/admin/support-requests"
+                to="/admin/submissions"
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
                   collapsed ? 'justify-center' : ''
                 } ${
-                  location.pathname === '/admin/support-requests'
+                  location.pathname === '/admin/submissions'
                     ? 'bg-primary text-white shadow-glow-primary'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
                 }`}
               >
-                <UserPlus className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span className="text-sm font-medium truncate">{t('admin.supportRequests')}</span>}
+                <FileText className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{t('admin.submissions.title')}</span>}
+              </Link>
+              <Link
+                to="/reports"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  location.pathname === '/reports'
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <Flag className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{t('sidebar.reports')}</span>}
               </Link>
             </div>
           </>
@@ -187,25 +214,6 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
             >
               <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
               {!collapsed && <span className="text-sm font-medium truncate">{t('roles.admin')}</span>}
-            </Link>
-          </div>
-        )}
-
-        {/* Assistant: Kênh chat */}
-        {isAssistant && !isAdminArea && (
-          <div className="space-y-1 mb-2">
-            <Link
-              to="/chats"
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
-                collapsed ? 'justify-center' : ''
-              } ${
-                location.pathname === '/chats'
-                  ? 'bg-primary text-white shadow-glow-primary'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
-              }`}
-            >
-              <MessageSquare className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && <span className="text-sm font-medium truncate">{t('admin.chatChannels')}</span>}
             </Link>
           </div>
         )}
@@ -273,46 +281,108 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
           </div>
         )}
 
-        {/* Kênh chat */}
-        {channels.length > 0 && (
-          <>
-            {!collapsed && (
-              <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 py-2.5 mt-2">
-                {t('sidebar.chatChannels')}
-              </p>
-            )}
-            <div className="space-y-1">
-          {channels.map((ch) => {
-            const Icon = ICON_MAP[ch.icon] || MessageSquare
-            const isActive = !isSettingsPage && !isReportsPage && !isClassesPage && !isJournalPage && activeChannelId === ch.id
-
-            const btn = (
-              <button
-                key={ch.id}
-                onClick={() => handleChannelClick(ch)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
-                  collapsed ? 'justify-center' : ''
-                } ${
-                  isActive
-                    ? 'bg-primary text-white shadow-glow-primary'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
-                }`}
-              >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span className="text-sm font-medium truncate">{getChannelLabel(ch)}</span>}
-              </button>
-            )
-
-            return collapsed ? (
-              <Tooltip key={ch.id} label={getChannelLabel(ch)}>
-                {btn}
-              </Tooltip>
-            ) : (
-              btn
-            )
-          })}
-            </div>
-          </>
+        {/* Kênh chat: Assistant = chỉ learner được gán, Learner = kênh theo lớp */}
+        {isAssistant ? (
+          assignedUsers.length > 0 && (
+            <>
+              {!collapsed && (
+                <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 py-2.5 mt-2">
+                  {t('sidebar.chatsWithLearners')}
+                </p>
+              )}
+              <div className="space-y-1">
+                {assignedUsers.map((u) => {
+                  const isActive = location.pathname === '/' && supporterChat?.selectedUser?.id === u.id
+                  const handleUserClick = () => {
+                    supporterChat?.setSelectedUser?.(u)
+                    if (location.pathname === '/reports' || location.pathname === '/classes') {
+                      navigate('/')
+                    }
+                  }
+                  const btn = (
+                    <button
+                      key={u.id}
+                      onClick={handleUserClick}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                        collapsed ? 'justify-center' : ''
+                      } ${
+                        isActive
+                          ? 'bg-primary text-white shadow-glow-primary'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                      }`}
+                    >
+                      <User className="w-5 h-5 flex-shrink-0" />
+                      {!collapsed && <span className="text-sm font-medium truncate">{getUserDisplayName(u)}</span>}
+                    </button>
+                  )
+                  return collapsed ? (
+                    <Tooltip key={u.id} label={getUserDisplayName(u)}>
+                      {btn}
+                    </Tooltip>
+                  ) : (
+                    btn
+                  )
+                })}
+              </div>
+            </>
+          )
+        ) : (
+          channels.length > 0 && (
+            <>
+              {!collapsed && (
+                <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 py-2.5 mt-2">
+                  {t('sidebar.chatChannels')}
+                </p>
+              )}
+              <div className="space-y-3">
+                {(() => {
+                  const byClass = {}
+                  channels.forEach((ch) => {
+                    const code = ch.code || ch.id
+                    if (!byClass[code]) byClass[code] = []
+                    byClass[code].push(ch)
+                  })
+                  const classCodes = Object.keys(byClass).sort()
+                  return classCodes.map((code) => (
+                    <div key={code} className="space-y-1">
+                      {!collapsed && (
+                        <p className="px-3 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          {t('admin.classLabel', { code })}
+                        </p>
+                      )}
+                      {byClass[code].map((ch) => {
+                        const Icon = ICON_MAP[ch.icon] || MessageSquare
+                        const isActive = !isSettingsPage && !isReportsPage && !isClassesPage && !isJournalPage && activeChannelId === ch.id
+                        const btn = (
+                          <button
+                            key={ch.id}
+                            onClick={() => handleChannelClick(ch)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                              collapsed ? 'justify-center' : ''
+                            } ${
+                              isActive
+                                ? 'bg-primary text-white shadow-glow-primary'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                            }`}
+                          >
+                            <Icon className="w-5 h-5 flex-shrink-0" />
+                            {!collapsed && <span className="text-sm font-medium truncate">{getChannelLabel(ch)}</span>}
+                          </button>
+                        )
+                        return collapsed ? (
+                          <Tooltip key={ch.id} label={getChannelLabel(ch)}>
+                            {btn}
+                          </Tooltip>
+                        ) : (
+                          btn
+                        )
+                      })}
+                    </div>
+                  ))
+                })()}
+              </div>
+            </>
+          )
         )}
       </div>
 

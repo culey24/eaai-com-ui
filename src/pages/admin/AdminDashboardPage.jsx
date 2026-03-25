@@ -4,8 +4,8 @@ import {
   MessageSquare,
   Users,
   UserCog,
-  UserPlus,
   FileText,
+  Flag,
   ChevronRight,
 } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
@@ -26,7 +26,8 @@ export default function AdminDashboardPage() {
     { to: '/admin/chats', icon: MessageSquare, labelKey: 'admin.chatChannels' },
     { to: '/admin/classes', icon: Users, labelKey: 'admin.classList' },
     { to: '/admin/accounts', icon: UserCog, labelKey: 'admin.accountManagement' },
-    { to: '/admin/support-requests', icon: UserPlus, labelKey: 'admin.supportRequests' },
+    { to: '/admin/submissions', icon: FileText, labelKey: 'admin.submissions.title' },
+    { to: '/reports', icon: Flag, labelKey: 'sidebar.reports' },
   ]
 
   return (

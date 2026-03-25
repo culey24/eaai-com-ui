@@ -7,7 +7,7 @@ import { useAdmin } from '../context/AdminContext'
 import { useJournal } from '../context/JournalContext'
 import { useLanguage } from '../context/LanguageContext'
 import { ROLES, VALID_CLASS_CODES } from '../constants/roles'
-import { CLASS_TO_MODE } from '../constants/admin'
+import { CLASS_TO_MODE, hasSupporterMode } from '../constants/admin'
 
 export default function ClassesPage() {
   const { user } = useAuth()
@@ -120,6 +120,7 @@ export default function ClassesPage() {
                           const journals = getJournalsForUser(m.id) || []
                           const submitted = journals.length > 0
                           const hasSupporter = !!assignment
+                          const usesSupporter = hasSupporterMode(classCode)
 
                           return (
                             <div
@@ -131,9 +132,11 @@ export default function ClassesPage() {
                                   {m.fullName || m.username}
                                 </span>
                                 <span className="text-slate-500 dark:text-slate-400 text-sm ml-2">
-                                  {hasSupporter
-                                    ? `${t('admin.supporter')}: ${getSupporterName(assignment.supporterId)}`
-                                    : t('admin.noSupporter')}
+                                  {usesSupporter
+                                    ? (hasSupporter
+                                      ? `${t('admin.supporter')}: ${getSupporterName(assignment.supporterId)}`
+                                      : t('admin.noSupporter'))
+                                    : t(`admin.teachingMode.${mode}`)}
                                 </span>
                               </div>
                               <div className="flex items-center gap-4">
@@ -149,7 +152,7 @@ export default function ClassesPage() {
                                     </span>
                                   )}
                                 </span>
-                                {isAssistant && !hasSupporter && (
+                                {isAssistant && usesSupporter && !hasSupporter && (
                                   <button
                                     onClick={() => handleRequestSupport(m.id, m.classCode || classCode)}
                                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm"

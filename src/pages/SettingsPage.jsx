@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, User, Mail, Shield, Sun, Moon, GraduationCap, BookOpen, Globe } from 'lucide-react'
+import { ArrowLeft, User, Mail, Shield, Sun, Moon, GraduationCap, BookOpen, Globe, Calendar } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -16,6 +16,10 @@ export default function SettingsPage() {
   const [faculty, setFaculty] = useState(user?.faculty === PLACEHOLDER ? '' : user?.faculty || '')
   const [major, setMajor] = useState(user?.major === PLACEHOLDER ? '' : user?.major || '')
   const [subject, setSubject] = useState(user?.subject === PLACEHOLDER ? '' : user?.subject || '')
+  const [email, setEmail] = useState(user?.email ?? '')
+  const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth ?? '')
+  const [gender, setGender] = useState(user?.gender ?? '')
+  const [trainingProgramType, setTrainingProgramType] = useState(user?.trainingProgramType ?? '')
 
   useEffect(() => {
     if (editing) {
@@ -23,6 +27,10 @@ export default function SettingsPage() {
       setFaculty(user?.faculty === PLACEHOLDER ? '' : user?.faculty || '')
       setMajor(user?.major === PLACEHOLDER ? '' : user?.major || '')
       setSubject(user?.subject === PLACEHOLDER ? '' : user?.subject || '')
+      setEmail(user?.email ?? '')
+      setDateOfBirth(user?.dateOfBirth ?? '')
+      setGender(user?.gender ?? '')
+      setTrainingProgramType(user?.trainingProgramType ?? '')
     }
   }, [editing, user])
 
@@ -81,8 +89,8 @@ export default function SettingsPage() {
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.account')}</p>
-                  <p className="font-medium text-slate-800 dark:text-white">{user?.email || '—'}</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.email')}</p>
+                  <p className="font-medium text-slate-800 dark:text-white">{user?.email || user?.name || '—'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -99,6 +107,48 @@ export default function SettingsPage() {
                 <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700 space-y-4">
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{t('settings.studentInfo')}</p>
                   <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('settings.email')}</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="email@example.com"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('settings.dateOfBirth')}</label>
+                      <input
+                        type="date"
+                        value={dateOfBirth}
+                        onChange={(e) => setDateOfBirth(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('settings.gender')}</label>
+                      <select
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm"
+                      >
+                        <option value="">—</option>
+                        <option value="male">{t('settings.genderMale')}</option>
+                        <option value="female">{t('settings.genderFemale')}</option>
+                        <option value="other">{t('settings.genderOther')}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('settings.trainingProgramType')}</label>
+                      <input
+                        type="text"
+                        value={trainingProgramType}
+                        onChange={(e) => setTrainingProgramType(e.target.value)}
+                        placeholder="e.g. Đại học chính quy"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm"
+                      />
+                    </div>
                     <div>
                       <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('settings.mssv')}</label>
                       <input
@@ -144,6 +194,10 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => {
                       updateProfile({
+                        email: email.trim() || user?.email || user?.name,
+                        dateOfBirth: dateOfBirth.trim(),
+                        gender: gender.trim(),
+                        trainingProgramType: trainingProgramType.trim(),
                         studentId: studentId.trim() || PLACEHOLDER,
                         faculty: faculty.trim() || PLACEHOLDER,
                         major: major.trim() || PLACEHOLDER,
@@ -158,8 +212,41 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {!editing && (user?.studentId !== PLACEHOLDER || user?.faculty !== PLACEHOLDER || user?.major !== PLACEHOLDER) && (
+              {!editing && (user?.studentId !== PLACEHOLDER || user?.faculty !== PLACEHOLDER || user?.major !== PLACEHOLDER || user?.dateOfBirth || user?.gender || user?.trainingProgramType) && (
                 <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-700 space-y-2">
+                  {(user?.dateOfBirth || user?.gender || user?.trainingProgramType) && (
+                    <>
+                      {user?.dateOfBirth && (
+                        <div className="flex items-start gap-3">
+                          <Calendar className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.dateOfBirth')}</p>
+                            <p className="font-medium text-slate-800 dark:text-white">{user.dateOfBirth}</p>
+                          </div>
+                        </div>
+                      )}
+                      {user?.gender && (
+                        <div className="flex items-start gap-3">
+                          <User className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.gender')}</p>
+                            <p className="font-medium text-slate-800 dark:text-white">
+                              {user.gender === 'male' ? t('settings.genderMale') : user.gender === 'female' ? t('settings.genderFemale') : t('settings.genderOther')}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {user?.trainingProgramType && (
+                        <div className="flex items-start gap-3">
+                          <GraduationCap className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm">{t('settings.trainingProgramType')}</p>
+                            <p className="font-medium text-slate-800 dark:text-white">{user.trainingProgramType}</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                   <div className="flex items-start gap-3">
                     <GraduationCap className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
                     <div>

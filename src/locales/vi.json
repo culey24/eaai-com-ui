@@ -36,6 +36,7 @@
   },
   "sidebar": {
     "chatChannels": "Kênh chat",
+    "chatsWithLearners": "Chat với học viên",
     "management": "Quản lý",
     "reports": "Báo cáo",
     "classManagement": "Quản lý lớp",
@@ -83,7 +84,14 @@
     "mssv": "MSSV",
     "faculty": "Khoa",
     "major": "Chuyên ngành",
-    "subject": "Môn học quan tâm"
+    "subject": "Môn học quan tâm",
+    "email": "Email",
+    "dateOfBirth": "Ngày sinh",
+    "gender": "Giới tính",
+    "trainingProgramType": "Loại hình đào tạo",
+    "genderMale": "Nam",
+    "genderFemale": "Nữ",
+    "genderOther": "Khác"
   },
   "profile": {
     "completeRequired": "Chưa điền đầy đủ thông tin",
@@ -95,13 +103,19 @@
     "desc": "Upload các phiên bản research journal cho TA hoặc AI kiểm tra mỗi deadline. Dùng làm context.",
     "upload": "Upload journal",
     "versions": "Các phiên bản journal",
-    "deadline": "Deadline",
+    "uploadHistory": "Lịch sử upload (mới nhất trước)",
+    "deadline": "Hạn nộp",
     "version": "Phiên bản",
     "uploadedAt": "Upload lúc",
     "noVersions": "Chưa có phiên bản journal nào",
     "noVersionsHint": "Upload phiên bản journal đầu tiên ở trên.",
     "dragDrop": "Kéo thả file vào đây hoặc click để chọn",
-    "uploadSuccess": "Đã upload journal thành công"
+    "uploadSuccess": "Đã upload journal thành công",
+    "currentSubmission": "Submission hiện tại",
+    "noActiveSubmission": "Hiện không có đợt nộp đang mở.",
+    "editFile": "Sửa file",
+    "deleteFile": "Xóa file",
+    "confirmDelete": "Xóa file này?"
   },
   "supporter": {
     "totalLearners": "học viên",
@@ -115,7 +129,7 @@
   },
   "roles": {
     "learner": "Người học",
-    "assistant": "Quản lý lớp",
+    "assistant": "Supporter",
     "admin": "Quản trị viên"
   },
   "admin": {
@@ -127,6 +141,7 @@
     "chatSection": "Kênh chat",
     "classList": "Danh sách lớp",
     "accountManagement": "Quản lý tài khoản",
+    "accountsTab": "Tài khoản",
     "supportRequests": "Yêu cầu nhận thành viên",
     "createAccount": "Tạo tài khoản",
     "searchPlaceholder": "Tìm theo tên, ID...",
@@ -147,6 +162,7 @@
     "journalSubmitted": "{submitted}/{total} đã nộp",
     "members": "thành viên",
     "noMembers": "Chưa có thành viên",
+    "other": "Khác",
     "noSupporter": "Chưa có supporter",
     "supporter": "Supporter",
     "journalStatus": "Journal",
@@ -167,6 +183,22 @@
       "AGENT": "AGENT",
       "LLM": "LLM",
       "MANUAL": "MANUAL"
+    },
+    "submissions": {
+      "title": "Quản lý Submissions",
+      "desc": "Tạo và quản lý các đợt nộp journal. Hết hạn sẽ chuyển sang submission mới.",
+      "create": "Tạo submission",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "titleLabel": "Tiêu đề",
+      "titlePlaceholder": "Ví dụ: Submission 1",
+      "descriptionLabel": "Mô tả",
+      "descriptionPlaceholder": "Mô tả chi tiết về đợt nộp này...",
+      "deadlineLabel": "Hạn nộp",
+      "confirmDelete": "Xóa submission này? Dữ liệu đã nộp sẽ bị xóa.",
+      "active": "Đang mở",
+      "ended": "Đã kết thúc",
+      "noSubmissions": "Chưa có submission nào"
     }
   }
 }

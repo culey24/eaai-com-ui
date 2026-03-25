@@ -36,6 +36,7 @@
   },
   "sidebar": {
     "chatChannels": "Chat channels",
+    "chatsWithLearners": "Chats with learners",
     "management": "Management",
     "reports": "Reports",
     "classManagement": "Class management",
@@ -83,7 +84,14 @@
     "mssv": "Student ID",
     "faculty": "Faculty",
     "major": "Major",
-    "subject": "Subject of interest"
+    "subject": "Subject of interest",
+    "email": "Email",
+    "dateOfBirth": "Date of birth",
+    "gender": "Gender",
+    "trainingProgramType": "Training program type",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other"
   },
   "profile": {
     "completeRequired": "Complete your profile",
@@ -95,13 +103,19 @@
     "desc": "Upload research journal versions for TA or AI review at each deadline. Used as context.",
     "upload": "Upload journal",
     "versions": "Journal versions",
+    "uploadHistory": "Upload history (newest first)",
     "deadline": "Deadline",
     "version": "Version",
     "uploadedAt": "Uploaded at",
     "noVersions": "No journal versions yet",
     "noVersionsHint": "Upload your first journal version above.",
     "dragDrop": "Drag and drop file here, or click to select",
-    "uploadSuccess": "Journal uploaded successfully"
+    "uploadSuccess": "Journal uploaded successfully",
+    "currentSubmission": "Current submission",
+    "noActiveSubmission": "No submission is currently open.",
+    "editFile": "Edit file",
+    "deleteFile": "Delete file",
+    "confirmDelete": "Delete this file?"
   },
   "supporter": {
     "totalLearners": "learners",
@@ -115,7 +129,7 @@
   },
   "roles": {
     "learner": "Learner",
-    "assistant": "Class manager",
+    "assistant": "Supporter",
     "admin": "Administrator"
   },
   "admin": {
@@ -127,6 +141,7 @@
     "chatSection": "Chat",
     "classList": "Class list",
     "accountManagement": "Account management",
+    "accountsTab": "Accounts",
     "supportRequests": "Support requests",
     "createAccount": "Create account",
     "searchPlaceholder": "Search by name, ID...",
@@ -147,6 +162,7 @@
     "journalSubmitted": "{submitted}/{total} submitted",
     "members": "members",
     "noMembers": "No members yet",
+    "other": "Other",
     "noSupporter": "No supporter",
     "supporter": "Supporter",
     "journalStatus": "Journal",
@@ -167,6 +183,22 @@
       "AGENT": "AGENT",
       "LLM": "LLM",
       "MANUAL": "MANUAL"
+    },
+    "submissions": {
+      "title": "Manage Submissions",
+      "desc": "Create and manage journal submission rounds. When deadline ends, users move to a new submission.",
+      "create": "Create submission",
+      "edit": "Edit",
+      "delete": "Delete",
+      "titleLabel": "Title",
+      "titlePlaceholder": "e.g. Submission 1",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Describe this submission round...",
+      "deadlineLabel": "Deadline",
+      "confirmDelete": "Delete this submission? Submitted data will be removed.",
+      "active": "Open",
+      "ended": "Ended",
+      "noSubmissions": "No submissions yet"
     }
   }
 }

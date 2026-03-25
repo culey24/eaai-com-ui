@@ -6,7 +6,7 @@ import { useAdmin } from '../../context/AdminContext'
 import { useJournal } from '../../context/JournalContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { VALID_CLASS_CODES } from '../../constants/roles'
-import { CLASS_TO_MODE } from '../../constants/admin'
+import { CLASS_TO_MODE, hasSupporterMode } from '../../constants/admin'
 
 export default function AdminClassesPage() {
   const { t } = useLanguage()
@@ -76,6 +76,8 @@ export default function AdminClassesPage() {
                         const assignment = assignments[m.id]
                         const journals = getJournalsForUser(m.id) || []
                         const submitted = journals.length > 0
+                        const mode = getTeachingMode(classCode)
+                        const usesSupporter = hasSupporterMode(classCode)
 
                         return (
                           <div
@@ -85,7 +87,9 @@ export default function AdminClassesPage() {
                             <div>
                               <span className="font-medium text-slate-800 dark:text-white">{m.username}</span>
                               <span className="text-slate-500 dark:text-slate-400 text-sm ml-2">
-                                {assignment ? `${t('admin.supporter')}: ${assignment.supporterId}` : t('admin.noSupporter')}
+                                {usesSupporter
+                                  ? (assignment ? `${t('admin.supporter')}: ${assignment.supporterId}` : t('admin.noSupporter'))
+                                  : t(`admin.teachingMode.${mode}`)}
                               </span>
                             </div>
                             <div className="flex items-center gap-4">

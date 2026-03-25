@@ -76,6 +76,15 @@ export function AuthProvider({ children }) {
             userToSet = { ...userToSet, faculty: 'Chưa cập nhật' }
             updated = true
           }
+          if (userToSet.dateOfBirth === undefined || userToSet.gender === undefined || userToSet.trainingProgramType === undefined) {
+            userToSet = {
+              ...userToSet,
+              dateOfBirth: userToSet.dateOfBirth ?? '',
+              gender: userToSet.gender ?? '',
+              trainingProgramType: userToSet.trainingProgramType ?? '',
+            }
+            updated = true
+          }
           if (!userToSet.stableId && userToSet.name) {
             const src = userToSet.role === 'LEARNER' ? 'reg' : 'prov'
             userToSet = { ...userToSet, stableId: `${src}-${userToSet.name}` }
@@ -96,7 +105,7 @@ export function AuthProvider({ children }) {
     return {
     id: Date.now().toString(),
     stableId,
-    email: username,
+    email: extra.email ?? username,
     studentId: 'Chưa cập nhật',
     faculty: 'Chưa cập nhật',
     major: 'Chưa cập nhật',
@@ -105,6 +114,9 @@ export function AuthProvider({ children }) {
     role,
     avatar: null,
     classCode: 'Chưa cập nhật',
+    dateOfBirth: '',
+    gender: '',
+    trainingProgramType: '',
     ...extra,
   }
   }

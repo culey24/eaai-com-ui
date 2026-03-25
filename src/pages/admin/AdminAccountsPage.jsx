@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, UserCog, Search, Plus, Trash2 } from 'lucide-react'
+import { Search, Plus, Trash2 } from 'lucide-react'
 import { useAllUsers } from '../../hooks/useAllUsers'
 import { useAdmin } from '../../context/AdminContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { ROLES, ROLE_LABELS, VALID_CLASS_CODES } from '../../constants/roles'
+import { CLASS_TO_MODE, hasSupporterMode } from '../../constants/admin'
 
 export default function AdminAccountsPage() {
   const { t } = useLanguage()
   const { allUsers, createUser, updateUserRole, deleteUser } = useAllUsers()
-  const { assignments, kickSupporter } = useAdmin()
+  const { assignments, assignSupporter, kickSupporter } = useAdmin()
   const [search, setSearch] = useState('')
   const [filterRole, setFilterRole] = useState('')
   const [filterClass, setFilterClass] = useState('')
@@ -33,6 +33,7 @@ export default function AdminAccountsPage() {
     return matchSearch && matchRole && matchClass
   })
 
+  const supporters = allUsers.filter((u) => u.role === 'ASSISTANT')
   const getSupporterName = (userId) => {
     const a = assignments[userId]
     if (!a) return null
@@ -54,20 +55,8 @@ export default function AdminAccountsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900">
-      <div className="flex-shrink-0 px-8 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link
-            to="/admin"
-            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <h1 className="font-semibold text-slate-800 dark:text-white text-lg flex items-center gap-2">
-            <UserCog className="w-5 h-5 text-primary" />
-            {t('admin.accountManagement')}
-          </h1>
-        </div>
+    <div className="flex flex-col h-full overflow-y-auto">
+      <div className="flex-shrink-0 px-8 py-5 flex items-center justify-end">
         <button
           onClick={() => setShowCreate(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white hover:opacity-90"
@@ -76,8 +65,7 @@ export default function AdminAccountsPage() {
           {t('admin.createAccount')}
         </button>
       </div>
-
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 px-8 pb-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Filters */}
           <div className="flex flex-wrap gap-4">
@@ -144,8 +132,35 @@ export default function AdminAccountsPage() {
                         ))}
                       </select>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                      {getSupporterName(u.id) ?? '-'}
+                    <td className="px-6 py-4">
+                      {u.role === 'LEARNER' ? (
+                        hasSupporterMode(u.classCode) ? (
+                          <select
+                            value={assignments[u.id]?.supporterId ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value
+                              if (!val) {
+                                kickSupporter(u.id)
+                              } else {
+                                const mode = CLASS_TO_MODE[u.classCode] || 'MANUAL'
+                                assignSupporter(u.id, val, mode)
+                              }
+                            }}
+                            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm min-w-[140px]"
+                          >
+                            <option value="">{t('admin.noSupporter')}</option>
+                            {supporters.map((s) => (
+                              <option key={s.id} value={s.id}>{s.fullName || s.username}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-sm text-slate-500">
+                            {t(`admin.teachingMode.${CLASS_TO_MODE[u.classCode] || 'MANUAL'}`)}
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-sm text-slate-500">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 flex items-center gap-2">
                       <span className="text-sm text-slate-500">{u.source}</span>

@@ -17,3 +17,7 @@ export const CLASS_TO_MODE = {
   'IS-2': TEACHING_MODES.LLM,
   'IS-3': TEACHING_MODES.MANUAL,
 }
+
+/** Lớp có supporter (chỉ MANUAL). IS-1, IS-2 dùng AGENT/LLM nên không có supporter */
+export const hasSupporterMode = (classCode) =>
+  (CLASS_TO_MODE[classCode] || TEACHING_MODES.MANUAL) === TEACHING_MODES.MANUAL

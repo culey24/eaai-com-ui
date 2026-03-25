@@ -47,10 +47,19 @@ router.post('/register', authRouteLimiter, async (req, res) => {
       return res.status(409).json({ error: 'Tài khoản đã tồn tại' })
     }
 
-    const major = await prisma.major.findUnique({ where: { majorCode: DEFAULT_MAJOR } })
-    if (!major) {
-      return res.status(500).json({ error: 'Chưa có ngành mặc định trong DB (majors)' })
+    if (!process.env.JWT_SECRET?.trim()) {
+      return res.status(500).json({
+        error: 'Cấu hình máy chủ thiếu JWT_SECRET',
+        message: 'Đặt biến JWT_SECRET trên Railway (Variables)',
+      })
     }
+
+    /* DB mới / chỉ migrate thường không có seed majors → findUnique null → 500. */
+    await prisma.major.upsert({
+      where: { majorCode: DEFAULT_MAJOR },
+      create: { majorCode: DEFAULT_MAJOR, majorName: 'Mặc định' },
+      update: {},
+    })
 
     const userId = await allocateStudentUserId()
     const pwdHash = await hashPassword(p)

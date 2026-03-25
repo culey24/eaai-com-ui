@@ -32,18 +32,22 @@ export default function RegisterForm() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setRegisterError('')
     if (!validate()) return
 
     setIsSubmitting(true)
-    const result = register(username.trim(), password, classCode.trim(), fullName.trim())
-    if (result && !result.error) {
-      // Đăng ký thành công — user đã được set, chuyển vào dashboard ngay
-      setTimeout(() => navigate('/', { replace: true }), 0)
-    } else {
-      setRegisterError(result?.error || t('auth.accountExists'))
+    try {
+      const result = await register(username.trim(), password, classCode.trim(), fullName.trim())
+      if (result && !result.error) {
+        setTimeout(() => navigate('/', { replace: true }), 0)
+      } else {
+        setRegisterError(result?.error || t('auth.accountExists'))
+      }
+    } catch {
+      setRegisterError(t('auth.accountExists'))
+    } finally {
       setIsSubmitting(false)
     }
   }

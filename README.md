@@ -25,43 +25,101 @@
 - **React Router DOM**
 - **Lucide React** (icons)
 
-## Cài đặt & Chạy
+## Biến môi trường (`.env`)
 
-Mã nguồn giao diện nằm trong thư mục **`frontend/`**.
+### `backend/.env` (bắt buộc khi chạy API + Prisma)
+
+Sao chép từ [backend/.env.example](backend/.env.example):
+
+| Biến | Ghi chú |
+|------|---------|
+| **`DATABASE_URL`** | Chuỗi PostgreSQL. Mặc định Docker: `postgresql://eaai:eaai_dev_change_me@localhost:5432/eaai_com?schema=public`. Nếu đổi mật khẩu DB trong Docker, sửa user/password cho khớp. |
+| **`PORT`** | Cổng Express (mặc định `3000`). |
+| **`JWT_SECRET`** | Chuỗi bí mật ký JWT (nên ≥ 32 ký tự, ngẫu nhiên trên production). **Bắt buộc** cho `POST /api/auth/login`, `register`, v.v. |
+| **`JWT_EXPIRES_IN`** | Tuỳ chọn, ví dụ `7d`. |
+| **`POSTGRES_PASSWORD`**, **`POSTGRES_PORT`** | Tuỳ chọn — chỉ khi chạy `docker compose` trong `backend/` và muốn ghi đè mặc định (xem file example). |
+
+### `frontend/.env` (tuỳ chọn)
+
+Sao chép từ [frontend/.env.example](frontend/.env.example):
+
+| Biến | Ghi chú |
+|------|---------|
+| **`VITE_API_URL`** | URL gốc của backend **không** có dấu `/` cuối, ví dụ `http://localhost:3000`. Dùng cho **đăng nhập/đăng ký API** và **chat kênh (polling DB)**. Không khai báo thì fallback `http://localhost:3000`. |
+
+Vite chỉ đọc biến bắt đầu bằng `VITE_`. Sau khi sửa `.env`, cần restart `npm run dev` của frontend.
+
+---
+
+## Chạy full stack (DB + backend + frontend)
+
+Thứ tự gợi ý (mở **3 terminal** hoặc tách bước):
+
+1. **PostgreSQL (Docker)** — từ root repo:
+
+   ```bash
+   npm run db:up
+   ```
+
+   Lần đầu: container chạy script trong `backend/init/`. Chi tiết: [docs/DATABASE.md](docs/DATABASE.md).
+
+2. **Cấu hình & migration Prisma** — một lần (hoặc sau khi đổi schema):
+
+   ```bash
+   cp backend/.env.example backend/.env
+   # Sửa JWT_SECRET (và DATABASE_URL nếu cần)
+   cd backend && npm install && npm run prisma:migrate
+   ```
+
+3. **API Express** — terminal 2:
+
+   ```bash
+   cd backend && npm run dev
+   ```
+
+   Hoặc từ root: `npm run backend:dev` (cần đã `npm install` trong `backend/`).
+
+4. **Giao diện Vite** — terminal 3:
+
+   ```bash
+   cp frontend/.env.example frontend/.env   # tuỳ chọn
+   cd frontend && npm install && npm run dev
+   ```
+
+   Hoặc từ root (sau `npm install` trong `frontend/`): `npm run dev`.
+
+- UI: **http://localhost:5173**  
+- API: **http://localhost:3000** (kiểm tra **http://localhost:3000/health**)
+
+**Lưu ý:** Nếu backend chạy và đăng nhập qua API thành công, **người học** dùng chat kênh qua **polling** (`GET /api/messages/:conversationId`, `POST /api/messages` + JWT). Nếu API lỗi hoặc chỉ đăng nhập mock, chat vẫn dùng **localStorage** như trước.
+
+## Deploy (Docker / hosting)
+
+Hướng dẫn chi tiết: [docs/DEPLOY.md](docs/DEPLOY.md).
+
+Tóm tắt Compose (sau `cp prod.compose.env.example .env.deploy` và chỉnh biến):
 
 ```bash
-cd frontend
-npm install
-npm run dev
+npm run deploy:up
 ```
 
-Hoặc từ thư mục gốc repo (sau khi đã `npm install` trong `frontend/`):
+---
+
+## Cơ sở dữ liệu (PostgreSQL) — lệnh nhanh
 
 ```bash
-npm run dev
-```
-
-Ứng dụng chạy tại http://localhost:5173
-
-## Cơ sở dữ liệu (PostgreSQL)
-
-Schema và Docker nằm trong **`backend/`** (chạy riêng với frontend). Tài liệu: **[docs/DATABASE.md](docs/DATABASE.md)**.
-
-```bash
-npm run db:up      # Postgres + script trong backend/init/ (hoặc: cd backend && npm run db:up)
+npm run db:up      # Postgres + script trong backend/init/
 npm run db:logs    # xem log container
 npm run db:down    # tắt container (giữ volume)
 npm run db:reset   # xóa volume và tạo lại DB từ đầu
 ```
-
-**API (Express + Prisma):** trong `backend/` — `cp backend/.env.example backend/.env`, `cd backend && npm install && npm run prisma:migrate && npm run dev`, hoặc từ root: `npm run backend:dev` (sau khi đã có `.env` trong `backend/`).
 
 ## Tính năng
 
 - **RBAC:** LEARNER (đăng ký), ASSISTANT (cấp riêng), ADMIN
 - **Đăng nhập/Đăng ký:** Form có validation cơ bản
 - **Dashboard:** Sidebar với danh sách kênh chat theo quyền, khu vực chat dạng bubble, input gửi tin nhắn
-- **Lưu trữ:** Sử dụng localStorage để mock trạng thái đăng nhập và tin nhắn
+- **Lưu trữ:** Đăng nhập + chat có thể qua **API + Postgres** (JWT); fallback mock dùng localStorage
 
 ## Cấu trúc thư mục
 

@@ -18,6 +18,8 @@ frontend/.env
 
 # Backend local overrides
 backend/.env
+backend/uploads
+.env.deploy
 
 # Editor directories and files
 .vscode/*

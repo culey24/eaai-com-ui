@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
 import ChatWindow from '../components/chat/ChatWindow'
-import MinimalChatPanel from '../components/chat/MinimalChatPanel'
 import ProfileCompleteBanner from '../components/ProfileCompleteBanner'
 import { useMessages } from '../hooks/useMessages'
 import { useReports } from '../context/ReportsContext'
@@ -10,7 +9,7 @@ import { getChannelsByUser } from '../constants/roles'
 import { useAuth } from '../context/AuthContext'
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, isProfileComplete } = useAuth()
   const location = useLocation()
   const channels = getChannelsByUser(user) || []
   const [activeChannel, setActiveChannel] = useState(null)
@@ -33,6 +32,7 @@ export default function DashboardPage() {
   const messages = getMessagesForChannel(activeChannel?.id, userId)
 
   const handleSendMessage = (channelId, content, file) => {
+    if (!isProfileComplete()) return
     addMessage(channelId, content, file, 'user', userId)
   }
 
@@ -52,7 +52,6 @@ export default function DashboardPage() {
       />
       <main className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900">
         <ProfileCompleteBanner />
-        <MinimalChatPanel />
         <ChatWindow
           channel={activeChannel}
           messages={messages}

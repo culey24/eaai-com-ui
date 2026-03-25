@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { ROLES, VALID_CLASS_CODES } from '../constants/roles'
+import { API_BASE } from '../config/api'
 
 const AUTH_STORAGE_KEY = 'eeai_chatbot_user'
 const REGISTERED_USERS_KEY = 'eeai_registered_users'
 const ADMIN_USERS_KEY = 'eeai_admin_users'
+const API_TOKEN_KEY = 'eeai_api_token'
 
 /** Tài khoản demo (MOCKUP) - Assistants & Admin được cấp riêng, không đăng ký */
 const PROVISIONED_ACCOUNTS = {
@@ -60,8 +62,29 @@ function saveRegisteredUser(username, password, classCode, fullName = '') {
   return true
 }
 
+/** Prisma enum → mã lớp UI */
+function mapApiClassToUi(code) {
+  if (code == null || code === '') return 'Chưa cập nhật'
+  const m = { IS_1: 'IS-1', IS_2: 'IS-2', IS_3: 'IS-3' }
+  return m[code] || String(code)
+}
+
+function mapApiRoleToApp(role) {
+  if (role === 'LEARNER') return ROLES.LEARNER
+  if (role === 'ASSISTANT') return ROLES.ASSISTANT
+  if (role === 'ADMIN') return ROLES.ADMIN
+  return ROLES.LEARNER
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  const [apiToken, setApiToken] = useState(() => {
+    try {
+      return localStorage.getItem(API_TOKEN_KEY)
+    } catch {
+      return null
+    }
+  })
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -86,7 +109,7 @@ export function AuthProvider({ children }) {
             updated = true
           }
           if (!userToSet.stableId && userToSet.name) {
-            const src = userToSet.role === 'LEARNER' ? 'reg' : 'prov'
+            const src = userToSet.role === ROLES.LEARNER ? 'reg' : 'prov'
             userToSet = { ...userToSet, stableId: `${src}-${userToSet.name}` }
             updated = true
           }
@@ -113,8 +136,25 @@ export function AuthProvider({ children }) {
     setIsLoading(false)
   }, [])
 
+  const persistToken = (token) => {
+    if (token) {
+      localStorage.setItem(API_TOKEN_KEY, token)
+      setApiToken(token)
+    } else {
+      localStorage.removeItem(API_TOKEN_KEY)
+      setApiToken(null)
+    }
+  }
+
   const createUserObject = (username, role, extra = {}, source = 'provisioned') => {
-    const stableId = source === 'registered' ? `reg-${username}` : source === 'admin' ? `admin-${username}` : `prov-${username}`
+    const stableId =
+      extra.backendUserId != null
+        ? `api-${extra.backendUserId}`
+        : source === 'registered'
+          ? `reg-${username}`
+          : source === 'admin'
+            ? `admin-${username}`
+            : `prov-${username}`
     const merged = {
       id: Date.now().toString(),
       stableId,
@@ -131,6 +171,7 @@ export function AuthProvider({ children }) {
       dateOfBirth: '',
       gender: '',
       trainingProgramType: '',
+      backendUserId: extra.backendUserId,
       ...extra,
     }
     if (merged.fullName === undefined || merged.fullName === null) {
@@ -143,11 +184,43 @@ export function AuthProvider({ children }) {
   const isClassCodeValid = (code) =>
     code && VALID_CLASS_CODES.includes(String(code).trim().toUpperCase())
 
-  const login = (username, password) => {
-    // Kiểm tra tài khoản admin tạo
+  const login = async (username, password) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.token && data.user?.userId) {
+        const appRole = mapApiRoleToApp(data.user.role)
+        const classCodeUi = mapApiClassToUi(data.user.classCode)
+        const fn = (data.user.fullname || '').trim()
+        const newUser = createUserObject(data.user.username || username, appRole, {
+          classCode:
+            appRole === ROLES.LEARNER
+              ? classCodeUi
+              : data.user.classCode != null
+                ? mapApiClassToUi(data.user.classCode)
+                : 'Chưa cập nhật',
+          managedClasses: Array.isArray(data.user.managedClasses) ? data.user.managedClasses : [],
+          name: fn || data.user.username || username,
+          fullName: fn,
+          backendUserId: data.user.userId,
+        }, 'provisioned')
+        persistToken(data.token)
+        setUser(newUser)
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
+        return newUser
+      }
+    } catch {
+      /* mạng lỗi — thử mock */
+    }
+
     const adminUsers = getAdminUsers()
     const adminUser = adminUsers.find((u) => u.username === username && u.password === password)
     if (adminUser) {
+      persistToken(null)
       const fn = adminUser.fullName?.trim()
       const newUser = createUserObject(username, ROLES[adminUser.role] || ROLES.LEARNER, {
         classCode: adminUser.classCode || 'Chưa cập nhật',
@@ -159,11 +232,12 @@ export function AuthProvider({ children }) {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
       return newUser
     }
-    // Kiểm tra tài khoản được cấp (admin, assistant, demo learner)
+
     const provisioned = Object.values(PROVISIONED_ACCOUNTS).find(
       (d) => d.username === username && d.password === password
     )
     if (provisioned) {
+      persistToken(null)
       const newUser = createUserObject(provisioned.username, ROLES[provisioned.role], {
         classCode: provisioned.classCode || 'Chưa cập nhật',
         managedClasses: provisioned.managedClasses || [],
@@ -172,12 +246,11 @@ export function AuthProvider({ children }) {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
       return newUser
     }
-    // Kiểm tra Learner đã đăng ký
+
     const users = getRegisteredUsers()
-    const found = users.find(
-      (u) => u.username === username && u.password === password
-    )
+    const found = users.find((u) => u.username === username && u.password === password)
     if (found) {
+      persistToken(null)
       const fn = found.fullName?.trim() || ''
       const newUser = createUserObject(username, ROLES.LEARNER, {
         classCode: found.classCode || 'Chưa cập nhật',
@@ -188,14 +261,48 @@ export function AuthProvider({ children }) {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
       return newUser
     }
+
     return null
   }
 
-  const register = (username, password, classCode, fullName = '') => {
+  const register = async (username, password, classCode, fullName = '') => {
     if (!isClassCodeValid(classCode)) return { error: 'Mã lớp không hợp lệ' }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          password,
+          classCode: String(classCode).trim().toUpperCase(),
+          fullName: fullName?.trim() || undefined,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.token && data.user?.userId) {
+        const classCodeUi = mapApiClassToUi(data.user.classCode)
+        const fn = (data.user.fullname || fullName || '').trim()
+        const newUser = createUserObject(data.user.username || username, ROLES.LEARNER, {
+          classCode: classCodeUi,
+          name: fn || username,
+          fullName: fn,
+          backendUserId: data.user.userId,
+        }, 'registered')
+        persistToken(data.token)
+        setUser(newUser)
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
+        return newUser
+      }
+      if (res.status === 409) return { error: data.error || 'Tài khoản đã tồn tại' }
+    } catch {
+      /* fallback local */
+    }
+
     if (!saveRegisteredUser(username, password, classCode, fullName)) return { error: 'Tài khoản này đã tồn tại' }
     const classCodeNorm = String(classCode).trim().toUpperCase()
     const fn = fullName?.trim() || ''
+    persistToken(null)
     const newUser = createUserObject(username, ROLES.LEARNER, {
       classCode: classCodeNorm,
       name: fn || username,
@@ -208,6 +315,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null)
+    persistToken(null)
     localStorage.removeItem(AUTH_STORAGE_KEY)
   }
 
@@ -227,7 +335,18 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, isProfileComplete, isLoading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        apiToken,
+        login,
+        register,
+        logout,
+        updateProfile,
+        isProfileComplete,
+        isLoading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

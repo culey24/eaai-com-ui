@@ -11,6 +11,8 @@
     "db:down": "docker compose -f backend/docker-compose.yml down",
     "db:logs": "docker compose -f backend/docker-compose.yml logs -f db",
     "db:reset": "docker compose -f backend/docker-compose.yml down -v && docker compose -f backend/docker-compose.yml up -d",
-    "backend:dev": "npm run dev --prefix backend"
+    "backend:dev": "npm run dev --prefix backend",
+    "deploy:up": "docker compose -f docker-compose.prod.yml --env-file .env.deploy up -d --build",
+    "deploy:down": "docker compose -f docker-compose.prod.yml --env-file .env.deploy down"
   }
 }

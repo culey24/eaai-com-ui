@@ -29,10 +29,7 @@
     "passwordRequired": "Please enter password",
     "invalidClassCode": "Invalid class code. Valid codes: {codes}",
     "accountExists": "This account already exists",
-    "creatingAccount": "Creating account...",
-    "demoAdmin": "Admin",
-    "demoLearner": "Learner",
-    "demoAssistant": "Assistant"
+    "creatingAccount": "Creating account..."
   },
   "sidebar": {
     "chatChannels": "Chat channels",
@@ -49,7 +46,10 @@
     "noMessages": "No messages yet",
     "noMessagesHint": "Send a message or attach a file to get started!",
     "report": "Report",
-    "agent": "Chat with Agent ({code})"
+    "agent": "Chat with Agent ({code})",
+    "inputPlaceholder": "Type a message...",
+    "inputLockedPlaceholder": "Complete your profile in Settings to send messages",
+    "inputLockedHint": "Please fill in your student ID, faculty, and major in Settings before you can send messages."
   },
   "report": {
     "title": "Report",

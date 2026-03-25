@@ -1,0 +1,30 @@
+/**
+ * Bản vá schema nhẹ, idempotent — volume Postgres cũ có thể thiếu cột thêm sau này
+ * (init SQL gốc không có; migration Prisma chưa chạy trên môi trường đó).
+ */
+const USER_PROFILE_ALTER = [
+  'ALTER TABLE users ADD COLUMN IF NOT EXISTS student_school_id VARCHAR(32)',
+  'ALTER TABLE users ADD COLUMN IF NOT EXISTS faculty VARCHAR(200)',
+  'ALTER TABLE users ADD COLUMN IF NOT EXISTS major_display VARCHAR(200)',
+  'ALTER TABLE users ADD COLUMN IF NOT EXISTS subject_note VARCHAR(255)',
+]
+
+export async function applyLightweightSchemaPatches(prisma) {
+  try {
+    await prisma.$executeRawUnsafe(
+      'ALTER TABLE journal_uploads ADD COLUMN IF NOT EXISTS extracted_text TEXT'
+    )
+  } catch (err) {
+    console.warn(
+      '[db-patches] journal_uploads.extracted_text:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
+  for (const sql of USER_PROFILE_ALTER) {
+    try {
+      await prisma.$executeRawUnsafe(sql)
+    } catch (err) {
+      console.warn('[db-patches] users profile cols:', err instanceof Error ? err.message : String(err))
+    }
+  }
+}

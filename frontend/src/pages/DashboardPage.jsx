@@ -58,6 +58,8 @@ export default function DashboardPage() {
           onSendMessage={handleSendMessage}
           onReport={handleReport}
           userId={user?.id}
+          messagePerspective="learner"
+          maskAssistantAsAgent={activeChannel?.id === 'internal-chat'}
         />
       </main>
     </div>

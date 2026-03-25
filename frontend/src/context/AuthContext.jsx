@@ -79,6 +79,35 @@ function mapApiRoleToApp(role) {
   return ROLES.LEARNER
 }
 
+const PROFILE_PLACEHOLDER = 'Chưa cập nhật'
+
+/** Gộp payload GET/PATCH /api/me/profile vào object user trong UI */
+function mergeDbProfileIntoUser(base, p) {
+  if (!p || !base) return base
+  const fn = (p.fullname || '').trim()
+  const classCodeUi = mapApiClassToUi(p.classCode)
+  const nz = (v) =>
+    v != null && String(v).trim() !== '' ? String(v).trim() : PROFILE_PLACEHOLDER
+  return {
+    ...base,
+    fullName: fn || base.fullName,
+    name: fn || base.name,
+    email:
+      p.email != null && String(p.email).trim() !== ''
+        ? String(p.email).trim()
+        : base.email,
+    dateOfBirth: p.dateOfBirth != null ? String(p.dateOfBirth) : '',
+    gender: p.gender != null ? String(p.gender) : '',
+    trainingProgramType:
+      p.trainingProgramType != null ? String(p.trainingProgramType) : '',
+    studentId: nz(p.studentId),
+    faculty: nz(p.faculty),
+    major: nz(p.major),
+    subject: nz(p.subject),
+    classCode: base.role === ROLES.LEARNER ? classCodeUi : base.classCode,
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [apiToken, setApiToken] = useState(() => {
@@ -91,53 +120,136 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    let userToSet = null
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY)
-    if (stored) {
+    let cancelled = false
+    ;(async () => {
+      let userToSet = null
       try {
-        userToSet = JSON.parse(stored)
-        if (userToSet) {
-          let updated = false
-          if (userToSet.faculty === undefined) {
-            userToSet = { ...userToSet, faculty: 'Chưa cập nhật' }
-            updated = true
-          }
-          if (userToSet.dateOfBirth === undefined || userToSet.gender === undefined || userToSet.trainingProgramType === undefined) {
-            userToSet = {
-              ...userToSet,
-              dateOfBirth: userToSet.dateOfBirth ?? '',
-              gender: userToSet.gender ?? '',
-              trainingProgramType: userToSet.trainingProgramType ?? '',
-            }
-            updated = true
-          }
-          if (!userToSet.stableId && userToSet.name) {
-            const src = userToSet.role === ROLES.LEARNER ? 'reg' : 'prov'
-            userToSet = { ...userToSet, stableId: `${src}-${userToSet.name}` }
-            updated = true
-          }
-          if (userToSet.username === undefined && userToSet.stableId) {
-            const m = String(userToSet.stableId).match(/^(reg|prov|admin)-(.+)$/)
-            userToSet = { ...userToSet, username: m ? m[2] : userToSet.name }
-            updated = true
-          }
-          if (userToSet.fullName === undefined) {
-            userToSet = {
-              ...userToSet,
-              fullName:
-                userToSet.name && userToSet.name !== userToSet.username ? userToSet.name : '',
-            }
-            updated = true
-          }
-          if (updated) localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userToSet))
+        let stored = null
+        try {
+          stored = localStorage.getItem(AUTH_STORAGE_KEY)
+        } catch {
+          stored = null
         }
+
+        if (stored) {
+          try {
+            userToSet = JSON.parse(stored)
+            if (userToSet) {
+              let updated = false
+              if (userToSet.faculty === undefined) {
+                userToSet = { ...userToSet, faculty: PROFILE_PLACEHOLDER }
+                updated = true
+              }
+              if (
+                userToSet.dateOfBirth === undefined ||
+                userToSet.gender === undefined ||
+                userToSet.trainingProgramType === undefined
+              ) {
+                userToSet = {
+                  ...userToSet,
+                  dateOfBirth: userToSet.dateOfBirth ?? '',
+                  gender: userToSet.gender ?? '',
+                  trainingProgramType: userToSet.trainingProgramType ?? '',
+                }
+                updated = true
+              }
+              if (!userToSet.stableId && userToSet.name) {
+                const src = userToSet.role === ROLES.LEARNER ? 'reg' : 'prov'
+                userToSet = { ...userToSet, stableId: `${src}-${userToSet.name}` }
+                updated = true
+              }
+              if (userToSet.username === undefined && userToSet.stableId) {
+                const m = String(userToSet.stableId).match(/^(reg|prov|admin)-(.+)$/)
+                userToSet = { ...userToSet, username: m ? m[2] : userToSet.name }
+                updated = true
+              }
+              if (userToSet.fullName === undefined) {
+                userToSet = {
+                  ...userToSet,
+                  fullName:
+                    userToSet.name && userToSet.name !== userToSet.username ? userToSet.name : '',
+                }
+                updated = true
+              }
+              if (updated) {
+                try {
+                  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userToSet))
+                } catch {
+                  /* ignore */
+                }
+              }
+            }
+          } catch {
+            try {
+              localStorage.removeItem(AUTH_STORAGE_KEY)
+            } catch {
+              /* ignore */
+            }
+            userToSet = null
+          }
+        }
+
+        /* Tải profile từ DB: xem useEffect syncLearnerProfileFromApi (sau login / khi có token) */
       } catch {
-        localStorage.removeItem(AUTH_STORAGE_KEY)
+        userToSet = null
+      } finally {
+        if (!cancelled) {
+          setUser(userToSet)
+          setIsLoading(false)
+        }
       }
+    })()
+    return () => {
+      cancelled = true
     }
-    setUser(userToSet)
-    setIsLoading(false)
   }, [])
+
+  /** Sau đăng nhập / F5: login API không trả MSSV, khoa… — luôn kéo từ GET /api/me/profile */
+  useEffect(() => {
+    const learnerId = user?.backendUserId
+    if (!apiToken || user?.role !== ROLES.LEARNER || learnerId == null) return
+
+    let cancelled = false
+    const ac = new AbortController()
+    const tid = setTimeout(() => ac.abort(), 12000)
+
+    ;(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/me/profile`, {
+          headers: { Authorization: `Bearer ${apiToken}` },
+          signal: ac.signal,
+        })
+        const data = await res.json().catch(() => ({}))
+        if (cancelled || !res.ok || !data.profile) return
+        setUser((prev) => {
+          if (
+            !prev ||
+            String(prev.backendUserId) !== String(learnerId) ||
+            prev.role !== ROLES.LEARNER
+          ) {
+            return prev
+          }
+          const merged = mergeDbProfileIntoUser(prev, data.profile)
+          try {
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(merged))
+          } catch {
+            /* ignore */
+          }
+          return merged
+        })
+      } catch {
+        /* offline / timeout */
+      } finally {
+        clearTimeout(tid)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+      ac.abort()
+      clearTimeout(tid)
+    }
+  }, [apiToken, user?.backendUserId, user?.role])
 
   const persistToken = (token) => {
     if (token) {
@@ -356,12 +468,57 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(AUTH_STORAGE_KEY)
   }
 
-  const updateProfile = (updates) => {
-    if (!user) return null
+  const updateProfile = async (updates) => {
+    if (!user) return { ok: false, error: 'Chưa đăng nhập' }
+    const token = apiToken || localStorage.getItem(API_TOKEN_KEY)
+    if (
+      token &&
+      user.backendUserId != null &&
+      user.role === ROLES.LEARNER
+    ) {
+      try {
+        const res = await fetch(`${API_BASE}/api/me/profile`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            email: updates.email,
+            dateOfBirth: updates.dateOfBirth,
+            gender: updates.gender,
+            trainingProgramType: updates.trainingProgramType,
+            studentId: updates.studentId,
+            faculty: updates.faculty,
+            major: updates.major,
+            subject: updates.subject,
+          }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          return {
+            ok: false,
+            error: data.error || `Lưu thất bại (${res.status})`,
+          }
+        }
+        if (data.profile) {
+          const merged = mergeDbProfileIntoUser(user, data.profile)
+          setUser(merged)
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(merged))
+          return { ok: true, user: merged }
+        }
+        const fallback = { ...user, ...updates }
+        setUser(fallback)
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(fallback))
+        return { ok: true, user: fallback }
+      } catch {
+        return { ok: false, error: 'Không kết nối được máy chủ' }
+      }
+    }
     const updated = { ...user, ...updates }
     setUser(updated)
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated))
-    return updated
+    return { ok: true, user: updated }
   }
 
   const isProfileComplete = (u = user) => {

@@ -73,7 +73,8 @@ CREATE TABLE journal_uploads (
     storage_key VARCHAR(512) NOT NULL,
     original_file_name VARCHAR(512),
     submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    status VARCHAR(32) NOT NULL DEFAULT 'submitted'
+    status VARCHAR(32) NOT NULL DEFAULT 'submitted',
+    extracted_text TEXT
 );
 
 CREATE INDEX idx_journal_uploads_user_period ON journal_uploads (user_id, period_id);

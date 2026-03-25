@@ -42,10 +42,10 @@ function Tooltip({ children, label }) {
 }
 
 export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode }) {
-  const { user, logout } = useAuth()
+  const { user, logout, apiToken } = useAuth()
   const { t } = useLanguage()
   const { assignments } = useAdmin()
-  const { allUsers } = useAllUsers()
+  const { allUsers, supporterApiRows } = useAllUsers()
   const supporterChat = useSupporterChat()
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
@@ -64,6 +64,13 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const isClassesPage = location.pathname === '/classes'
   const isJournalPage = location.pathname === '/journal'
   const isAssistant = user?.role === ROLES.ASSISTANT
+  const apiIs3ChatLearners = allUsers.filter(
+    (u) => u.role === ROLES.LEARNER && u.fromApi && u.classCode === 'IS-3'
+  )
+  const supporterChatUsers =
+    isAssistant && user && apiToken && Array.isArray(supporterApiRows)
+      ? apiIs3ChatLearners
+      : assignedUsers
   const isAdmin = user?.role === ROLES.ADMIN
   const isLearner = user?.role === ROLES.LEARNER
   const isAdminArea = isAdminMode || location.pathname.startsWith('/admin')
@@ -283,7 +290,7 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
 
         {/* Kênh chat: Assistant = chỉ learner được gán, Learner = kênh theo lớp */}
         {isAssistant ? (
-          assignedUsers.length > 0 && (
+          supporterChatUsers.length > 0 && (
             <>
               {!collapsed && (
                 <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 py-2.5 mt-2">
@@ -291,7 +298,7 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
                 </p>
               )}
               <div className="space-y-1">
-                {assignedUsers.map((u) => {
+                {supporterChatUsers.map((u) => {
                   const isActive = location.pathname === '/' && supporterChat?.selectedUser?.id === u.id
                   const handleUserClick = () => {
                     supporterChat?.setSelectedUser?.(u)

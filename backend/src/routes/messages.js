@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { MessageSender } from '@prisma/client'
+import { MessageSender, UserClass } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { canAccessConversation } from '../lib/access.js'
@@ -124,6 +124,22 @@ router.post(
       let conversationId
       const { userId, userRole } = req.auth
 
+      if (
+        userRole === 'student' &&
+        channel.userClass === UserClass.IS_3 &&
+        senderRole === MessageSender.user
+      ) {
+        const assign = await prisma.learnerSupporterAssignment.findUnique({
+          where: { learnerId: userId },
+          select: { learnerId: true },
+        })
+        if (!assign) {
+          return res.status(403).json({
+            error: 'Chưa được gán supporter. Hệ thống đang bận, hãy thử lại sau.',
+          })
+        }
+      }
+
       if (bodyConvId != null && bodyConvId !== '') {
         try {
           conversationId = BigInt(String(bodyConvId))
@@ -170,10 +186,13 @@ router.post(
         },
       })
 
-      // Phản hồi assistant — kênh IS-2: OpenRouter + Gemini Flash, system = AGENT tư vấn + lịch sử hội thoại
+      // IS-3 / internal-chat: không tự trả lời — supporter trả lời sau (hiển thị phía client như AGENT).
+      // IS-2: OpenRouter agent. IS-1: echo mặc định.
       if (userRole === 'student' && senderRole === MessageSender.user) {
-        let assistantContent = `Đã nhận tin nhắn của bạn. (Phản hồi từ ${ch})`
-        if (channelUsesIs2Agent(channel)) {
+        if (channel.userClass === UserClass.IS_3) {
+          /* chỉ lưu tin người học */
+        } else if (channelUsesIs2Agent(channel)) {
+          let assistantContent
           if (process.env.OPENROUTER_API_KEY?.trim()) {
             try {
               assistantContent = await generateIs2AgentReply(conversationId)
@@ -185,16 +204,27 @@ router.post(
             assistantContent =
               'Trợ lý lớp IS-2 chưa được bật trên server (thiếu OPENROUTER_API_KEY). Liên hệ quản trị hoặc dùng kênh khác.'
           }
+          await prisma.message.create({
+            data: {
+              conversationId,
+              senderRole: MessageSender.assistant,
+              senderUserId: null,
+              content: assistantContent,
+              metadata: { source: 'openrouter_is2' },
+            },
+          })
+        } else {
+          const assistantContent = `Đã nhận tin nhắn của bạn. (Phản hồi từ ${ch})`
+          await prisma.message.create({
+            data: {
+              conversationId,
+              senderRole: MessageSender.assistant,
+              senderUserId: null,
+              content: assistantContent,
+              metadata: { source: 'echo' },
+            },
+          })
         }
-        await prisma.message.create({
-          data: {
-            conversationId,
-            senderRole: MessageSender.assistant,
-            senderUserId: null,
-            content: assistantContent,
-            metadata: { source: channelUsesIs2Agent(channel) ? 'openrouter_is2' : 'echo' },
-          },
-        })
       }
 
       await prisma.conversation.update({

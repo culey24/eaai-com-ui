@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { MessageSquare, Flag } from 'lucide-react'
 import MessageItem from './MessageItem'
@@ -6,14 +6,81 @@ import ChatInput from './ChatInput'
 import ReportModal from './ReportModal'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
+import { ROLES } from '../../constants/roles'
+import { API_BASE } from '../../config/api'
 
-export default function ChatWindow({ channel, messages, onSendMessage, onReport, userId, hideReport, customTitle }) {
+/** Sau khoảng này mà chưa có phản hồi assistant → gợi ý “hệ thống bận” (kênh IS-3). */
+const IS3_BUSY_AFTER_MS = 45_000
+
+export default function ChatWindow({
+  channel,
+  messages,
+  onSendMessage,
+  onReport,
+  userId,
+  hideReport,
+  customTitle,
+  messagePerspective = 'learner',
+  maskAssistantAsAgent = false,
+}) {
   const { t } = useLanguage()
-  const { isProfileComplete } = useAuth()
+  const { isProfileComplete, apiToken, user } = useAuth()
   const canSendChat = isProfileComplete()
   const channelLabel = customTitle ?? (channel?.labelKey ? t(channel.labelKey, { code: channel.code }) : channel?.label)
   const scrollRef = useRef(null)
   const [reportOpen, setReportOpen] = useState(false)
+  const [busyClock, setBusyClock] = useState(0)
+  /** null = không áp dụng hoặc đang tải; false = chưa gán supporter (IS-3 + JWT) */
+  const [hasSupporterAssignment, setHasSupporterAssignment] = useState(null)
+
+  const internalMask =
+    maskAssistantAsAgent && channel?.id === 'internal-chat' && messagePerspective === 'learner'
+
+  useEffect(() => {
+    if (!internalMask || !apiToken || user?.role !== ROLES.LEARNER) {
+      setHasSupporterAssignment(null)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/me/support-assignment`, {
+          headers: { Authorization: `Bearer ${apiToken}` },
+        })
+        const data = await res.json().catch(() => ({}))
+        if (cancelled) return
+        if (res.ok && data.applicable !== false) {
+          setHasSupporterAssignment(data.assigned === true)
+        } else {
+          setHasSupporterAssignment(true)
+        }
+      } catch {
+        if (!cancelled) setHasSupporterAssignment(true)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [internalMask, apiToken, user?.role])
+
+  useEffect(() => {
+    if (!internalMask) return undefined
+    const id = setInterval(() => setBusyClock((c) => c + 1), 4000)
+    return () => clearInterval(id)
+  }, [internalMask])
+
+  const showIs3BusyHint = useMemo(() => {
+    if (!internalMask || !messages?.length) return false
+    const last = messages[messages.length - 1]
+    if (last.role !== 'user') return false
+    return Date.now() - last.timestamp > IS3_BUSY_AFTER_MS
+  }, [internalMask, messages, busyClock])
+
+  const agentMaskLabel = internalMask ? t('chat.agentMaskLabel') : undefined
+
+  const showUnassignedSupporterBg =
+    internalMask && hasSupporterAssignment === false
+  const blockChatNoSupporter = showUnassignedSupporterBg
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -60,38 +127,64 @@ export default function ChatWindow({ channel, messages, onSendMessage, onReport,
       {/* Messages area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-8 pb-4 space-y-6 bg-slate-50/30 dark:bg-slate-800/30 scrollbar-thin"
+        className="flex-1 overflow-y-auto p-8 pb-4 space-y-6 bg-slate-50/30 dark:bg-slate-800/30 scrollbar-thin relative"
       >
-        {!channel ? (
-          <div className="flex flex-col items-center justify-center h-full text-center px-8">
-            <div className="w-20 h-20 rounded-3xl bg-primary/15 flex items-center justify-center mb-6">
-              <MessageSquare className="w-10 h-10 text-primary" />
-            </div>
-            <p className="text-lg font-semibold text-slate-600 dark:text-slate-300 mb-2">
-              {t('chat.welcomeTitle')}
+        {showUnassignedSupporterBg && (
+          <div
+            className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center px-6 py-12"
+            aria-hidden
+          >
+            <p className="text-center text-base sm:text-lg md:text-xl font-medium text-slate-400/95 dark:text-slate-500/95 max-w-lg leading-relaxed tracking-tight">
+              {t('chat.is3NoSupporterBackground')}
             </p>
-            <p className="text-slate-500 dark:text-slate-400 max-w-sm">
-              {t('chat.welcomeDesc')}
-            </p>
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mb-4">
-              <MessageSquare className="w-8 h-8 text-primary" />
-            </div>
-            <p className="text-slate-500 dark:text-slate-400 font-medium">{t('chat.noMessages')}</p>
-            <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">{t('chat.noMessagesHint')}</p>
-          </div>
-        ) : (
-          <div className="max-w-3xl mx-auto space-y-6">
-            {messages.map((msg) => (
-              <MessageItem key={msg.id} message={msg} />
-            ))}
           </div>
         )}
+        <div className="relative z-10 min-h-0">
+          {!channel ? (
+            <div className="flex flex-col items-center justify-center h-full min-h-[40vh] text-center px-8">
+              <div className="w-20 h-20 rounded-3xl bg-primary/15 flex items-center justify-center mb-6">
+                <MessageSquare className="w-10 h-10 text-primary" />
+              </div>
+              <p className="text-lg font-semibold text-slate-600 dark:text-slate-300 mb-2">
+                {t('chat.welcomeTitle')}
+              </p>
+              <p className="text-slate-500 dark:text-slate-400 max-w-sm">
+                {t('chat.welcomeDesc')}
+              </p>
+            </div>
+          ) : messages.length === 0 && !showUnassignedSupporterBg ? (
+            <div className="flex flex-col items-center justify-center h-full min-h-[40vh] text-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mb-4">
+                <MessageSquare className="w-8 h-8 text-primary" />
+              </div>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">{t('chat.noMessages')}</p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">{t('chat.noMessagesHint')}</p>
+            </div>
+          ) : messages.length === 0 && showUnassignedSupporterBg ? (
+            <div className="min-h-[45vh]" aria-hidden />
+          ) : (
+            <div className="max-w-3xl mx-auto space-y-6">
+              {messages.map((msg) => (
+                <MessageItem
+                  key={msg.id}
+                  message={msg}
+                  perspective={messagePerspective}
+                  agentLabel={agentMaskLabel}
+                />
+              ))}
+              {showIs3BusyHint && (
+                <div className="pt-2">
+                  <p className="text-sm text-slate-600 dark:text-slate-300 italic border-l-2 border-amber-400 pl-3 py-2.5 bg-amber-50/80 dark:bg-amber-900/20 rounded-r-xl">
+                    {t('chat.is3SystemBusy')}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {channel && !canSendChat && (
+      {channel && !canSendChat && !blockChatNoSupporter && (
         <div className="flex-shrink-0 px-6 pt-4">
           <div className="max-w-3xl mx-auto rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/90 dark:bg-amber-900/25 px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
             <p>{t('chat.inputLockedHint')}</p>
@@ -108,8 +201,14 @@ export default function ChatWindow({ channel, messages, onSendMessage, onReport,
       {/* Input */}
       <ChatInput
         onSend={handleSend}
-        disabled={!channel || !canSendChat}
-        placeholder={!canSendChat && channel ? t('chat.inputLockedPlaceholder') : t('chat.inputPlaceholder')}
+        disabled={!channel || !canSendChat || blockChatNoSupporter}
+        placeholder={
+          blockChatNoSupporter
+            ? t('chat.is3NoSupporterBackground')
+            : !canSendChat && channel
+              ? t('chat.inputLockedPlaceholder')
+              : t('chat.inputPlaceholder')
+        }
       />
     </div>
   )

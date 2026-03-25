@@ -49,7 +49,10 @@
     "agent": "Chat với Agent ({code})",
     "inputPlaceholder": "Nhập tin nhắn...",
     "inputLockedPlaceholder": "Hoàn thiện hồ sơ trong Cài đặt để gửi tin nhắn",
-    "inputLockedHint": "Bạn cần cập nhật đủ thông tin (MSSV, Khoa, chuyên ngành) trong mục Cài đặt trước khi được gửi tin nhắn."
+    "inputLockedHint": "Bạn cần cập nhật đủ thông tin (MSSV, Khoa, chuyên ngành) trong mục Cài đặt trước khi được gửi tin nhắn.",
+    "agentMaskLabel": "AGENT",
+    "is3SystemBusy": "Hệ thống đang bận. Phản hồi sẽ được gửi đến bạn sớm nhất có thể — bạn có thể tiếp tục chờ trong khung chat này.",
+    "is3NoSupporterBackground": "Hệ thống đang bận, hãy thử lại sau"
   },
   "report": {
     "title": "Báo cáo",

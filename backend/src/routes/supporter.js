@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { UserClass } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
@@ -26,15 +27,26 @@ router.get('/learners', async (req, res) => {
       select: { userClass: true },
     })
     const classes = scopes.map((s) => s.userClass)
-    if (classes.length === 0) {
+    if (classes.length === 0 || !classes.includes(UserClass.IS_3)) {
       return res.status(200).json({ learners: [] })
     }
 
+    const assignedRows = await prisma.learnerSupporterAssignment.findMany({
+      where: { supporterId: req.auth.userId },
+      select: { learnerId: true },
+    })
+    const assignedIds = assignedRows.map((r) => r.learnerId)
+
+    const where = {
+      userRole: 'student',
+      userClass: UserClass.IS_3,
+    }
+    if (assignedIds.length > 0) {
+      where.userId = { in: assignedIds }
+    }
+
     const learners = await prisma.user.findMany({
-      where: {
-        userRole: 'student',
-        userClass: { in: classes },
-      },
+      where,
       select: {
         userId: true,
         username: true,

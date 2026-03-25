@@ -304,5 +304,14 @@ export function useAllUsers() {
     [adminUsers, roleOverrides]
   )
 
-  return { allUsers, getLearners, getByClass, createUser, updateUserRole, deleteUser }
+  return {
+    allUsers,
+    getLearners,
+    getByClass,
+    createUser,
+    updateUserRole,
+    deleteUser,
+    /** null = chưa có phản hồi / lỗi; mảng (có thể rỗng) = GET /api/supporter/learners đã trả về */
+    supporterApiRows,
+  }
 }

@@ -97,6 +97,12 @@ model User {
   phoneNumber           String?   @map("phone_number") @db.VarChar(15)
   email                 String?   @unique @db.VarChar(100)
   userClass             UserClass? @map("user_class")
+  /// MSSV / mã sinh viên hiển thị trên UI (khác citizen_identification)
+  studentSchoolId       String?   @map("student_school_id") @db.VarChar(32)
+  faculty               String?   @db.VarChar(200)
+  /// Tên ngành tự do (UI); majorCode vẫn là FK bắt buộc tới bảng majors
+  majorDisplay          String?   @map("major_display") @db.VarChar(200)
+  subjectNote           String?   @map("subject_note") @db.VarChar(255)
 
   major Major @relation(fields: [majorCode], references: [majorCode])
 
@@ -108,6 +114,9 @@ model User {
   assignmentsAsSupporter     LearnerSupporterAssignment[]  @relation("AssignmentSupporter")
   supportRequestsAsSupporter SupportRequest[]              @relation("SupportSupporter")
   supportRequestsAsLearner   SupportRequest[]              @relation("SupportLearner")
+
+  // init SQL: CREATE TABLE Users → PostgreSQL lưu là public.users (không phải bảng "User" của Prisma mặc định)
+  @@map("users")
 }
 
 model ChatChannel {

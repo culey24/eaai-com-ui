@@ -49,7 +49,10 @@
     "agent": "Chat with Agent ({code})",
     "inputPlaceholder": "Type a message...",
     "inputLockedPlaceholder": "Complete your profile in Settings to send messages",
-    "inputLockedHint": "Please fill in your student ID, faculty, and major in Settings before you can send messages."
+    "inputLockedHint": "Please fill in your student ID, faculty, and major in Settings before you can send messages.",
+    "agentMaskLabel": "AGENT",
+    "is3SystemBusy": "The system is busy. A reply will be sent as soon as possible — you can keep waiting in this chat.",
+    "is3NoSupporterBackground": "The system is busy, please try again later"
   },
   "report": {
     "title": "Report",

@@ -34,7 +34,12 @@ function saveMessages(messages) {
 function mapRemoteRows(messages) {
   return (messages || []).map((m) => ({
     id: String(m.id),
-    role: m.senderRole === 'user' ? 'user' : 'assistant',
+    role:
+      m.senderRole === 'user'
+        ? 'user'
+        : m.senderRole === 'system'
+          ? 'system'
+          : 'assistant',
     content: m.content || '',
     fileName: m.fileName || null,
     timestamp: m.createdAt ? new Date(m.createdAt).getTime() : Date.now(),
@@ -199,7 +204,7 @@ export function useMessages(pollChannelId = null, options = {}) {
               channelId,
               content: content || '',
               fileName: file?.name || undefined,
-              role: 'user',
+              role: 'assistant',
               conversationId,
             }),
           })
@@ -230,16 +235,16 @@ export function useMessages(pollChannelId = null, options = {}) {
       setLocalMessages((prev) => {
         const channelMsgs = prev[key] || []
         const userMsgs = [...channelMsgs, newMsg]
-
+        if (channelId === 'internal-chat') {
+          return { ...prev, [key]: userMsgs }
+        }
         const aiResponse = {
           id: `${Date.now() + 1}-ai`,
           role: 'assistant',
           content: `Đã nhận tin nhắn của bạn. (Mock phản hồi từ ${channelId})`,
           timestamp: Date.now() + 100,
         }
-        const withAi = [...userMsgs, aiResponse]
-
-        return { ...prev, [key]: withAi }
+        return { ...prev, [key]: [...userMsgs, aiResponse] }
       })
     },
     [isRemoteLearner, isRemoteAssistant, apiToken, pollChannelId, conversationId]

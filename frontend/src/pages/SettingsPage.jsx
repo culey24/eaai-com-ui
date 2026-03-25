@@ -20,6 +20,12 @@ export default function SettingsPage() {
   const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth ?? '')
   const [gender, setGender] = useState(user?.gender ?? '')
   const [trainingProgramType, setTrainingProgramType] = useState(user?.trainingProgramType ?? '')
+  const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (editing) setSaveError('')
+  }, [editing])
 
   useEffect(() => {
     if (editing) {
@@ -190,24 +196,37 @@ export default function SettingsPage() {
                       />
                     </div>
                   </div>
+                  {saveError ? (
+                    <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+                      {saveError}
+                    </p>
+                  ) : null}
                   <button
                     type="button"
-                    onClick={() => {
-                      updateProfile({
-                        email: email.trim() || user?.email || user?.name,
-                        dateOfBirth: dateOfBirth.trim(),
-                        gender: gender.trim(),
-                        trainingProgramType: trainingProgramType.trim(),
-                        studentId: studentId.trim() || PLACEHOLDER,
-                        faculty: faculty.trim() || PLACEHOLDER,
-                        major: major.trim() || PLACEHOLDER,
-                        subject: subject.trim() || PLACEHOLDER,
-                      })
-                      setEditing(false)
+                    disabled={saving}
+                    onClick={async () => {
+                      setSaveError('')
+                      setSaving(true)
+                      try {
+                        const result = await updateProfile({
+                          email: email.trim() || user?.email || user?.name,
+                          dateOfBirth: dateOfBirth.trim(),
+                          gender: gender.trim(),
+                          trainingProgramType: trainingProgramType.trim(),
+                          studentId: studentId.trim() || PLACEHOLDER,
+                          faculty: faculty.trim() || PLACEHOLDER,
+                          major: major.trim() || PLACEHOLDER,
+                          subject: subject.trim() || PLACEHOLDER,
+                        })
+                        if (result?.ok) setEditing(false)
+                        else setSaveError(result?.error || 'Lưu thất bại')
+                      } finally {
+                        setSaving(false)
+                      }
                     }}
-                    className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90"
+                    className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-60"
                   >
-                    {t('common.save')}
+                    {saving ? '…' : t('common.save')}
                   </button>
                 </div>
               )}

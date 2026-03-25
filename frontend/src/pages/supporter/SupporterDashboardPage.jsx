@@ -94,6 +94,7 @@ export default function SupporterDashboardPage() {
                   onSendMessage={handleSendMessage}
                   userId={selectedUser.id}
                   hideReport
+                  messagePerspective="supporter"
                   customTitle={`${getUserDisplayName(selectedUser)} — ${channel ? t('chat.agent', { code: channel.code }) : t('chat.selectChannel')}`}
                 />
               </div>

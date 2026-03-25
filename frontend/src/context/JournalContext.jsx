@@ -1,4 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { useAuth } from './AuthContext'
+import { ROLES } from '../constants/roles'
+import { API_BASE } from '../config/api'
 
 const JOURNAL_STORAGE_KEY = 'eeai_chatbot_journals'
 const SUBMISSIONS_STORAGE_KEY = 'eeai_chatbot_submissions'
@@ -42,8 +45,46 @@ function loadJournals() {
 const JournalContext = createContext(null)
 
 export function JournalProvider({ children }) {
+  const { apiToken, user } = useAuth()
   const [submissions, setSubmissions] = useState(loadSubmissions)
   const [journals, setJournals] = useState(loadJournals)
+
+  useEffect(() => {
+    if (!apiToken || user?.role !== ROLES.LEARNER || !user?.backendUserId || !user?.stableId) return
+    let cancelled = false
+    fetch(`${API_BASE}/api/journal/me`, {
+      headers: { Authorization: `Bearer ${apiToken}` },
+    })
+      .then((r) => (r.ok ? r.json() : { uploads: [] }))
+      .then((data) => {
+        if (cancelled) return
+        const stableId = user.stableId
+        const serverEntries = (data.uploads || []).map((u) => ({
+          id: `srv-${u.upload_id}`,
+          fileName: u.original_file_name || 'file',
+          fileSize: 0,
+          submissionId: u.period_id,
+          deadlineId: u.period_id,
+          uploadedAt: u.submitted_at ? new Date(u.submitted_at).getTime() : Date.now(),
+          fromServer: true,
+        }))
+        setJournals((prev) => {
+          const local = prev[stableId] || []
+          const localOnly = local.filter(
+            (j) =>
+              !j.fromServer &&
+              !serverEntries.some(
+                (s) => (s.submissionId || s.deadlineId) === (j.submissionId || j.deadlineId)
+              )
+          )
+          return { ...prev, [stableId]: [...serverEntries, ...localOnly] }
+        })
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [apiToken, user?.role, user?.backendUserId, user?.stableId])
 
   useEffect(() => {
     localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(submissions))

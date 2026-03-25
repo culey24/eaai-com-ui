@@ -28,9 +28,9 @@ export default function LoginForm() {
     if (!validate()) return
 
     try {
-      const loggedIn = await login(username.trim(), password)
-      if (loggedIn) navigate('/')
-      else setLoginError(t('auth.invalidCredentials'))
+      const result = await login(username.trim(), password)
+      if (result?.ok === true) navigate('/')
+      else setLoginError(result?.error || t('auth.invalidCredentials'))
     } catch {
       setLoginError(t('auth.invalidCredentials'))
     }

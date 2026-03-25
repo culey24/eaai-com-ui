@@ -40,7 +40,7 @@ export default function RegisterForm() {
     setIsSubmitting(true)
     try {
       const result = await register(username.trim(), password, classCode.trim(), fullName.trim())
-      if (result && !result.error) {
+      if (result?.ok === true) {
         setTimeout(() => navigate('/', { replace: true }), 0)
       } else {
         setRegisterError(result?.error || t('auth.accountExists'))

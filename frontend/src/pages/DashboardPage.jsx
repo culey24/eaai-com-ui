@@ -13,7 +13,7 @@ export default function DashboardPage() {
   const location = useLocation()
   const channels = getChannelsByUser(user) || []
   const [activeChannel, setActiveChannel] = useState(null)
-  const { addMessage, getMessagesForChannel } = useMessages()
+  const { addMessage, getMessagesForChannel } = useMessages(activeChannel?.id)
   const { addReport } = useReports()
 
   useEffect(() => {

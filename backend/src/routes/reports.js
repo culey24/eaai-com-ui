@@ -7,6 +7,79 @@ import { reportPostLimiter } from '../lib/rateLimits.js'
 const router = Router()
 router.use(authMiddleware)
 
+function userClassToLabel(uc) {
+  if (uc == null) return ''
+  const m = { IS_1: 'IS-1', IS_2: 'IS-2', IS_3: 'IS-3' }
+  return m[uc] || String(uc)
+}
+
+/**
+ * GET /api/reports
+ * - student: báo cáo do chính mình gửi
+ * - teacher: báo cáo trên kênh thuộc lớp trong phạm vi supporter
+ * - admin: tất cả
+ */
+router.get('/', async (req, res) => {
+  try {
+    const { userId, userRole } = req.auth
+
+    let where = {}
+    if (userRole === 'student') {
+      where = { reporterId: userId }
+    } else if (userRole === 'teacher') {
+      const scopes = await prisma.assistantManagedClass.findMany({
+        where: { teacherId: userId },
+        select: { userClass: true },
+      })
+      const classes = scopes.map((s) => s.userClass)
+      if (classes.length === 0) {
+        return res.status(200).json({ reports: [] })
+      }
+      where = {
+        channel: {
+          userClass: { in: classes },
+        },
+      }
+    } else if (userRole !== 'admin') {
+      return res.status(403).json({ error: 'Không có quyền' })
+    }
+
+    const rows = await prisma.contentReport.findMany({
+      where,
+      include: {
+        reporter: { select: { username: true, fullname: true } },
+        channel: { select: { channelId: true, userClass: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    })
+
+    const reports = rows.map((r) => ({
+      id: String(r.id),
+      channelId: r.channelId,
+      reportType: r.reportType,
+      type: r.reportType,
+      detail: r.detail,
+      status: r.status,
+      createdAt: r.createdAt,
+      timestamp: r.createdAt ? new Date(r.createdAt).getTime() : Date.now(),
+      reporterUsername: r.reporter?.username ?? '',
+      reporterFullName: (r.reporter?.fullname || '').trim(),
+      channelLabel: r.channel
+        ? `${userClassToLabel(r.channel.userClass)} (${r.channel.channelId})`
+        : r.channelId || '',
+    }))
+
+    return res.status(200).json(jsonSafe({ reports }))
+  } catch (err) {
+    console.error('[reports GET]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
 /**
  * POST /api/reports
  * Body (khớp eeai_chatbot_reports / ReportModal): channelId, type | reportType, detail?, channelLabel?, typeLabel?, messageId?

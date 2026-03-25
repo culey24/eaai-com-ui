@@ -2,6 +2,9 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { ROLES, VALID_CLASS_CODES } from '../constants/roles'
 import { API_BASE } from '../config/api'
 
+/** Bật đăng nhập/đăng ký mock (localStorage) khi API lỗi — dev/demo. Production: để false. */
+const MOCK_AUTH = import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true'
+
 const AUTH_STORAGE_KEY = 'eeai_chatbot_user'
 const REGISTERED_USERS_KEY = 'eeai_registered_users'
 const ADMIN_USERS_KEY = 'eeai_admin_users'
@@ -211,10 +214,25 @@ export function AuthProvider({ children }) {
         persistToken(data.token)
         setUser(newUser)
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
-        return newUser
+        return { ok: true, user: newUser }
+      }
+      if (!MOCK_AUTH) {
+        return {
+          ok: false,
+          error:
+            data.error ||
+            (res.status === 401
+              ? 'Sai tài khoản hoặc mật khẩu'
+              : `Đăng nhập thất bại (${res.status})`),
+        }
       }
     } catch {
-      /* mạng lỗi — thử mock */
+      if (!MOCK_AUTH) {
+        return {
+          ok: false,
+          error: 'Không kết nối được máy chủ. Kiểm tra VITE_API_URL và backend.',
+        }
+      }
     }
 
     const adminUsers = getAdminUsers()
@@ -230,7 +248,7 @@ export function AuthProvider({ children }) {
       }, 'admin')
       setUser(newUser)
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
-      return newUser
+      return { ok: true, user: newUser }
     }
 
     const provisioned = Object.values(PROVISIONED_ACCOUNTS).find(
@@ -244,7 +262,7 @@ export function AuthProvider({ children }) {
       })
       setUser(newUser)
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
-      return newUser
+      return { ok: true, user: newUser }
     }
 
     const users = getRegisteredUsers()
@@ -259,14 +277,14 @@ export function AuthProvider({ children }) {
       }, 'registered')
       setUser(newUser)
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
-      return newUser
+      return { ok: true, user: newUser }
     }
 
-    return null
+    return { ok: false, error: 'Sai tài khoản hoặc mật khẩu' }
   }
 
   const register = async (username, password, classCode, fullName = '') => {
-    if (!isClassCodeValid(classCode)) return { error: 'Mã lớp không hợp lệ' }
+    if (!isClassCodeValid(classCode)) return { ok: false, error: 'Mã lớp không hợp lệ' }
 
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
@@ -292,14 +310,33 @@ export function AuthProvider({ children }) {
         persistToken(data.token)
         setUser(newUser)
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
-        return newUser
+        return { ok: true, user: newUser }
       }
-      if (res.status === 409) return { error: data.error || 'Tài khoản đã tồn tại' }
+      if (res.status === 409) {
+        return { ok: false, error: data.error || 'Tài khoản đã tồn tại' }
+      }
+      if (!MOCK_AUTH) {
+        return {
+          ok: false,
+          error: data.error || `Đăng ký thất bại (${res.status})`,
+        }
+      }
     } catch {
-      /* fallback local */
+      if (!MOCK_AUTH) {
+        return { ok: false, error: 'Không kết nối được máy chủ. Kiểm tra VITE_API_URL và backend.' }
+      }
     }
 
-    if (!saveRegisteredUser(username, password, classCode, fullName)) return { error: 'Tài khoản này đã tồn tại' }
+    if (!MOCK_AUTH) {
+      return {
+        ok: false,
+        error: 'Đăng ký chỉ qua API. Bật VITE_ENABLE_MOCK_AUTH=true nếu cần chế độ demo offline.',
+      }
+    }
+
+    if (!saveRegisteredUser(username, password, classCode, fullName)) {
+      return { ok: false, error: 'Tài khoản này đã tồn tại' }
+    }
     const classCodeNorm = String(classCode).trim().toUpperCase()
     const fn = fullName?.trim() || ''
     persistToken(null)
@@ -310,7 +347,7 @@ export function AuthProvider({ children }) {
     }, 'registered')
     setUser(newUser)
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser))
-    return newUser
+    return { ok: true, user: newUser }
   }
 
   const logout = () => {

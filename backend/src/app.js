@@ -6,6 +6,8 @@ import messagesRoutes from './routes/messages.js'
 import syncRoutes from './routes/sync.js'
 import reportsRoutes from './routes/reports.js'
 import journalRoutes from './routes/journal.js'
+import adminUsersRoutes from './routes/adminUsers.js'
+import supporterRoutes from './routes/supporter.js'
 import { authMiddleware } from './middleware/auth.js'
 import { apiGeneralLimiter } from './lib/rateLimits.js'
 
@@ -50,6 +52,8 @@ export function createApp() {
   app.use('/api/sync', syncRoutes)
   app.use('/api/reports', reportsRoutes)
   app.use('/api/journal', journalRoutes)
+  app.use('/api/admin', adminUsersRoutes)
+  app.use('/api/supporter', supporterRoutes)
 
   /** Ví dụ route cần đăng nhập tùy chỉnh */
   app.get('/api/me', authMiddleware, (req, res) => {

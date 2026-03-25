@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import Sidebar from '../../components/layout/Sidebar'
 import ProfileCompleteBanner from '../../components/ProfileCompleteBanner'
 import TaskDashboardWidget from '../../components/supporter/TaskDashboardWidget'
@@ -9,20 +10,67 @@ import { useLanguage } from '../../context/LanguageContext'
 import { useSupporterStats } from '../../hooks/useSupporterStats'
 import { useSupporterChat } from '../../context/SupporterChatContext'
 import { CLASS_TO_CHANNEL } from '../../constants/roles'
+import { useAuth } from '../../context/AuthContext'
+import { API_BASE } from '../../config/api'
 
 export default function SupporterDashboardPage() {
   const { t } = useLanguage()
-  const { getMessagesForChannel, addMessage } = useMessages()
+  const { apiToken } = useAuth()
+  const { selectedUser } = useSupporterChat()
+  const channel = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
+  const { getMessagesForChannel, addMessage } = useMessages(channel?.id, {
+    assistantViewLearnerId: selectedUser?.backendUserId ?? null,
+  })
   const { getJournalsForUser } = useJournal()
   const stats = useSupporterStats()
-  const { selectedUser } = useSupporterChat()
+  const [apiJournals, setApiJournals] = useState({ loaded: false, list: null })
+
+  useEffect(() => {
+    if (!apiToken || !selectedUser?.backendUserId) {
+      setApiJournals({ loaded: false, list: null })
+      return
+    }
+    let cancelled = false
+    fetch(
+      `${API_BASE}/api/journal/by-user/${encodeURIComponent(selectedUser.backendUserId)}`,
+      { headers: { Authorization: `Bearer ${apiToken}` } }
+    )
+      .then(async (r) => {
+        if (!r.ok) return { ok: false }
+        const data = await r.json().catch(() => ({ uploads: [] }))
+        return { ok: true, data }
+      })
+      .then((out) => {
+        if (cancelled) return
+        if (!out.ok) {
+          setApiJournals({ loaded: false, list: null })
+          return
+        }
+        const list = (out.data.uploads || []).map((u) => ({
+          id: `srv-${u.upload_id}`,
+          fileName: u.original_file_name || '—',
+          uploadedAt: u.submitted_at ? new Date(u.submitted_at).getTime() : Date.now(),
+        }))
+        setApiJournals({ loaded: true, list })
+      })
+      .catch(() => {
+        if (!cancelled) setApiJournals({ loaded: false, list: null })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [apiToken, selectedUser?.backendUserId])
 
   const getUserDisplayName = (u) =>
     u.fullName?.trim() ? `${u.fullName.trim()} (${u.username})` : (u.username || u.id)
 
-  const channel = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
   const messages = channel && selectedUser ? getMessagesForChannel(channel.id, selectedUser.id) : []
-  const journals = selectedUser ? getJournalsForUser(selectedUser.id) : []
+  const journals =
+    apiJournals.loaded && apiJournals.list
+      ? apiJournals.list
+      : selectedUser
+        ? getJournalsForUser(selectedUser.id)
+        : []
 
   const handleSendMessage = (channelId, content, file) => {
     if (!selectedUser) return

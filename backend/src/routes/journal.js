@@ -10,6 +10,79 @@ import { journalUploadLimiter } from '../lib/rateLimits.js'
 
 const router = Router()
 
+/**
+ * GET /api/journal/me
+ * Learner: danh sách bản nộp của chính mình.
+ */
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'student') {
+      return res.status(403).json({ error: 'Chỉ learner xem được journal của mình' })
+    }
+    const userId = req.auth.userId
+    const rows = await prisma.$queryRaw`
+      SELECT ju.upload_id, ju.period_id, ju.original_file_name, ju.submitted_at, ju.status
+      FROM journal_uploads ju
+      WHERE ju.user_id = ${userId}
+      ORDER BY ju.submitted_at DESC
+    `
+    return res.status(200).json(jsonSafe({ uploads: rows || [] }))
+  } catch (err) {
+    console.error('[journal GET /me]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /api/journal/by-user/:learnerId
+ * Teacher: xem journal của learner thuộc lớp mình quản lý.
+ */
+router.get('/by-user/:learnerId', authMiddleware, async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'teacher') {
+      return res.status(403).json({ error: 'Chỉ assistant' })
+    }
+    const learnerId = String(req.params.learnerId || '').trim()
+    if (!learnerId) {
+      return res.status(400).json({ error: 'Thiếu learnerId' })
+    }
+
+    const learner = await prisma.user.findUnique({
+      where: { userId: learnerId },
+      select: { userId: true, userRole: true, userClass: true },
+    })
+    if (!learner || learner.userRole !== 'student') {
+      return res.status(404).json({ error: 'Không tìm thấy learner' })
+    }
+
+    const scopes = await prisma.assistantManagedClass.findMany({
+      where: { teacherId: req.auth.userId },
+      select: { userClass: true },
+    })
+    const allowed = new Set(scopes.map((s) => s.userClass))
+    if (learner.userClass == null || !allowed.has(learner.userClass)) {
+      return res.status(403).json({ error: 'Không có quyền xem journal của learner này' })
+    }
+
+    const rows = await prisma.$queryRaw`
+      SELECT ju.upload_id, ju.period_id, ju.original_file_name, ju.submitted_at, ju.status
+      FROM journal_uploads ju
+      WHERE ju.user_id = ${learnerId}
+      ORDER BY ju.submitted_at DESC
+    `
+    return res.status(200).json(jsonSafe({ uploads: rows || [] }))
+  } catch (err) {
+    console.error('[journal GET by-user]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
 const maxBytes = Math.min(Number(process.env.JOURNAL_MAX_FILE_BYTES) || 20 * 1024 * 1024, 50 * 1024 * 1024)
 const upload = multer({
   storage: multer.memoryStorage(),

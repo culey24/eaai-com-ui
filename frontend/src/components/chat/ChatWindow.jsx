@@ -1,12 +1,16 @@
 import { useRef, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { MessageSquare, Flag } from 'lucide-react'
 import MessageItem from './MessageItem'
 import ChatInput from './ChatInput'
 import ReportModal from './ReportModal'
 import { useLanguage } from '../../context/LanguageContext'
+import { useAuth } from '../../context/AuthContext'
 
 export default function ChatWindow({ channel, messages, onSendMessage, onReport, userId, hideReport, customTitle }) {
   const { t } = useLanguage()
+  const { isProfileComplete } = useAuth()
+  const canSendChat = isProfileComplete()
   const channelLabel = customTitle ?? (channel?.labelKey ? t(channel.labelKey, { code: channel.code }) : channel?.label)
   const scrollRef = useRef(null)
   const [reportOpen, setReportOpen] = useState(false)
@@ -87,8 +91,26 @@ export default function ChatWindow({ channel, messages, onSendMessage, onReport,
         )}
       </div>
 
+      {channel && !canSendChat && (
+        <div className="flex-shrink-0 px-6 pt-4">
+          <div className="max-w-3xl mx-auto rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/90 dark:bg-amber-900/25 px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
+            <p>{t('chat.inputLockedHint')}</p>
+            <Link
+              to="/settings"
+              className="inline-block mt-2 font-medium text-primary hover:underline"
+            >
+              {t('profile.goToSettings')}
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
-      <ChatInput onSend={handleSend} disabled={!channel} />
+      <ChatInput
+        onSend={handleSend}
+        disabled={!channel || !canSendChat}
+        placeholder={!canSendChat && channel ? t('chat.inputLockedPlaceholder') : t('chat.inputPlaceholder')}
+      />
     </div>
   )
 }

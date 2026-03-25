@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { Send, Paperclip } from 'lucide-react'
 
-export default function ChatInput({ onSend, disabled }) {
+export default function ChatInput({ onSend, disabled, placeholder = 'Nhập tin nhắn...' }) {
   const [message, setMessage] = useState('')
   const [attachedFile, setAttachedFile] = useState(null)
   const fileInputRef = useRef(null)
@@ -68,7 +68,7 @@ export default function ChatInput({ onSend, disabled }) {
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Nhập tin nhắn..."
+            placeholder={placeholder}
             disabled={disabled}
             className="flex-1 px-4 py-2.5 rounded-xl border-0 bg-transparent focus:ring-0 outline-none disabled:opacity-50 disabled:cursor-not-allowed text-[15px] placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-800 dark:text-white"
           />

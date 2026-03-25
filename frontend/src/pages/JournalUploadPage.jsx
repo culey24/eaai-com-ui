@@ -4,6 +4,14 @@ import { ArrowLeft, FileText, Upload, CheckCircle, Pencil, Trash2, Calendar } fr
 import { useLanguage } from '../context/LanguageContext'
 import { useJournal } from '../context/JournalContext'
 import { useAuth } from '../context/AuthContext'
+import { ROLES } from '../constants/roles'
+import { API_BASE } from '../config/api'
+
+/** Đợt journal trong DB (seed: default). Submission local khác id vẫn map về default. */
+function periodIdForApi(submissionId) {
+  if (submissionId === 'default') return 'default'
+  return 'default'
+}
 
 export default function JournalUploadPage() {
   const { t } = useLanguage()
@@ -16,11 +24,12 @@ export default function JournalUploadPage() {
     deleteJournal,
     isSubmissionOpen,
   } = useJournal()
-  const { user } = useAuth()
+  const { user, apiToken } = useAuth()
   const fileInputRef = useRef(null)
   const editInputRef = useRef(null)
   const [uploading, setUploading] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
 
   const userId = user?.stableId || (user?.name ? `reg-${user.name}` : user?.id)
   const activeSub = getActiveSubmission()
@@ -31,30 +40,64 @@ export default function JournalUploadPage() {
     .sort((a, b) => b.endsAt - a.endsAt)
   const currentEntry = activeSub ? getJournalForUserAndSubmission(userId, activeSub.id) : null
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file || !user || !activeSub) return
 
     setUploading(true)
     setUploadSuccess(false)
-    setTimeout(() => {
+    setUploadError(null)
+
+    try {
+      if (apiToken && user?.backendUserId && user?.role === ROLES.LEARNER) {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('periodId', periodIdForApi(activeSub.id))
+        const res = await fetch(`${API_BASE}/api/journal/upload`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${apiToken}` },
+          body: fd,
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          throw new Error(data.error || data.message || `Upload thất bại (${res.status})`)
+        }
+      }
+
       if (currentEntry) {
         updateJournal(userId, activeSub.id, file)
       } else {
         addJournal(userId, file, activeSub.id)
       }
-      setUploading(false)
       setUploadSuccess(true)
-      e.target.value = ''
       setTimeout(() => setUploadSuccess(false), 3000)
-    }, 500)
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
   }
 
   const handleEditClick = () => editInputRef.current?.click()
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!activeSub || !window.confirm(t('journal.confirmDelete'))) return
-    deleteJournal(userId, activeSub.id)
+    setUploadError(null)
+    try {
+      if (apiToken && user?.backendUserId && user?.role === ROLES.LEARNER) {
+        const q = new URLSearchParams({ periodId: periodIdForApi(activeSub.id) })
+        const res = await fetch(`${API_BASE}/api/journal/upload?${q}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${apiToken}` },
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || data.message || `Xóa thất bại (${res.status})`)
+      }
+      deleteJournal(userId, activeSub.id)
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : String(err))
+    }
   }
 
   const formatDate = (ts) =>
@@ -120,14 +163,14 @@ export default function JournalUploadPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,.doc,.docx,.txt,.md,.csv"
                   onChange={handleFileChange}
                   className="hidden"
                 />
                 <input
                   ref={editInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,.doc,.docx,.txt,.md,.csv"
                   onChange={handleFileChange}
                   className="hidden"
                 />
@@ -176,10 +219,15 @@ export default function JournalUploadPage() {
                     <Upload className="w-12 h-12 text-slate-400" />
                     <p className="font-medium text-slate-800 dark:text-white">{t('journal.upload')}</p>
                     <p className="text-sm text-slate-500 dark:text-slate-400">{t('journal.dragDrop')}</p>
-                    <p className="text-xs text-slate-400">PDF, DOC, DOCX</p>
+                    <p className="text-xs text-slate-400">PDF, DOC, DOCX, TXT, MD (trích văn bản cho chatbot)</p>
                   </div>
                 )}
               </div>
+              {uploadError && (
+                <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+                  {uploadError}
+                </p>
+              )}
             </>
           ) : (
             <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 p-8 text-center">

@@ -29,10 +29,7 @@
     "passwordRequired": "Vui lòng nhập mật khẩu",
     "invalidClassCode": "Mã lớp không hợp lệ. Các mã hợp lệ: {codes}",
     "accountExists": "Tài khoản này đã tồn tại",
-    "creatingAccount": "Đang tạo tài khoản...",
-    "demoAdmin": "Admin",
-    "demoLearner": "Người học",
-    "demoAssistant": "Quản lý lớp"
+    "creatingAccount": "Đang tạo tài khoản..."
   },
   "sidebar": {
     "chatChannels": "Kênh chat",
@@ -49,7 +46,10 @@
     "noMessages": "Chưa có tin nhắn nào",
     "noMessagesHint": "Hãy gửi tin nhắn hoặc đính kèm file để bắt đầu!",
     "report": "Báo cáo",
-    "agent": "Chat với Agent ({code})"
+    "agent": "Chat với Agent ({code})",
+    "inputPlaceholder": "Nhập tin nhắn...",
+    "inputLockedPlaceholder": "Hoàn thiện hồ sơ trong Cài đặt để gửi tin nhắn",
+    "inputLockedHint": "Bạn cần cập nhật đủ thông tin (MSSV, Khoa, chuyên ngành) trong mục Cài đặt trước khi được gửi tin nhắn."
   },
   "report": {
     "title": "Báo cáo",

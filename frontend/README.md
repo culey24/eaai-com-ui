@@ -17,7 +17,7 @@ npm run dev
 
 Mặc định Vite phục vụ tại **http://localhost:5173**. PostgreSQL (Docker) nằm ở workspace **[`backend/`](../backend/)** — chạy riêng, xem [docs/DATABASE.md](../docs/DATABASE.md).
 
-**Chat tối giản (polling):** sao chép [`.env.example`](./.env.example) → `.env` và chỉnh `VITE_API_URL` trỏ tới backend (mặc định `http://localhost:3000`). Dashboard gọi `GET/POST /api/messages`.
+**API backend:** sao chép [`.env.example`](./.env.example) → `.env` và chỉnh `VITE_API_URL` (mặc định `http://localhost:3000`). Đăng nhập/đăng ký gọi `/api/auth/*`; chat kênh (người học) làm mới tin từ DB định kỳ, không dùng Socket.io.
 
 ### Các lệnh npm
 

@@ -19,12 +19,18 @@ app.get('/health', async (req, res) => {
 })
 
 async function main() {
-  await prisma.$connect()
-  console.log('[prisma] connected to database')
-
-  const server = app.listen(PORT, () => {
-    console.log(`[express] http://localhost:${PORT}`)
+  /* Bind sớm trên mọi interface — Docker/Railway cần 0.0.0.0, không chỉ localhost. */
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[express] listening on 0.0.0.0:${PORT}`)
   })
+
+  try {
+    await prisma.$connect()
+    console.log('[prisma] connected to database')
+  } catch (err) {
+    console.error('[prisma] connect failed — kiểm tra DATABASE_URL / Postgres trên Railway', err)
+    process.exit(1)
+  }
 
   const shutdown = async () => {
     server.close()

@@ -4,6 +4,7 @@ import { ArrowLeft, User, Mail, Shield, Sun, Moon, GraduationCap, BookOpen, Glob
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useLanguage } from '../context/LanguageContext'
+import { formatAuthResultError } from '../lib/authErrorUi'
 
 const PLACEHOLDER = 'Chưa cập nhật'
 
@@ -219,7 +220,7 @@ export default function SettingsPage() {
                           subject: subject.trim() || PLACEHOLDER,
                         })
                         if (result?.ok) setEditing(false)
-                        else setSaveError(result?.error || 'Lưu thất bại')
+                        else setSaveError(formatAuthResultError(result, t, 'auth.errors.profileSaveFailedGeneric'))
                       } finally {
                         setSaving(false)
                       }

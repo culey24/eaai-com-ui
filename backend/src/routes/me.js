@@ -127,7 +127,10 @@ router.get('/profile', async (req, res) => {
 router.patch('/profile', async (req, res) => {
   try {
     if (req.auth.userRole !== 'student') {
-      return res.status(403).json({ error: 'Chỉ tài khoản learner cập nhật hồ sơ này' })
+      return res.status(403).json({
+        code: 'PROFILE_LEARNER_ONLY',
+        error: 'Chỉ tài khoản learner cập nhật hồ sơ này',
+      })
     }
 
     const body = req.body || {}
@@ -176,7 +179,10 @@ router.patch('/profile', async (req, res) => {
     }
 
     if (Object.keys(data).length === 0) {
-      return res.status(400).json({ error: 'Không có trường hợp lệ để cập nhật' })
+      return res.status(400).json({
+        code: 'PROFILE_NO_VALID_FIELDS',
+        error: 'Không có trường hợp lệ để cập nhật',
+      })
     }
 
     const updated = await prisma.user.update({
@@ -217,10 +223,14 @@ router.patch('/profile', async (req, res) => {
     return res.status(200).json(jsonSafe({ profile }))
   } catch (err) {
     if (err?.code === 'P2002') {
-      return res.status(409).json({ error: 'Email hoặc trường unique bị trùng' })
+      return res.status(409).json({
+        code: 'PROFILE_DUPLICATE',
+        error: 'Email hoặc trường unique bị trùng',
+      })
     }
     console.error('[me/profile PATCH]', err)
     return res.status(500).json({
+      code: 'SERVER_ERROR',
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),
     })

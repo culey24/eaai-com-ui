@@ -38,7 +38,28 @@
     "invalidClassCode": "Mã lớp không hợp lệ. Các mã hợp lệ: {codes}",
     "accountExists": "Tài khoản này đã tồn tại",
     "creatingAccount": "Đang tạo tài khoản...",
-    "registerDemoHint": "Demo: Mã lớp — {codes}"
+    "registerDemoHint": "Demo: Mã lớp — {codes}",
+    "errors": {
+      "invalidCredentials": "Sai tài khoản hoặc mật khẩu",
+      "loginMissingFields": "Thiếu tài khoản hoặc mật khẩu",
+      "registerMissingFields": "Thiếu tài khoản, mật khẩu hoặc mã lớp",
+      "passwordTooShort": "Mật khẩu tối thiểu 4 ký tự",
+      "invalidClassCodeApi": "Mã lớp không hợp lệ (IS-1, IS-2, IS-3)",
+      "accountExists": "Tài khoản đã tồn tại",
+      "serverMisconfigJwt": "Máy chủ thiếu cấu hình JWT",
+      "serverError": "Lỗi máy chủ",
+      "registerOfflineOnly": "Đăng ký chỉ qua API. Bật VITE_ENABLE_MOCK_AUTH=true nếu cần chế độ demo offline.",
+      "classCodeInvalid": "Mã lớp không hợp lệ",
+      "notLoggedIn": "Chưa đăng nhập",
+      "network": "Không kết nối được máy chủ. Kiểm tra địa chỉ API và backend.",
+      "loginFailedStatus": "Đăng nhập thất bại ({status})",
+      "registerFailedStatus": "Đăng ký thất bại ({status})",
+      "profileSaveFailed": "Lưu hồ sơ thất bại ({status})",
+      "profileSaveFailedGeneric": "Lưu hồ sơ thất bại",
+      "profileLearnerOnly": "Chỉ tài khoản learner cập nhật hồ sơ này",
+      "profileNoValidFields": "Không có trường hợp lệ để cập nhật",
+      "profileDuplicate": "Email hoặc trường unique bị trùng"
+    }
   },
   "sidebar": {
     "chatChannels": "Kênh chat",

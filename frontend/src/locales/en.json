@@ -38,7 +38,28 @@
     "invalidClassCode": "Invalid class code. Valid codes: {codes}",
     "accountExists": "This account already exists",
     "creatingAccount": "Creating account...",
-    "registerDemoHint": "Demo: Class code — {codes}"
+    "registerDemoHint": "Demo: Class code — {codes}",
+    "errors": {
+      "invalidCredentials": "Invalid username or password",
+      "loginMissingFields": "Please enter username and password",
+      "registerMissingFields": "Please enter username, password, and class code",
+      "passwordTooShort": "Password must be at least 4 characters",
+      "invalidClassCodeApi": "Invalid class code (use IS-1, IS-2, or IS-3)",
+      "accountExists": "This account already exists",
+      "serverMisconfigJwt": "Server is missing JWT configuration",
+      "serverError": "Server error",
+      "registerOfflineOnly": "Registration uses the API only. Set VITE_ENABLE_MOCK_AUTH=true for offline demo mode.",
+      "classCodeInvalid": "Invalid class code",
+      "notLoggedIn": "Not signed in",
+      "network": "Could not reach the server. Check the API URL and that the backend is running.",
+      "loginFailedStatus": "Sign-in failed ({status})",
+      "registerFailedStatus": "Registration failed ({status})",
+      "profileSaveFailed": "Could not save profile ({status})",
+      "profileSaveFailedGeneric": "Could not save profile",
+      "profileLearnerOnly": "Only learner accounts can update this profile",
+      "profileNoValidFields": "No valid fields to update",
+      "profileDuplicate": "Email or another unique field is already in use"
+    }
   },
   "sidebar": {
     "chatChannels": "Chat channels",

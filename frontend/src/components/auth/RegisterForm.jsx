@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { UserPlus, User, Lock, AlertCircle, BookMarked, Info } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { formatAuthResultError } from '../../lib/authErrorUi'
 import { VALID_CLASS_CODES } from '../../constants/roles'
 
 export default function RegisterForm() {
@@ -43,7 +44,7 @@ export default function RegisterForm() {
       if (result?.ok === true) {
         setTimeout(() => navigate('/', { replace: true }), 0)
       } else {
-        setRegisterError(result?.error || t('auth.accountExists'))
+        setRegisterError(formatAuthResultError(result, t, 'auth.accountExists'))
       }
     } catch {
       setRegisterError(t('auth.accountExists'))

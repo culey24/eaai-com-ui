@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { ROLES, VALID_CLASS_CODES } from '../constants/roles'
 import { API_BASE } from '../config/api'
+import { AuthErrorCode } from '../lib/authErrorUi'
 
 /** Bật đăng nhập/đăng ký mock (localStorage) khi API lỗi — dev/demo. Production: để false. */
 const MOCK_AUTH = import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true'
@@ -329,21 +330,26 @@ export function AuthProvider({ children }) {
         return { ok: true, user: newUser }
       }
       if (!MOCK_AUTH) {
+        if (data.code) {
+          return { ok: false, code: data.code, error: data.error }
+        }
+        if (res.status === 401) {
+          return {
+            ok: false,
+            code: AuthErrorCode.INVALID_CREDENTIALS,
+            error: data.error,
+          }
+        }
         return {
           ok: false,
-          error:
-            data.error ||
-            (res.status === 401
-              ? 'Sai tài khoản hoặc mật khẩu'
-              : `Đăng nhập thất bại (${res.status})`),
+          code: AuthErrorCode.LOGIN_FAILED_STATUS,
+          status: res.status,
+          error: data.error,
         }
       }
     } catch {
       if (!MOCK_AUTH) {
-        return {
-          ok: false,
-          error: 'Không kết nối được máy chủ. Kiểm tra VITE_API_URL và backend.',
-        }
+        return { ok: false, code: AuthErrorCode.NETWORK }
       }
     }
 
@@ -392,11 +398,13 @@ export function AuthProvider({ children }) {
       return { ok: true, user: newUser }
     }
 
-    return { ok: false, error: 'Sai tài khoản hoặc mật khẩu' }
+    return { ok: false, code: AuthErrorCode.INVALID_CREDENTIALS }
   }
 
   const register = async (username, password, classCode, fullName = '') => {
-    if (!isClassCodeValid(classCode)) return { ok: false, error: 'Mã lớp không hợp lệ' }
+    if (!isClassCodeValid(classCode)) {
+      return { ok: false, code: AuthErrorCode.CLASS_CODE_INVALID_LOCAL }
+    }
 
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
@@ -425,29 +433,35 @@ export function AuthProvider({ children }) {
         return { ok: true, user: newUser }
       }
       if (res.status === 409) {
-        return { ok: false, error: data.error || 'Tài khoản đã tồn tại' }
-      }
-      if (!MOCK_AUTH) {
         return {
           ok: false,
-          error: data.error || `Đăng ký thất bại (${res.status})`,
+          code: data.code || AuthErrorCode.ACCOUNT_EXISTS,
+          error: data.error,
+        }
+      }
+      if (!MOCK_AUTH) {
+        if (data.code) {
+          return { ok: false, code: data.code, error: data.error }
+        }
+        return {
+          ok: false,
+          code: AuthErrorCode.REGISTER_FAILED_STATUS,
+          status: res.status,
+          error: data.error,
         }
       }
     } catch {
       if (!MOCK_AUTH) {
-        return { ok: false, error: 'Không kết nối được máy chủ. Kiểm tra VITE_API_URL và backend.' }
+        return { ok: false, code: AuthErrorCode.NETWORK }
       }
     }
 
     if (!MOCK_AUTH) {
-      return {
-        ok: false,
-        error: 'Đăng ký chỉ qua API. Bật VITE_ENABLE_MOCK_AUTH=true nếu cần chế độ demo offline.',
-      }
+      return { ok: false, code: AuthErrorCode.REGISTER_OFFLINE_ONLY }
     }
 
     if (!saveRegisteredUser(username, password, classCode, fullName)) {
-      return { ok: false, error: 'Tài khoản này đã tồn tại' }
+      return { ok: false, code: AuthErrorCode.ACCOUNT_EXISTS }
     }
     const classCodeNorm = String(classCode).trim().toUpperCase()
     const fn = fullName?.trim() || ''
@@ -469,7 +483,7 @@ export function AuthProvider({ children }) {
   }
 
   const updateProfile = async (updates) => {
-    if (!user) return { ok: false, error: 'Chưa đăng nhập' }
+    if (!user) return { ok: false, code: AuthErrorCode.NOT_LOGGED_IN }
     const token = apiToken || localStorage.getItem(API_TOKEN_KEY)
     if (
       token &&
@@ -496,9 +510,19 @@ export function AuthProvider({ children }) {
         })
         const data = await res.json().catch(() => ({}))
         if (!res.ok) {
+          if (data.code) {
+            return {
+              ok: false,
+              code: data.code,
+              status: res.status,
+              error: data.error,
+            }
+          }
           return {
             ok: false,
-            error: data.error || `Lưu thất bại (${res.status})`,
+            code: AuthErrorCode.PROFILE_SAVE_FAILED,
+            status: res.status,
+            error: data.error,
           }
         }
         if (data.profile) {
@@ -512,7 +536,7 @@ export function AuthProvider({ children }) {
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(fallback))
         return { ok: true, user: fallback }
       } catch {
-        return { ok: false, error: 'Không kết nối được máy chủ' }
+        return { ok: false, code: AuthErrorCode.NETWORK }
       }
     }
     const updated = { ...user, ...updates }

@@ -31,24 +31,37 @@ router.post('/register', authRouteLimiter, async (req, res) => {
     const cc = typeof classCode === 'string' ? classCode.trim() : ''
 
     if (!u || !p || !cc) {
-      return res.status(400).json({ error: 'Thiếu username, password hoặc classCode' })
+      return res.status(400).json({
+        code: 'REGISTER_MISSING_FIELDS',
+        error: 'Thiếu username, password hoặc classCode',
+      })
     }
     if (p.length < 4) {
-      return res.status(400).json({ error: 'Mật khẩu tối thiểu 4 ký tự' })
+      return res.status(400).json({
+        code: 'PASSWORD_TOO_SHORT',
+        error: 'Mật khẩu tối thiểu 4 ký tự',
+      })
     }
 
     const userClass = parseUserClass(cc)
     if (!userClass) {
-      return res.status(400).json({ error: 'Mã lớp không hợp lệ (IS-1, IS-2, IS-3)' })
+      return res.status(400).json({
+        code: 'INVALID_CLASS_CODE',
+        error: 'Mã lớp không hợp lệ (IS-1, IS-2, IS-3)',
+      })
     }
 
     const exists = await prisma.user.findUnique({ where: { username: u } })
     if (exists) {
-      return res.status(409).json({ error: 'Tài khoản đã tồn tại' })
+      return res.status(409).json({
+        code: 'ACCOUNT_EXISTS',
+        error: 'Tài khoản đã tồn tại',
+      })
     }
 
     if (!process.env.JWT_SECRET?.trim()) {
       return res.status(500).json({
+        code: 'SERVER_MISCONFIG_JWT',
         error: 'Cấu hình máy chủ thiếu JWT_SECRET',
         message: 'Đặt biến JWT_SECRET trên Railway (Variables)',
       })
@@ -100,6 +113,7 @@ router.post('/register', authRouteLimiter, async (req, res) => {
   } catch (err) {
     console.error('[auth/register]', err)
     return res.status(500).json({
+      code: 'SERVER_ERROR',
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),
     })
@@ -115,17 +129,26 @@ router.post('/login', authRouteLimiter, async (req, res) => {
     const u = typeof username === 'string' ? username.trim() : ''
     const p = typeof password === 'string' ? password : ''
     if (!u || !p) {
-      return res.status(400).json({ error: 'Thiếu username hoặc password' })
+      return res.status(400).json({
+        code: 'LOGIN_MISSING_FIELDS',
+        error: 'Thiếu username hoặc password',
+      })
     }
 
     const user = await prisma.user.findUnique({ where: { username: u } })
     if (!user) {
-      return res.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu' })
+      return res.status(401).json({
+        code: 'INVALID_CREDENTIALS',
+        error: 'Sai tài khoản hoặc mật khẩu',
+      })
     }
 
     const ok = await verifyPassword(p, user.pwd, user.userId)
     if (!ok) {
-      return res.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu' })
+      return res.status(401).json({
+        code: 'INVALID_CREDENTIALS',
+        error: 'Sai tài khoản hoặc mật khẩu',
+      })
     }
 
     const token = signToken({
@@ -157,6 +180,7 @@ router.post('/login', authRouteLimiter, async (req, res) => {
   } catch (err) {
     console.error('[auth/login]', err)
     return res.status(500).json({
+      code: 'SERVER_ERROR',
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),
     })

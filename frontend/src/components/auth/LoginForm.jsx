@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { formatAuthResultError } from '../../lib/authErrorUi'
 
 export default function LoginForm() {
   const navigate = useNavigate()
@@ -30,7 +31,7 @@ export default function LoginForm() {
     try {
       const result = await login(username.trim(), password)
       if (result?.ok === true) navigate('/')
-      else setLoginError(result?.error || t('auth.invalidCredentials'))
+      else setLoginError(formatAuthResultError(result, t, 'auth.invalidCredentials'))
     } catch {
       setLoginError(t('auth.invalidCredentials'))
     }

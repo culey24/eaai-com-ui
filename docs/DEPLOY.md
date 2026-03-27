@@ -59,6 +59,8 @@ Trên API, đặt `TRUST_PROXY=1` nếu TLS kết thúc tại proxy.
 
 - **Biến môi trường**: `DATABASE_URL`, `JWT_SECRET`, `PORT`, tuỳ chọn `JWT_EXPIRES_IN`, `CORS_ORIGINS`, `TRUST_PROXY`, và `OPENROUTER_*` nếu dùng trợ lý IS-2 (xem mục OpenRouter ở trên).
 
+- **Railway / DB rỗng (P3009):** Entrypoint đã `migrate resolve --rolled-back` cho migration `journal_extracted_text` lỗi cũ; migration đó chỉ thêm cột khi bảng đã tồn tại. Migration **`journal_periods_and_uploads`** tạo đủ `journal_periods` + `journal_uploads` và seed đợt `default` — không bắt buộc chạy `backend/init` trên hosting. Nếu vẫn kẹt: `npx prisma migrate resolve --rolled-back 20260325180000_journal_extracted_text` rồi `npx prisma migrate deploy`.
+
 ### Frontend
 
 - **Build**: `cd frontend && npm ci && npm run build`

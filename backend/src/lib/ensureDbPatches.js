@@ -9,11 +9,21 @@ const USER_PROFILE_ALTER = [
   'ALTER TABLE users ADD COLUMN IF NOT EXISTS subject_note VARCHAR(255)',
 ]
 
+const JOURNAL_EXTRACTED_TEXT_PATCH = `
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'journal_uploads'
+  ) THEN
+    ALTER TABLE journal_uploads ADD COLUMN IF NOT EXISTS extracted_text TEXT;
+  END IF;
+END $$;
+`
+
 export async function applyLightweightSchemaPatches(prisma) {
   try {
-    await prisma.$executeRawUnsafe(
-      'ALTER TABLE journal_uploads ADD COLUMN IF NOT EXISTS extracted_text TEXT'
-    )
+    await prisma.$executeRawUnsafe(JOURNAL_EXTRACTED_TEXT_PATCH)
   } catch (err) {
     console.warn(
       '[db-patches] journal_uploads.extracted_text:',

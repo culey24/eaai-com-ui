@@ -43,6 +43,7 @@ cd backend && docker compose down -v && docker compose up -d
 - **Schema:** [backend/prisma/schema.prisma](../backend/prisma/schema.prisma) — map tới bảng Postgres do `backend/init/*.sql` tạo.
 - **Biến môi trường:** `DATABASE_URL` trong `backend/.env` (mẫu: [backend/.env.example](../backend/.env.example)).
 - **Sau khi container Postgres init xong:** trong `backend/` chạy `npm run prisma:migrate` để áp migration bổ sung cột `created_at` / `updated_at` (file `prisma/migrations/*_prisma_orm_timestamps`).
+- **Journal (Railway / DB chỉ Prisma):** migration `*_journal_periods_and_uploads` tạo `journal_periods` + `journal_uploads` và seed đợt `default` — không cần chạy `backend/init` đầy đủ. Docker local đã có bảng từ `04_app_schema.sql` thì lệnh `CREATE IF NOT EXISTS` + `INSERT … ON CONFLICT DO NOTHING` không phá dữ liệu cũ.
 - **Chạy server thử:** `cd backend && npm install && npm run dev` — `GET /health` gọi `prisma.$queryRaw` kiểm tra kết nối.
 
 Mapping nhanh Prisma ↔ mock cũ:

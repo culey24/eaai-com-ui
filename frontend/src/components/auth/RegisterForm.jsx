@@ -74,7 +74,7 @@ export default function RegisterForm() {
             className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border ${
               errors.classCode ? 'border-red-300' : 'border-slate-200'
             } focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200`}
-            placeholder="Ví dụ: IS-1, IS-2, IS-3"
+            placeholder={t('auth.classCodePlaceholder')}
           />
         </div>
         {errors.classCode && (
@@ -110,7 +110,7 @@ export default function RegisterForm() {
             className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border ${
               errors.username ? 'border-red-300' : 'border-slate-200'
             } focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200`}
-            placeholder="Nhập tài khoản"
+            placeholder={t('auth.usernamePlaceholder')}
           />
         </div>
         {errors.username && (
@@ -132,7 +132,7 @@ export default function RegisterForm() {
             className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border ${
               errors.password ? 'border-red-300' : 'border-slate-200'
             } focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200`}
-            placeholder="••••••••"
+            placeholder={t('auth.passwordPlaceholder')}
           />
         </div>
         {errors.password && (
@@ -154,7 +154,7 @@ export default function RegisterForm() {
             className={`w-full pl-11 pr-4 py-3.5 rounded-2xl border ${
               errors.confirmPassword ? 'border-red-300' : 'border-slate-200'
             } focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none transition-all duration-200`}
-            placeholder="••••••••"
+            placeholder={t('auth.confirmPasswordPlaceholder')}
           />
         </div>
         {errors.confirmPassword && (
@@ -193,7 +193,7 @@ export default function RegisterForm() {
       <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
         <p className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mb-1">
           <Info className="w-3.5 h-3.5" />
-          Demo: {t('auth.classCode')} — {VALID_CLASS_CODES.join(', ')}
+          {t('auth.registerDemoHint', { codes: VALID_CLASS_CODES.join(', ') })}
         </p>
       </div>
     </form>

@@ -9,14 +9,22 @@
     "loading": "Loading..."
   },
   "auth": {
+    "brandUniversity": "VIETNAM NATIONAL UNIVERSITY HO CHI MINH CITY",
+    "brandSchool": "Ho Chi Minh City University of Technology (HCMUT)",
+    "authFooterTagline": "Multi-task chatbot platform for students",
+    "logoAlt": "HCMUT logo",
     "login": "Login",
     "register": "Register",
     "fullName": "Full name",
     "fullNamePlaceholder": "Enter your full name",
     "username": "Username",
+    "usernamePlaceholder": "Enter your username",
     "password": "Password",
+    "passwordPlaceholder": "Enter your password",
     "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
     "classCode": "Class code",
+    "classCodePlaceholder": "e.g. IS-1, IS-2, IS-3",
     "classCodeRequired": "Please enter class code",
     "loginPrompt": "Enter your username and password",
     "registerPrompt": "Create an account",
@@ -29,7 +37,8 @@
     "passwordRequired": "Please enter password",
     "invalidClassCode": "Invalid class code. Valid codes: {codes}",
     "accountExists": "This account already exists",
-    "creatingAccount": "Creating account..."
+    "creatingAccount": "Creating account...",
+    "registerDemoHint": "Demo: Class code — {codes}"
   },
   "sidebar": {
     "chatChannels": "Chat channels",

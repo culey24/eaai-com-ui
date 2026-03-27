@@ -9,14 +9,22 @@
     "loading": "Đang tải..."
   },
   "auth": {
+    "brandUniversity": "ĐẠI HỌC QUỐC GIA TP.HỒ CHÍ MINH",
+    "brandSchool": "Trường Đại học Bách Khoa",
+    "authFooterTagline": "Nền tảng Chatbot đa nhiệm dành cho sinh viên",
+    "logoAlt": "Logo Bách Khoa",
     "login": "Đăng nhập",
     "register": "Đăng ký",
     "fullName": "Tên đầy đủ",
     "fullNamePlaceholder": "Nhập tên đầy đủ của bạn",
     "username": "Tài khoản",
+    "usernamePlaceholder": "Nhập tài khoản",
     "password": "Mật khẩu",
+    "passwordPlaceholder": "Nhập mật khẩu",
     "confirmPassword": "Xác nhận mật khẩu",
+    "confirmPasswordPlaceholder": "Nhập lại mật khẩu",
     "classCode": "Mã lớp",
+    "classCodePlaceholder": "Ví dụ: IS-1, IS-2, IS-3",
     "classCodeRequired": "Vui lòng nhập mã lớp",
     "loginPrompt": "Nhập tài khoản và mật khẩu",
     "registerPrompt": "Tạo tài khoản",
@@ -29,7 +37,8 @@
     "passwordRequired": "Vui lòng nhập mật khẩu",
     "invalidClassCode": "Mã lớp không hợp lệ. Các mã hợp lệ: {codes}",
     "accountExists": "Tài khoản này đã tồn tại",
-    "creatingAccount": "Đang tạo tài khoản..."
+    "creatingAccount": "Đang tạo tài khoản...",
+    "registerDemoHint": "Demo: Mã lớp — {codes}"
   },
   "sidebar": {
     "chatChannels": "Kênh chat",

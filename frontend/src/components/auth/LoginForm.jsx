@@ -61,7 +61,7 @@ export default function LoginForm() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Nhập tài khoản"
+              placeholder={t('auth.usernamePlaceholder')}
               className={`w-full pl-11 pr-4 py-3 rounded-2xl border ${
                 errors.username ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-primary'
               } outline-none transition-all duration-200 text-slate-700`}
@@ -80,7 +80,7 @@ export default function LoginForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder={t('auth.passwordPlaceholder')}
               className={`w-full pl-11 pr-4 py-3 rounded-2xl border ${
                 errors.password ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-primary'
               } outline-none transition-all duration-200 text-slate-700`}

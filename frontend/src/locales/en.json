@@ -203,6 +203,8 @@
     "noMembers": "No members yet",
     "other": "Other",
     "noSupporter": "No supporter",
+    "supporterSearchPlaceholder": "Search by name (accent-insensitive)…",
+    "supporterSearchNoResults": "No matching supporters",
     "supporter": "Supporter",
     "journalStatus": "Journal",
     "submitted": "Submitted",

@@ -6,6 +6,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { ROLES, ROLE_LABELS, VALID_CLASS_CODES } from '../../constants/roles'
 import { CLASS_TO_MODE, hasSupporterMode } from '../../constants/admin'
 import { uiIdToBackendUserId } from '../../lib/userIds'
+import SupporterPicker from '../../components/admin/SupporterPicker'
 
 export default function AdminAccountsPage() {
   const { t } = useLanguage()
@@ -176,10 +177,13 @@ export default function AdminAccountsPage() {
                     <td className="px-6 py-4">
                       {u.role === 'LEARNER' ? (
                         hasSupporterMode(u.classCode) ? (
-                          <select
+                          <SupporterPicker
+                            supporters={supporters}
                             value={assignments[u.id]?.supporterId ?? ''}
-                            onChange={async (e) => {
-                              const val = e.target.value
+                            noSupporterLabel={t('admin.noSupporter')}
+                            searchPlaceholder={t('admin.supporterSearchPlaceholder')}
+                            noResultsLabel={t('admin.supporterSearchNoResults')}
+                            onChange={async (val) => {
                               const sup = supporters.find((s) => s.id === val)
                               if (!val) {
                                 await kickSupporter(u.id, { learnerUser: u })
@@ -191,13 +195,8 @@ export default function AdminAccountsPage() {
                                 })
                               }
                             }}
-                            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm min-w-[140px]"
-                          >
-                            <option value="">{t('admin.noSupporter')}</option>
-                            {supporters.map((s) => (
-                              <option key={s.id} value={s.id}>{s.fullName || s.username}</option>
-                            ))}
-                          </select>
+                            className="min-w-[160px]"
+                          />
                         ) : (
                           <span className="text-sm text-slate-500">
                             {t(`admin.teachingMode.${CLASS_TO_MODE[u.classCode] || 'MANUAL'}`)}

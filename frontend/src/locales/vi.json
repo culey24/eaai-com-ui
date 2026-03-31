@@ -203,6 +203,8 @@
     "noMembers": "Chưa có thành viên",
     "other": "Khác",
     "noSupporter": "Chưa có supporter",
+    "supporterSearchPlaceholder": "Tìm theo tên (không dấu, không phân biệt hoa thường)…",
+    "supporterSearchNoResults": "Không có supporter khớp",
     "supporter": "Supporter",
     "journalStatus": "Journal",
     "submitted": "Đã nộp",

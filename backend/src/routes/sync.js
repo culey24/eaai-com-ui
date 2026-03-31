@@ -3,6 +3,7 @@ import { MessageSender } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
+import { isSupporterUserRole } from '../lib/roles.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -28,14 +29,19 @@ function mapRole(role) {
 async function assertCanSyncForLearner(auth, learnerId) {
   if (auth.userRole === 'admin') return true
   if (auth.userId === learnerId) return true
-  if (auth.userRole === 'teacher') {
+  if (isSupporterUserRole(auth.userRole)) {
+    const assign = await prisma.learnerSupporterAssignment.findUnique({
+      where: { learnerId },
+      select: { supporterId: true },
+    })
+    if (assign?.supporterId === auth.userId) return true
     const learner = await prisma.user.findUnique({
       where: { userId: learnerId },
       select: { userClass: true },
     })
     if (!learner?.userClass) return false
     const row = await prisma.assistantManagedClass.findFirst({
-      where: { teacherId: auth.userId, userClass: learner.userClass },
+      where: { supporterId: auth.userId, userClass: learner.userClass },
     })
     return !!row
   }

@@ -18,7 +18,8 @@ export function authMiddleware(req, res, next) {
     const decoded = verifyToken(token)
     const userId = decoded.sub
     const username = decoded.username
-    const userRole = decoded.userRole
+    const rawRole = decoded.userRole
+    const userRole = rawRole === 'teacher' ? 'assistant' : rawRole
     if (!userId || !username || !userRole) {
       return res.status(401).json({ error: 'Token không hợp lệ' })
     }

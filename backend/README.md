@@ -43,7 +43,7 @@ npm run dev
 | POST | `/api/auth/register` | Không | Đăng ký learner (bcrypt) |
 | POST | `/api/auth/login` | Không | Đăng nhập → JWT |
 | GET | `/api/me` | Bearer | Thông tin user từ token |
-| GET | `/api/conversations` | Bearer | Hội thoại (learner: của mình; teacher: theo lớp; admin: tất cả) |
+| GET | `/api/conversations` | Bearer | Hội thoại (learner: của mình; assistant/supporter: theo lớp; admin: tất cả) |
 | GET | `/api/messages` | Không | Chat tối giản: 50 tin mới nhất (thời gian tăng dần) |
 | GET | `/api/messages/:conversationId` | Bearer | Lịch sử tin (`?limit=&beforeId=`) |
 | POST | `/api/messages` | Tuỳ | `{ senderName, content }` không `channelId` → tối giản, không JWT; có `channelId` → JWT như cũ |

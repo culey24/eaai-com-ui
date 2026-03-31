@@ -5,7 +5,7 @@ INSERT INTO chat_channels (channel_id, user_class, display_order) VALUES
 ('human-chat', 'IS-2', 2),
 ('internal-chat', 'IS-3', 3);
 
-INSERT INTO assistant_managed_classes (teacher_id, user_class) VALUES
+INSERT INTO assistant_managed_classes (supporter_id, user_class) VALUES
 ('T24002', 'IS-1'),
 ('T24002', 'IS-2'),
 ('T24003', 'IS-2'),

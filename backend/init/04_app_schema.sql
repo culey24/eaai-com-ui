@@ -5,13 +5,13 @@ CREATE TYPE report_status_enum AS ENUM ('open', 'reviewed', 'dismissed');
 CREATE TYPE support_request_status_enum AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE teaching_mode_enum AS ENUM ('AGENT', 'LLM', 'MANUAL');
 
--- Phạm vi lớp chat (IS-*) mà supporter (teacher) được xem — tương ứng managedClasses trong UI.
+-- Phạm vi lớp chat (IS-*) mà supporter/assistant được xem — tương ứng managedClasses trong UI.
 CREATE TABLE assistant_managed_classes (
     id SERIAL PRIMARY KEY,
-    teacher_id VARCHAR(10) NOT NULL,
+    supporter_id VARCHAR(10) NOT NULL,
     user_class user_class_enum NOT NULL,
-    CONSTRAINT fk_amc_teacher FOREIGN KEY (teacher_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    CONSTRAINT uq_amc_teacher_class UNIQUE (teacher_id, user_class)
+    CONSTRAINT fk_amc_supporter FOREIGN KEY (supporter_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    CONSTRAINT uq_amc_supporter_class UNIQUE (supporter_id, user_class)
 );
 
 -- Kênh chat cố định theo lớp (CLASS_TO_CHANNEL).
@@ -105,3 +105,30 @@ CREATE TABLE app_settings (
     value JSONB NOT NULL DEFAULT '{}',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Tích hợp agentic_assistant / chatbot (route root, song song /api).
+CREATE TYPE agent_session_status_enum AS ENUM ('active', 'deactive');
+CREATE TYPE agent_chat_role_enum AS ENUM ('user', 'model', 'TA');
+
+CREATE TABLE agent_sessions (
+    session_id UUID PRIMARY KEY,
+    user_id VARCHAR(10) NOT NULL REFERENCES Users(user_id) ON DELETE CASCADE,
+    session_status agent_session_status_enum NOT NULL DEFAULT 'active',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_agent_sessions_user ON agent_sessions (user_id);
+
+CREATE TABLE agent_session_messages (
+    message_id BIGSERIAL PRIMARY KEY,
+    session_id UUID NOT NULL REFERENCES agent_sessions(session_id) ON DELETE CASCADE,
+    chat_role agent_chat_role_enum NOT NULL,
+    content TEXT NOT NULL DEFAULT '',
+    file_ids JSONB,
+    dynamic_profile TEXT,
+    tokens_count INT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_agent_session_messages_session_created ON agent_session_messages (session_id, created_at);

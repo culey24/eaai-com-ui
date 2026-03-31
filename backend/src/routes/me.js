@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { prismaRoleToApi } from '../lib/roles.js'
 import { jsonSafe } from '../lib/json.js'
+import { validatePretestBody } from '../lib/pretestValidate.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -229,6 +230,85 @@ router.patch('/profile', async (req, res) => {
       })
     }
     console.error('[me/profile PATCH]', err)
+    return res.status(500).json({
+      code: 'SERVER_ERROR',
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /api/me/pretest
+ * Học viên: đã nộp PRETEST hay chưa. Vai khác: không áp dụng → completed.
+ */
+router.get('/pretest', async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'student') {
+      return res.status(200).json(jsonSafe({ applicable: false, completed: true }))
+    }
+    const row = await prisma.pretestResponse.findUnique({
+      where: { userId: req.auth.userId },
+      select: { createdAt: true },
+    })
+    return res.status(200).json(
+      jsonSafe({
+        applicable: true,
+        completed: !!row,
+        submittedAt: row?.createdAt ? row.createdAt.toISOString() : null,
+      })
+    )
+  } catch (err) {
+    console.error('[me/pretest GET]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * POST /api/me/pretest
+ * Lưu khảo sát PRETEST (Section A, B, C) — học viên, một lần (ghi đè nếu gửi lại).
+ */
+router.post('/pretest', async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'student') {
+      return res.status(403).json({
+        code: 'PRETEST_LEARNER_ONLY',
+        error: 'Only learners submit the PRETEST',
+      })
+    }
+
+    const errCode = validatePretestBody(req.body)
+    if (errCode) {
+      return res.status(400).json({
+        code: 'PRETEST_VALIDATION',
+        error: 'Invalid PRETEST payload',
+        detail: errCode,
+      })
+    }
+
+    const { sectionA, sectionB, sectionC } = req.body
+
+    await prisma.pretestResponse.upsert({
+      where: { userId: req.auth.userId },
+      create: {
+        userId: req.auth.userId,
+        sectionA,
+        sectionB,
+        sectionC,
+      },
+      update: {
+        sectionA,
+        sectionB,
+        sectionC,
+      },
+    })
+
+    return res.status(201).json(jsonSafe({ ok: true }))
+  } catch (err) {
+    console.error('[me/pretest POST]', err)
     return res.status(500).json({
       code: 'SERVER_ERROR',
       error: 'Lỗi máy chủ',

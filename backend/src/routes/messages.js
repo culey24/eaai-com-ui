@@ -7,7 +7,11 @@ import { jsonSafe } from '../lib/json.js'
 import { isMinimalChatBody } from '../lib/lobby.js'
 import { getMinimalMessages, postMinimalMessage } from './minimalMessagesHandlers.js'
 import { channelUsesIs2Agent, generateIs2AgentReply } from '../lib/is2AgentReply.js'
-import { minimalMessagePostLimiter, jwtMessagePostLimiter } from '../lib/rateLimits.js'
+import {
+  minimalMessagePostLimiter,
+  jwtMessagePostLimiter,
+  is2GeminiPostLimiter,
+} from '../lib/rateLimits.js'
 
 const router = Router()
 
@@ -101,6 +105,7 @@ router.post(
   },
   authMiddleware,
   jwtMessagePostLimiter,
+  is2GeminiPostLimiter,
   async (req, res) => {
     if (isMinimalChatBody(req.body)) {
       return res.status(400).json({ error: 'Sai định dạng tin nhắn' })
@@ -156,7 +161,7 @@ router.post(
       } else {
         if (userRole !== 'student') {
           return res.status(400).json({
-            error: 'Teacher/Admin cần gửi conversationId khi đăng tin nhắn',
+            error: 'Supporter/Admin cần gửi conversationId khi đăng tin nhắn',
           })
         }
         const conv = await prisma.conversation.upsert({

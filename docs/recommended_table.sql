@@ -5,7 +5,7 @@
  
  
 -- 2. Tạo các kiểu ENUM
-CREATE TYPE user_role_enum AS ENUM ('teacher', 'student');
+CREATE TYPE user_role_enum AS ENUM ('assistant', 'student');
 CREATE TYPE user_class_enum AS ENUM ('IS-1', 'IS-2', 'IS-3');
 CREATE TYPE gender_enum AS ENUM ('Male', 'Female', 'Other');
 CREATE TYPE day_of_week_enum AS ENUM ('2', '3', '4', '5', '6', '7', 'CN');
@@ -51,7 +51,7 @@ INSERT INTO Majors (major_code, major_name) VALUES
 -- 6. Table: Users
 --    Tham chiếu app frontend/ (src/context/AuthContext.jsx, constants/roles.js):
 --    - user_role 'student'  <-> LEARNER (đăng ký / demo learner).
---    - user_role 'teacher'  <-> ASSISTANT / supporter (quản lý lớp; chi tiết lớp dạy: Class_Teachers).
+--    - user_role 'assistant'  <-> ASSISTANT / supporter (quản lý lớp; Class_Teachers.assistant_id).
 --    - ADMIN: hiện chưa có trong user_role_enum; khi tích hợp nên mở rộng ENUM hoặc bảng Roles riêng.
 --    - user_class (IS-1, IS-2, IS-3) <-> VALID_CLASS_CODES / kênh chat theo lớp (CLASS_TO_CHANNEL).
 --    - pwd: trong production thay bằng hash (bcrypt/argon2), không lưu plain text như dữ liệu mẫu.
@@ -81,7 +81,7 @@ CREATE TABLE Users (
 );
  
 INSERT INTO Users (user_id, username, pwd, fullname, user_role, date_of_birth, gender, major, training_program_type, citizen_identification, date_of_issue, place_of_issue, ethnicity, religion, permanent_address, contact_address, phone_number, email, user_class) VALUES
-('T24001', 'gv_a', '123456', 'Nguyễn Văn A', 'teacher', '1980-05-15', 'Male', '0000000', '', '001123456789', '2010-01-20', 'Hà Nội', 'Kinh', 'Không', 'Số 1, đường ABC, Hà Nội', 'Số 1, đường ABC, Hà Nội', '0912345678', 'a.nguyen@example.com', NULL),
+('T24001', 'gv_a', '123456', 'Nguyễn Văn A', 'assistant', '1980-05-15', 'Male', '0000000', '', '001123456789', '2010-01-20', 'Hà Nội', 'Kinh', 'Không', 'Số 1, đường ABC, Hà Nội', 'Số 1, đường ABC, Hà Nội', '0912345678', 'a.nguyen@example.com', NULL),
 ('2400001', 'sv_x', '123456', 'Lê Văn X', 'student', '2000-03-25', 'Male', '0000000', 'Chính quy', '003111222333', '2018-02-15', 'Đà Nẵng', 'Kinh', 'Không', 'Số 10, đường PQR, Đà Nẵng', 'Số 20, đường QRS, TP.HCM', '0901234567', 'x.le@example.com', NULL);
  
  
@@ -177,13 +177,13 @@ INSERT INTO Class_Students (student_id, class_id, study_status, score) VALUES
 -- 12. Table: Class_Teachers
 CREATE TABLE Class_Teachers (
     id SERIAL PRIMARY KEY,
-    teacher_id VARCHAR(10) NOT NULL,
+    assistant_id VARCHAR(10) NOT NULL,
     class_id VARCHAR(50) NOT NULL,
-    CONSTRAINT fk_ct_teacher FOREIGN KEY (teacher_id) REFERENCES Users(user_id),
+    CONSTRAINT fk_ct_assistant FOREIGN KEY (assistant_id) REFERENCES Users(user_id),
     CONSTRAINT fk_ct_class FOREIGN KEY (class_id) REFERENCES Classes(class_id)
 );
  
-INSERT INTO Class_Teachers (teacher_id, class_id) VALUES
+INSERT INTO Class_Teachers (assistant_id, class_id) VALUES
 ('T24001', '20231_Test001_01'),
 ('T24001', '20231_Test002_01');
  

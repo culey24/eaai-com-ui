@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
+import { isSupporterUserRole } from '../lib/roles.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -9,7 +10,7 @@ router.use(authMiddleware)
 /**
  * GET /api/conversations
  * Student: hội thoại của chính mình.
- * Teacher: hội thoại của learner thuộc lớp (user_class) trong phạm vi supporter.
+ * Supporter (support/assistant): hội thoại theo phân công learner_supporter_assignments hoặc phạm vi assistant_managed_classes.
  * Admin: tất cả.
  */
 router.get('/', async (req, res) => {
@@ -19,20 +20,28 @@ router.get('/', async (req, res) => {
     let where = {}
     if (userRole === 'student') {
       where = { learnerId: userId }
-    } else if (userRole === 'teacher') {
+    } else if (isSupporterUserRole(userRole)) {
+      const assignedRows = await prisma.learnerSupporterAssignment.findMany({
+        where: { supporterId: userId },
+        select: { learnerId: true },
+      })
+      const assignedIds = assignedRows.map((r) => r.learnerId)
       const scopes = await prisma.assistantManagedClass.findMany({
-        where: { teacherId: userId },
+        where: { supporterId: userId },
         select: { userClass: true },
       })
       const classes = scopes.map((s) => s.userClass)
-      if (classes.length === 0) {
+      const orBlock = []
+      if (assignedIds.length > 0) {
+        orBlock.push({ learnerId: { in: assignedIds } })
+      }
+      if (classes.length > 0) {
+        orBlock.push({ learner: { userClass: { in: classes } } })
+      }
+      if (orBlock.length === 0) {
         return res.status(200).json({ conversations: [] })
       }
-      where = {
-        learner: {
-          userClass: { in: classes },
-        },
-      }
+      where = orBlock.length === 1 ? orBlock[0] : { OR: orBlock }
     } else if (userRole === 'admin') {
       where = {}
     }

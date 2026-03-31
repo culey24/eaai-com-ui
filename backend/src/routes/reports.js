@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
 import { reportPostLimiter } from '../lib/rateLimits.js'
+import { isSupporterUserRole } from '../lib/roles.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -16,7 +17,7 @@ function userClassToLabel(uc) {
 /**
  * GET /api/reports
  * - student: báo cáo do chính mình gửi
- * - teacher: báo cáo trên kênh thuộc lớp trong phạm vi supporter
+ * - support/assistant: báo cáo trên kênh thuộc lớp phạm vi hoặc lớp của learner được gán
  * - admin: tất cả
  */
 router.get('/', async (req, res) => {
@@ -26,12 +27,27 @@ router.get('/', async (req, res) => {
     let where = {}
     if (userRole === 'student') {
       where = { reporterId: userId }
-    } else if (userRole === 'teacher') {
+    } else if (isSupporterUserRole(userRole)) {
+      const classSet = new Set()
       const scopes = await prisma.assistantManagedClass.findMany({
-        where: { teacherId: userId },
+        where: { supporterId: userId },
         select: { userClass: true },
       })
-      const classes = scopes.map((s) => s.userClass)
+      for (const s of scopes) {
+        if (s.userClass != null) classSet.add(s.userClass)
+      }
+      const assigns = await prisma.learnerSupporterAssignment.findMany({
+        where: { supporterId: userId },
+        select: { learnerId: true },
+      })
+      for (const a of assigns) {
+        const learner = await prisma.user.findUnique({
+          where: { userId: a.learnerId },
+          select: { userClass: true },
+        })
+        if (learner?.userClass != null) classSet.add(learner.userClass)
+      }
+      const classes = [...classSet]
       if (classes.length === 0) {
         return res.status(200).json({ reports: [] })
       }

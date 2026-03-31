@@ -14,6 +14,8 @@ export default function AdminSupportRequestsPage() {
     rejectRequest,
     kickSupporter,
     assignments,
+    assignmentSyncError,
+    clearAssignmentSyncError,
   } = useAdmin()
   const { allUsers } = useAllUsers()
   const [kicking, setKicking] = useState(null)
@@ -25,8 +27,8 @@ export default function AdminSupportRequestsPage() {
   }
 
   const handleKick = (userId) => {
-    kickSupporter(userId)
-    setKicking(null)
+    const learner = allUsers.find((x) => x.id === userId)
+    void kickSupporter(userId, { learnerUser: learner }).finally(() => setKicking(null))
   }
 
   return (
@@ -45,6 +47,21 @@ export default function AdminSupportRequestsPage() {
       </div>
       <div className="flex-1 px-8 pb-8">
         <div className="max-w-4xl mx-auto space-y-8">
+          {assignmentSyncError && (
+            <div
+              className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-200 flex items-center justify-between gap-3"
+              role="alert"
+            >
+              <span>{assignmentSyncError}</span>
+              <button
+                type="button"
+                onClick={() => clearAssignmentSyncError()}
+                className="shrink-0 underline font-medium"
+              >
+                {t('common.cancel')}
+              </button>
+            </div>
+          )}
           {/* Pending requests */}
           <div>
             <h2 className="font-semibold text-slate-800 dark:text-white mb-4">
@@ -67,7 +84,12 @@ export default function AdminSupportRequestsPage() {
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => approveRequest(r.id)}
+                        type="button"
+                        onClick={() => {
+                          const learner = allUsers.find((x) => x.id === r.userId)
+                          const sup = allUsers.find((x) => x.id === r.supporterId)
+                          void approveRequest(r.id, { learnerUser: learner, supporterUser: sup })
+                        }}
                         className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 hover:bg-green-200 dark:hover:bg-green-900/50"
                       >
                         <Check className="w-4 h-4" />

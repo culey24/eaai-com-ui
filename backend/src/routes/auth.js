@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { hashPassword, verifyPassword } from '../lib/password.js'
 import { signToken } from '../lib/jwt.js'
-import { prismaRoleToApi } from '../lib/roles.js'
+import { prismaRoleToApi, isSupporterUserRole } from '../lib/roles.js'
 import { allocateStudentUserId } from '../lib/userId.js'
 import { parseUserClass } from '../lib/classCode.js'
 import { Gender, UserRole } from '@prisma/client'
@@ -158,9 +158,9 @@ router.post('/login', authRouteLimiter, async (req, res) => {
     })
 
     let managedClasses = []
-    if (user.userRole === 'teacher') {
+    if (isSupporterUserRole(user.userRole)) {
       const rows = await prisma.assistantManagedClass.findMany({
-        where: { teacherId: user.userId },
+        where: { supporterId: user.userId },
         select: { userClass: true },
       })
       managedClasses = rows.map((r) => userClassToApiLabel(r.userClass)).filter(Boolean)

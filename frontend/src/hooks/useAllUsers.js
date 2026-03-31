@@ -41,7 +41,7 @@ function loadRoleOverrides() {
 function mapDbRoleToUi(role) {
   const r = String(role || '').toLowerCase()
   if (r === 'student') return 'LEARNER'
-  if (r === 'teacher') return 'ASSISTANT'
+  if (r === 'support' || r === 'assistant' || r === 'teacher') return 'ASSISTANT'
   if (r === 'admin') return 'ADMIN'
   return 'LEARNER'
 }
@@ -64,6 +64,8 @@ function toUser(entry, id, source, roleOverride) {
     source,
     fromApi: entry.fromApi === true,
     backendUserId: entry.backendUserId,
+    /** Vai trò thật trên DB (student|assistant|admin) — khác `role` UI khi có roleOverrides */
+    dbUserRole: entry.dbUserRole,
   }
 }
 
@@ -75,6 +77,8 @@ export function useAllUsers() {
   /** null = chưa gọi API hoặc lỗi mạng (dùng local); mảng = đã có phản hồi (có thể rỗng) */
   const [adminApiRows, setAdminApiRows] = useState(null)
   const [adminApiLoaded, setAdminApiLoaded] = useState(false)
+  /** Tăng sau khi PATCH role trên DB để GET /api/admin/users tải lại */
+  const [adminUsersRefresh, setAdminUsersRefresh] = useState(0)
   const [supporterApiRows, setSupporterApiRows] = useState(null)
   const [supporterApiLoaded, setSupporterApiLoaded] = useState(false)
 
@@ -121,7 +125,7 @@ export function useAllUsers() {
     return () => {
       cancelled = true
     }
-  }, [apiToken, user?.role])
+  }, [apiToken, user?.role, adminUsersRefresh])
 
   useEffect(() => {
     if (!apiToken || user?.role !== ROLES.ASSISTANT) {
@@ -170,6 +174,7 @@ export function useAllUsers() {
           managedClasses: null,
           fromApi: true,
           backendUserId: String(u.userId),
+          dbUserRole: u.userRole,
         },
         `api-${u.userId}`,
         'api',
@@ -274,11 +279,53 @@ export function useAllUsers() {
     [adminUsers]
   )
 
-  const updateUserRole = useCallback((userId, role) => {
-    const next = { ...roleOverrides, [userId]: role }
-    setRoleOverrides(next)
-    localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(next))
-  }, [roleOverrides])
+  const updateUserRole = useCallback(
+    async (userId, role) => {
+      const prevOverrides = { ...roleOverrides }
+      const next = { ...roleOverrides, [userId]: role }
+      setRoleOverrides(next)
+      try {
+        localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(next))
+      } catch {
+        /* ignore */
+      }
+
+      if (userId.startsWith('api-') && apiToken && user?.role === ROLES.ADMIN) {
+        const backendId = userId.slice(4)
+        try {
+          const res = await fetch(
+            `${API_BASE}/api/admin/users/${encodeURIComponent(backendId)}/role`,
+            {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${apiToken}`,
+              },
+              body: JSON.stringify({ role }),
+            }
+          )
+          if (res.ok) {
+            setAdminUsersRefresh((n) => n + 1)
+          } else {
+            setRoleOverrides(prevOverrides)
+            try {
+              localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(prevOverrides))
+            } catch {
+              /* ignore */
+            }
+          }
+        } catch {
+          setRoleOverrides(prevOverrides)
+          try {
+            localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(prevOverrides))
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    },
+    [roleOverrides, apiToken, user?.role]
+  )
 
   const deleteUser = useCallback(
     (userId) => {
@@ -313,5 +360,6 @@ export function useAllUsers() {
     deleteUser,
     /** null = chưa có phản hồi / lỗi; mảng (có thể rỗng) = GET /api/supporter/learners đã trả về */
     supporterApiRows,
+    supporterApiLearners,
   }
 }

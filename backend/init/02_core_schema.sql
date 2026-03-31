@@ -1,6 +1,6 @@
 -- Schema cốt lõi (học vụ) — căn theo docs/recommended_table.sql, mở rộng user_role_enum cho ADMIN.
 
-CREATE TYPE user_role_enum AS ENUM ('teacher', 'student', 'admin');
+CREATE TYPE user_role_enum AS ENUM ('assistant', 'student', 'admin', 'support');
 CREATE TYPE user_class_enum AS ENUM ('IS-1', 'IS-2', 'IS-3');
 CREATE TYPE gender_enum AS ENUM ('Male', 'Female', 'Other');
 CREATE TYPE day_of_week_enum AS ENUM ('2', '3', '4', '5', '6', '7', 'CN');
@@ -94,8 +94,8 @@ CREATE TABLE Class_Students (
 
 CREATE TABLE Class_Teachers (
     id SERIAL PRIMARY KEY,
-    teacher_id VARCHAR(10) NOT NULL,
+    assistant_id VARCHAR(10) NOT NULL,
     class_id VARCHAR(50) NOT NULL,
-    CONSTRAINT fk_ct_teacher FOREIGN KEY (teacher_id) REFERENCES Users(user_id),
+    CONSTRAINT fk_ct_assistant FOREIGN KEY (assistant_id) REFERENCES Users(user_id),
     CONSTRAINT fk_ct_class FOREIGN KEY (class_id) REFERENCES Classes(class_id)
 );

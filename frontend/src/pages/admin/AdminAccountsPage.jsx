@@ -9,7 +9,13 @@ import { CLASS_TO_MODE, hasSupporterMode } from '../../constants/admin'
 export default function AdminAccountsPage() {
   const { t } = useLanguage()
   const { allUsers, createUser, updateUserRole, deleteUser } = useAllUsers()
-  const { assignments, assignSupporter, kickSupporter } = useAdmin()
+  const {
+    assignments,
+    assignSupporter,
+    kickSupporter,
+    assignmentSyncError,
+    clearAssignmentSyncError,
+  } = useAdmin()
   const [search, setSearch] = useState('')
   const [filterRole, setFilterRole] = useState('')
   const [filterClass, setFilterClass] = useState('')
@@ -34,12 +40,15 @@ export default function AdminAccountsPage() {
     return matchSearch && matchRole && matchClass
   })
 
-  const supporters = allUsers.filter((u) => u.role === 'ASSISTANT')
-  const getSupporterName = (userId) => {
-    const a = assignments[userId]
-    if (!a) return null
-    return allUsers.find((u) => u.id === a.supporterId)?.username ?? a.supporterId
-  }
+  /** Chỉ assistant (supporter) trên DB mới được gán (tránh roleOverrides UI ASSISTANT giả). */
+  const supporters = allUsers.filter((u) => {
+    if (u.role !== 'ASSISTANT') return false
+    const db = u.dbUserRole != null ? String(u.dbUserRole).toLowerCase() : ''
+    if (u.fromApi && db && db !== 'support' && db !== 'assistant' && db !== 'teacher') {
+      return false
+    }
+    return true
+  })
 
   const handleCreate = () => {
     if (!newUser.username.trim()) return
@@ -76,6 +85,21 @@ export default function AdminAccountsPage() {
       </div>
       <div className="flex-1 px-8 pb-8">
         <div className="max-w-4xl mx-auto space-y-6">
+          {assignmentSyncError && (
+            <div
+              className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-200 flex items-center justify-between gap-3"
+              role="alert"
+            >
+              <span>{assignmentSyncError}</span>
+              <button
+                type="button"
+                onClick={() => clearAssignmentSyncError()}
+                className="shrink-0 underline font-medium"
+              >
+                {t('common.cancel')}
+              </button>
+            </div>
+          )}
           {/* Filters */}
           <div className="flex flex-wrap gap-4">
             <div className="relative flex-1 min-w-[200px]">
@@ -137,7 +161,9 @@ export default function AdminAccountsPage() {
                     <td className="px-6 py-4">
                       <select
                         value={u.role}
-                        onChange={(e) => updateUserRole(u.id, e.target.value)}
+                        onChange={(e) => {
+                          void updateUserRole(u.id, e.target.value)
+                        }}
                         className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm"
                       >
                         {Object.keys(ROLE_LABELS).map((k) => (
@@ -150,13 +176,17 @@ export default function AdminAccountsPage() {
                         hasSupporterMode(u.classCode) ? (
                           <select
                             value={assignments[u.id]?.supporterId ?? ''}
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               const val = e.target.value
+                              const sup = supporters.find((s) => s.id === val)
                               if (!val) {
-                                kickSupporter(u.id)
+                                await kickSupporter(u.id, { learnerUser: u })
                               } else {
                                 const mode = CLASS_TO_MODE[u.classCode] || 'MANUAL'
-                                assignSupporter(u.id, val, mode)
+                                await assignSupporter(u.id, val, mode, {
+                                  learnerUser: u,
+                                  supporterUser: sup,
+                                })
                               }
                             }}
                             className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm min-w-[140px]"
@@ -180,10 +210,13 @@ export default function AdminAccountsPage() {
                       {!u.id.startsWith('prov-') && (
                         <button
                           onClick={() => {
-                            if (window.confirm(t('admin.confirmDelete'))) {
-                              if (assignments[u.id]) kickSupporter(u.id)
+                            if (!window.confirm(t('admin.confirmDelete'))) return
+                            void (async () => {
+                              if (assignments[u.id]) {
+                                await kickSupporter(u.id, { learnerUser: u })
+                              }
                               deleteUser(u.id)
-                            }
+                            })()
                           }}
                           className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                           title={t('admin.deleteAccount')}

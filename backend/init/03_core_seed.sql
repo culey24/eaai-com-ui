@@ -55,19 +55,19 @@ INSERT INTO Users (
     'HCMUT', 'HCMUT', '0900000001', 'admin@example.local', NULL
 ),
 (
-    'T24001', 'gv_a', crypt('123456', gen_salt('bf')), 'Nguyễn Văn A', 'teacher',
+    'T24001', 'gv_a', crypt('123456', gen_salt('bf')), 'Nguyễn Văn A', 'support',
     '1980-05-15', 'Male', '0000000', 'Chính quy',
     '001123456789', '2010-01-20', 'Hà Nội', 'Kinh', 'Không',
     'Số 1, đường ABC, Hà Nội', 'Số 1, đường ABC, Hà Nội', '0912345678', 'a.nguyen@example.com', NULL
 ),
 (
-    'T24002', 'assistant1', crypt('assistant123', gen_salt('bf')), 'Supporter Một', 'teacher',
+    'T24002', 'assistant1', crypt('assistant123', gen_salt('bf')), 'Supporter Một', 'support',
     '1985-06-10', 'Female', '0000000', 'Chính quy',
     '009000000002', '2012-03-01', 'Hà Nội', 'Kinh', 'Không',
     'Hà Nội', 'Hà Nội', '0911111111', 'assistant1@example.local', NULL
 ),
 (
-    'T24003', 'assistant2', crypt('assistant123', gen_salt('bf')), 'Supporter Hai', 'teacher',
+    'T24003', 'assistant2', crypt('assistant123', gen_salt('bf')), 'Supporter Hai', 'support',
     '1986-07-11', 'Male', '0000000', 'Chính quy',
     '009000000003', '2013-04-01', 'Đà Nẵng', 'Kinh', 'Không',
     'Đà Nẵng', 'Đà Nẵng', '0922222222', 'assistant2@example.local', NULL
@@ -90,7 +90,7 @@ INSERT INTO Class_Students (student_id, class_id, study_status, score) VALUES
 ('2400001', '20231_Test002_01', 'Registered', NULL),
 ('2400002', '20231_Test001_01', 'Registered', NULL);
 
-INSERT INTO Class_Teachers (teacher_id, class_id) VALUES
+INSERT INTO Class_Teachers (assistant_id, class_id) VALUES
 ('T24001', '20231_Test001_01'),
 ('T24001', '20231_Test002_01'),
 ('T24002', '20231_Test001_01'),

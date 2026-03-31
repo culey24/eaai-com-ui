@@ -13,9 +13,10 @@ datasource db {
 }
 
 enum UserRole {
-  teacher
+  assistant
   student
   admin
+  support
 
   @@map("user_role_enum")
 }
@@ -68,6 +69,21 @@ enum TeachingMode {
   @@map("teaching_mode_enum")
 }
 
+enum AgentSessionStatus {
+  active
+  deactive
+
+  @@map("agent_session_status_enum")
+}
+
+enum AgentChatRole {
+  user
+  model
+  TA
+
+  @@map("agent_chat_role_enum")
+}
+
 model Major {
   majorCode String @id @map("major_code") @db.VarChar(7)
   majorName String @map("major_name") @db.VarChar(200)
@@ -116,9 +132,26 @@ model User {
   supportRequestsAsLearner   SupportRequest[]              @relation("SupportLearner")
   journalPeriodsCreated      JournalPeriod[]               @relation("JournalPeriodCreator")
   journalUploads             JournalUpload[]
+  agentSessions              AgentSession[]
+  pretestResponse            PretestResponse?
 
   // init SQL: CREATE TABLE Users → PostgreSQL lưu là public.users (không phải bảng "User" của Prisma mặc định)
   @@map("users")
+}
+
+/// Khảo sát PRETEST (Section A/B/C) — một bản ghi / học viên, JSON theo spec docs/Pretest.pdf
+model PretestResponse {
+  id        BigInt   @id @default(autoincrement()) @map("pretest_id")
+  userId    String   @unique @map("user_id") @db.VarChar(10)
+  sectionA  Json     @map("section_a")
+  sectionB  Json     @map("section_b")
+  sectionC  Json     @map("section_c")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("pretest_responses")
 }
 
 /// Đợt nộp journal (submission window). Production: không FK tới Classes — class_id tuỳ chọn, text.
@@ -167,13 +200,13 @@ model ChatChannel {
 }
 
 model AssistantManagedClass {
-  id        Int       @id @default(autoincrement())
-  teacherId String    @map("teacher_id") @db.VarChar(10)
-  userClass UserClass @map("user_class")
+  id          Int       @id @default(autoincrement())
+  supporterId String    @map("supporter_id") @db.VarChar(10)
+  userClass   UserClass @map("user_class")
 
-  teacher User @relation("AssistantScopes", fields: [teacherId], references: [userId], onDelete: Cascade)
+  supporter User @relation("AssistantScopes", fields: [supporterId], references: [userId], onDelete: Cascade)
 
-  @@unique([teacherId, userClass])
+  @@unique([supporterId, userClass])
   @@map("assistant_managed_classes")
 }
 
@@ -273,4 +306,37 @@ model AppSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("app_settings")
+}
+
+/// Phiên chatbot/agent (UUID); song song với bảng conversations của web app.
+model AgentSession {
+  sessionId String             @id @map("session_id") @db.Uuid
+  userId    String             @map("user_id") @db.VarChar(10)
+  status    AgentSessionStatus @default(active) @map("session_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User                  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  messages AgentSessionMessage[]
+
+  @@index([userId])
+  @@map("agent_sessions")
+}
+
+model AgentSessionMessage {
+  id              BigInt       @id @default(autoincrement()) @map("message_id")
+  sessionId       String       @map("session_id") @db.Uuid
+  chatRole        AgentChatRole @map("chat_role")
+  content         String       @default("") @db.Text
+  fileIds         Json?        @map("file_ids") @db.JsonB
+  dynamicProfile  String?      @map("dynamic_profile") @db.Text
+  tokensCount     Int?         @map("tokens_count")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  session AgentSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@map("agent_session_messages")
 }

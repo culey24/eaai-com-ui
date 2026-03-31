@@ -3,6 +3,7 @@ import { UserClass } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
+import { isSupporterUserRole } from '../lib/roles.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -15,20 +16,12 @@ function userClassToLabel(uc) {
 
 /**
  * GET /api/supporter/learners
- * Teacher (assistant): learners thuộc lớp trong phạm vi assistant_managed_classes.
+ * Role support (hoặc assistant legacy): học viên IS-3 đã được admin gán cho supporter này.
  */
 router.get('/learners', async (req, res) => {
   try {
-    if (req.auth.userRole !== 'teacher') {
-      return res.status(403).json({ error: 'Chỉ tài khoản assistant' })
-    }
-    const scopes = await prisma.assistantManagedClass.findMany({
-      where: { teacherId: req.auth.userId },
-      select: { userClass: true },
-    })
-    const classes = scopes.map((s) => s.userClass)
-    if (classes.length === 0 || !classes.includes(UserClass.IS_3)) {
-      return res.status(200).json({ learners: [] })
+    if (!isSupporterUserRole(req.auth.userRole)) {
+      return res.status(403).json({ error: 'Chỉ tài khoản supporter (role support)' })
     }
 
     const assignedRows = await prisma.learnerSupporterAssignment.findMany({
@@ -36,17 +29,16 @@ router.get('/learners', async (req, res) => {
       select: { learnerId: true },
     })
     const assignedIds = assignedRows.map((r) => r.learnerId)
-
-    const where = {
-      userRole: 'student',
-      userClass: UserClass.IS_3,
-    }
-    if (assignedIds.length > 0) {
-      where.userId = { in: assignedIds }
+    if (assignedIds.length === 0) {
+      return res.status(200).json({ learners: [] })
     }
 
     const learners = await prisma.user.findMany({
-      where,
+      where: {
+        userRole: 'student',
+        userClass: UserClass.IS_3,
+        userId: { in: assignedIds },
+      },
       select: {
         userId: true,
         username: true,

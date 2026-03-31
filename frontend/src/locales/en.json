@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "Learning Support Chatbot",
     "settings": "Settings",
     "logout": "Logout",
     "cancel": "Cancel",
@@ -11,7 +12,7 @@
   "auth": {
     "brandUniversity": "VIETNAM NATIONAL UNIVERSITY HO CHI MINH CITY",
     "brandSchool": "Ho Chi Minh City University of Technology (HCMUT)",
-    "authFooterTagline": "Multi-task chatbot platform for students",
+    "authFooterTagline": "Learning support chatbot for students",
     "logoAlt": "HCMUT logo",
     "login": "Login",
     "register": "Register",
@@ -71,7 +72,7 @@
   },
   "chat": {
     "selectChannel": "Select a channel",
-    "welcomeTitle": "Welcome to BK Chatbot",
+    "welcomeTitle": "Welcome to Learning Support Chatbot",
     "welcomeDesc": "Select a channel on the left to start a conversation.",
     "noMessages": "No messages yet",
     "noMessagesHint": "Send a message or attach a file to get started!",
@@ -239,6 +240,44 @@
       "scheduled": "Scheduled",
       "ended": "Ended",
       "noSubmissions": "No submissions yet"
+    }
+  },
+  "pretest": {
+    "title": "PRETEST survey",
+    "subtitle": "Required before using the app · English is primary; Vietnamese shown as support",
+    "intro": {
+      "en": "Welcome. This questionnaire follows the course PRETEST (background, two technical topics you choose, and AI attitudes). Your answers are stored securely for research and course improvement.",
+      "vi": "Chào bạn. Bộ câu hỏi này theo PRETEST khóa học (phần nền, hai chủ đề kỹ thuật bạn chọn, và thái độ với AI). Câu trả lời được lưu an toàn phục vụ nghiên cứu và cải thiện học phần."
+    },
+    "blocker": "You must complete this survey to access chats and course tools.",
+    "sectionA": {
+      "title": "Section A: Background information",
+      "subtitleVi": "Phần A: Thông tin nền (tiếng Anh chính; tiếng Việt hỗ trợ)"
+    },
+    "sectionB": {
+      "title": "Section B: Technical knowledge check"
+    },
+    "sectionC": {
+      "title": "Section C: AI attitudes & readiness",
+      "instructions": "Rate each statement from 1 (Strongly disagree) to 5 (Strongly agree).",
+      "instructionsVi": "Mức đồng ý từ 1 (Hoàn toàn không đồng ý) đến 5 (Hoàn toàn đồng ý)."
+    },
+    "select": "Select…",
+    "next": "Next",
+    "submit": "Submit survey",
+    "step": "Step",
+    "validation": {
+      "sectionA": "Please complete all fields in Section A and choose two different topics.",
+      "sectionB": "Please answer every question in this section (including open-ended items).",
+      "sectionC": "Please choose a score from 1 to 5 for each statement."
+    },
+    "submitError": "Could not save. Check your connection or contact support.",
+    "likert": {
+      "1": "Strongly disagree",
+      "2": "Disagree",
+      "3": "Neutral",
+      "4": "Agree",
+      "5": "Strongly agree"
     }
   }
 }

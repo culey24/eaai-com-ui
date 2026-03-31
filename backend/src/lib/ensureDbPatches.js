@@ -21,7 +21,32 @@ BEGIN
 END $$;
 `
 
+/** Mỗi chuỗi một lệnh — Prisma/Postgres không cho nhiều lệnh trong một prepared statement. */
+const PRETEST_RESPONSES_TABLE = `
+CREATE TABLE IF NOT EXISTS pretest_responses (
+  pretest_id BIGSERIAL PRIMARY KEY,
+  user_id VARCHAR(10) NOT NULL UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+  section_a JSONB NOT NULL DEFAULT '{}',
+  section_b JSONB NOT NULL DEFAULT '{}',
+  section_c JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+)
+`
+
+const PRETEST_RESPONSES_INDEX =
+  'CREATE INDEX IF NOT EXISTS idx_pretest_responses_user_id ON pretest_responses(user_id)'
+
 export async function applyLightweightSchemaPatches(prisma) {
+  try {
+    await prisma.$executeRawUnsafe(PRETEST_RESPONSES_TABLE)
+    await prisma.$executeRawUnsafe(PRETEST_RESPONSES_INDEX)
+  } catch (err) {
+    console.warn(
+      '[db-patches] pretest_responses:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
   try {
     await prisma.$executeRawUnsafe(JOURNAL_EXTRACTED_TEXT_PATCH)
   } catch (err) {

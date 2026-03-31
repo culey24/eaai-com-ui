@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { ROLES, VALID_CLASS_CODES } from '../constants/roles'
 import { API_BASE } from '../config/api'
 import { AuthErrorCode } from '../lib/authErrorUi'
@@ -119,6 +119,31 @@ export function AuthProvider({ children }) {
     }
   })
   const [isLoading, setIsLoading] = useState(true)
+  /** null = đang tải; true = đã làm hoặc không áp dụng; false = bắt buộc làm PRETEST */
+  const [pretestCompleted, setPretestCompleted] = useState(null)
+
+  const refreshPretestStatus = useCallback(async () => {
+    const token = apiToken || localStorage.getItem(API_TOKEN_KEY)
+    if (!token || user?.role !== ROLES.LEARNER || user?.backendUserId == null) {
+      setPretestCompleted(true)
+      return
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/me/pretest`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.applicable === false) {
+        setPretestCompleted(true)
+      } else if (res.ok) {
+        setPretestCompleted(!!data.completed)
+      } else {
+        setPretestCompleted(false)
+      }
+    } catch {
+      setPretestCompleted(false)
+    }
+  }, [apiToken, user])
 
   useEffect(() => {
     let cancelled = false
@@ -249,6 +274,32 @@ export function AuthProvider({ children }) {
       cancelled = true
       ac.abort()
       clearTimeout(tid)
+    }
+  }, [apiToken, user?.backendUserId, user?.role])
+
+  useEffect(() => {
+    if (!apiToken || user?.role !== ROLES.LEARNER || user?.backendUserId == null) {
+      setPretestCompleted(true)
+      return
+    }
+    let cancelled = false
+    setPretestCompleted(null)
+    ;(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/me/pretest`, {
+          headers: { Authorization: `Bearer ${apiToken}` },
+        })
+        const data = await res.json().catch(() => ({}))
+        if (cancelled) return
+        if (res.ok && data.applicable === false) setPretestCompleted(true)
+        else if (res.ok) setPretestCompleted(!!data.completed)
+        else setPretestCompleted(false)
+      } catch {
+        if (!cancelled) setPretestCompleted(false)
+      }
+    })()
+    return () => {
+      cancelled = true
     }
   }, [apiToken, user?.backendUserId, user?.role])
 
@@ -478,6 +529,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null)
+    setPretestCompleted(null)
     persistToken(null)
     localStorage.removeItem(AUTH_STORAGE_KEY)
   }
@@ -563,6 +615,22 @@ export function AuthProvider({ children }) {
         updateProfile,
         isProfileComplete,
         isLoading,
+        pretestCompleted,
+        pretestChecking: Boolean(
+          user &&
+            user.role === ROLES.LEARNER &&
+            user.backendUserId != null &&
+            apiToken &&
+            pretestCompleted === null
+        ),
+        pretestNeedsCompletion: Boolean(
+          user &&
+            user.role === ROLES.LEARNER &&
+            user.backendUserId != null &&
+            apiToken &&
+            pretestCompleted === false
+        ),
+        refreshPretestStatus,
       }}
     >
       {children}

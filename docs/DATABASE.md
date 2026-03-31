@@ -82,7 +82,7 @@ Giữ đúng tinh thần [recommended_table.sql](./recommended_table.sql): `Educ
 
 | Bảng | Mục đích |
 |------|-----------|
-| `assistant_managed_classes` | Teacher nào xem lớp chat IS-* nào ↔ `managedClasses` (Assistant). |
+| `assistant_managed_classes` | Supporter/assistant nào xem lớp chat IS-* nào ↔ `managedClasses` (Assistant). |
 | `chat_channels` | `ai-chat` / `human-chat` / `internal-chat` ↔ `IS-1` … `IS-3`. |
 | `conversations` | Một thread / learner / kênh (tương đương key `channelId::userId` trong mock). |
 | `messages` | Tin nhắn; `sender_role` = `user` \| `assistant` \| `system`. |
@@ -98,7 +98,7 @@ Giữ đúng tinh thần [recommended_table.sql](./recommended_table.sql): `Educ
 | UI (`frontend/`) | DB |
 |----------|-----|
 | `ROLES.LEARNER` | `Users.user_role = 'student'` |
-| `ROLES.ASSISTANT` | `Users.user_role = 'teacher'` + `assistant_managed_classes` |
+| `ROLES.ASSISTANT` (UI) | `Users.user_role = 'support'` (supporter do admin gán; legacy `assistant`) + tuỳ chọn `assistant_managed_classes` |
 | `ROLES.ADMIN` | `Users.user_role = 'admin'` |
 | `VALID_CLASS_CODES` / `CLASS_TO_CHANNEL` | `user_class_enum`, `chat_channels` |
 | `useMessages` | `conversations` + `messages` |
@@ -114,10 +114,10 @@ Giữ đúng tinh thần [recommended_table.sql](./recommended_table.sql): `Educ
 | username | Plain password | user_role (DB) | Ghi chú |
 |----------|----------------|----------------|---------|
 | `admin` | `admin123` | admin | Trùng demo UI |
-| `assistant1` | `assistant123` | teacher | IS-1, IS-2 trong `assistant_managed_classes` |
-| `assistant2` | `assistant123` | teacher | IS-2, IS-3 |
+| `assistant1` | `assistant123` | support | IS-1, IS-2 trong `assistant_managed_classes` |
+| `assistant2` | `assistant123` | support | IS-2, IS-3 |
 | `demo` | `demo123` | student | `user_class = IS-1` |
-| `gv_a` | `123456` | teacher | Mẫu học vụ gốc |
+| `gv_a` | `123456` | support | Mẫu học vụ gốc |
 | `sv_x` | `123456` | student | Mẫu học vụ gốc |
 
 Xác thực mật khẩu trong SQL (sau khi đăng nhập bằng app, có thể dùng để debug):

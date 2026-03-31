@@ -26,6 +26,7 @@ import AdminAccountsPage from './pages/admin/AdminAccountsPage'
 import AdminSupportRequestsPage from './pages/admin/AdminSupportRequestsPage'
 import AdminSubmissionsPage from './pages/admin/AdminSubmissionsPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
+import PretestGate from './components/PretestGate'
 import ClassesWithWidget from './components/supporter/ClassesWithWidget'
 import Sidebar from './components/layout/Sidebar'
 import { ROLES } from './constants/roles'
@@ -58,7 +59,9 @@ function AppRoutes() {
         path="/"
         element={
           <ProtectedRoute>
-            <HomeOrRedirect />
+            <PretestGate>
+              <HomeOrRedirect />
+            </PretestGate>
           </ProtectedRoute>
         }
       />
@@ -66,12 +69,14 @@ function AppRoutes() {
         path="/settings"
         element={
           <ProtectedRoute>
-            <div className="flex h-screen overflow-hidden">
-              <Sidebar activeChannelId={null} onSelectChannel={() => {}} />
-              <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <SettingsPage />
+            <PretestGate>
+              <div className="flex h-screen overflow-hidden">
+                <Sidebar activeChannelId={null} onSelectChannel={() => {}} />
+                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                  <SettingsPage />
+                </div>
               </div>
-            </div>
+            </PretestGate>
           </ProtectedRoute>
         }
       />
@@ -94,12 +99,14 @@ function AppRoutes() {
         path="/journal"
         element={
           <ProtectedRoute>
-            <div className="flex h-screen overflow-hidden">
-              <Sidebar activeChannelId={null} onSelectChannel={() => {}} />
-              <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <JournalUploadPage />
+            <PretestGate>
+              <div className="flex h-screen overflow-hidden">
+                <Sidebar activeChannelId={null} onSelectChannel={() => {}} />
+                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                  <JournalUploadPage />
+                </div>
               </div>
-            </div>
+            </PretestGate>
           </ProtectedRoute>
         }
       />

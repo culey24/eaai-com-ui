@@ -1,4 +1,4 @@
-import logo from '../../assets/hcmut_logo/logo.png'
+import logo from '../../../assets/hcmut_logo/01_logobachkhoasang.png'
 import { useLanguage } from '../../context/LanguageContext'
 
 export default function AuthLayout({ children }) {
@@ -8,13 +8,20 @@ export default function AuthLayout({ children }) {
       <div className="w-full max-w-md">
         {/* Logo & Brand */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl overflow-hidden mb-6 shadow-soft">
-            <img src={logo} alt={t('auth.logoAlt')} className="w-full h-full object-contain p-2" />
+          <div className="inline-flex items-center justify-center mb-7 -mt-1">
+            <img
+              src={logo}
+              alt={t('auth.logoAlt')}
+              className="h-32 w-auto sm:h-36 object-contain object-center select-none"
+            />
           </div>
-          <h1 className="mx-auto text-secondary text-lg sm:text-xl font-bold uppercase tracking-tight max-w-md leading-snug">
-            {t('auth.brandUniversity')}
+          <h1 className="mx-auto text-slate-800 dark:text-white text-xl sm:text-2xl font-bold tracking-tight max-w-md leading-snug">
+            {t('common.appName')}
           </h1>
-          <p className="text-slate-500 text-sm mt-2 font-medium">{t('auth.brandSchool')}</p>
+          <p className="mx-auto text-secondary text-[10px] sm:text-xs font-bold uppercase tracking-tight max-w-md leading-snug mt-3">
+            {t('auth.brandUniversity')}
+          </p>
+          <p className="text-slate-500 text-sm mt-1.5 font-medium">{t('auth.brandSchool')}</p>
         </div>
 
         {/* Auth Form Card */}

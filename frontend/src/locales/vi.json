@@ -1,5 +1,6 @@
 {
   "common": {
+    "appName": "Learning Support Chatbot",
     "settings": "Cài đặt",
     "logout": "Đăng xuất",
     "cancel": "Hủy",
@@ -11,7 +12,7 @@
   "auth": {
     "brandUniversity": "ĐẠI HỌC QUỐC GIA TP.HỒ CHÍ MINH",
     "brandSchool": "Trường Đại học Bách Khoa",
-    "authFooterTagline": "Nền tảng Chatbot đa nhiệm dành cho sinh viên",
+    "authFooterTagline": "Chatbot hỗ trợ học tập cho sinh viên",
     "logoAlt": "Logo Bách Khoa",
     "login": "Đăng nhập",
     "register": "Đăng ký",
@@ -71,7 +72,7 @@
   },
   "chat": {
     "selectChannel": "Chọn kênh chat",
-    "welcomeTitle": "Chào mừng đến với Chatbot Bách Khoa",
+    "welcomeTitle": "Chào mừng đến với Learning Support Chatbot",
     "welcomeDesc": "Chọn một kênh chat ở bên trái để bắt đầu cuộc trò chuyện.",
     "noMessages": "Chưa có tin nhắn nào",
     "noMessagesHint": "Hãy gửi tin nhắn hoặc đính kèm file để bắt đầu!",
@@ -239,6 +240,44 @@
       "scheduled": "Chưa mở",
       "ended": "Đã kết thúc",
       "noSubmissions": "Chưa có submission nào"
+    }
+  },
+  "pretest": {
+    "title": "Khảo sát PRETEST",
+    "subtitle": "Bắt buộc trước khi dùng ứng dụng · Ưu tiên tiếng Anh; tiếng Việt hỗ trợ",
+    "intro": {
+      "en": "This survey follows the course PRETEST (background, two technical topics you choose, and AI attitudes). Answers are stored for research and course improvement.",
+      "vi": "Bộ câu hỏi theo PRETEST khóa học (phần nền, hai chủ đề bạn chọn, thái độ với AI). Dữ liệu được lưu phục vụ nghiên cứu và cải thiện học phần."
+    },
+    "blocker": "Bạn cần hoàn thành khảo sát này để dùng chat và các công cụ khóa học.",
+    "sectionA": {
+      "title": "Phần A: Thông tin nền",
+      "subtitleVi": "Theo tài liệu PRETEST — hiển thị song ngữ; ưu tiên trả lời bằng tiếng Anh khi có thể"
+    },
+    "sectionB": {
+      "title": "Phần B: Kiểm tra kiến thức chuyên môn"
+    },
+    "sectionC": {
+      "title": "Phần C: Thái độ và sẵn sàng với AI",
+      "instructions": "Chọn từ 1 (Hoàn toàn không đồng ý) đến 5 (Hoàn toàn đồng ý).",
+      "instructionsVi": "Thang đo thống nhất với tài liệu PRETEST (Section C)."
+    },
+    "select": "Chọn…",
+    "next": "Tiếp theo",
+    "submit": "Gửi khảo sát",
+    "step": "Bước",
+    "validation": {
+      "sectionA": "Vui lòng điền đủ Phần A và chọn hai chủ đề khác nhau.",
+      "sectionB": "Vui lòng trả lời tất cả câu ở phần này (kể cả câu mở).",
+      "sectionC": "Vui lòng chọn điểm từ 1 đến 5 cho mỗi ý."
+    },
+    "submitError": "Không lưu được. Kiểm tra kết nối hoặc liên hệ hỗ trợ.",
+    "likert": {
+      "1": "Hoàn toàn không đồng ý",
+      "2": "Không đồng ý",
+      "3": "Trung lập",
+      "4": "Đồng ý",
+      "5": "Hoàn toàn đồng ý"
     }
   }
 }

@@ -16,11 +16,15 @@ const CLASS_TO_CHANNEL = {
 
 export default function AdminChatsPage() {
   const { t } = useLanguage()
-  const { getMessagesForChannel } = useMessages()
   const { getLearners } = useAllUsers()
   const { getJournalsForUser } = useJournal()
   const [selectedUser, setSelectedUser] = useState(null)
   const [search, setSearch] = useState('')
+
+  const channelId = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
+  const { getMessagesForChannel } = useMessages(channelId, {
+    adminViewLearnerId: selectedUser?.backendUserId ?? null,
+  })
 
   const allLearners = getLearners()
   const filteredUsers = search.trim()
@@ -36,7 +40,6 @@ export default function AdminChatsPage() {
   }, {})
   const usersWithoutClass = filteredUsers.filter((u) => !u.classCode || !VALID_CLASS_CODES.includes(u.classCode))
 
-  const channelId = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
   const messages = channelId && selectedUser
     ? getMessagesForChannel(channelId, selectedUser.id)
     : []

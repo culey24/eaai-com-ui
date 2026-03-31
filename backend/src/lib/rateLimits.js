@@ -69,6 +69,32 @@ export const jwtMessagePostLimiter = rateLimit({
   handler: json429,
 })
 
+/**
+ * POST /api/messages — học viên gửi tin trên kênh IS-2 (human-chat) → gọi OpenRouter/Gemini.
+ * Mỗi user (userId) tối đa RATE_LIMIT_IS2_GEMINI_MAX lần mỗi RATE_LIMIT_IS2_GEMINI_WINDOW_MS.
+ */
+export const is2GeminiPostLimiter = rateLimit({
+  windowMs: ms('RATE_LIMIT_IS2_GEMINI_WINDOW_MS', 60_000),
+  limit: num('RATE_LIMIT_IS2_GEMINI_MAX', 12),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: false,
+  skip: (req) => {
+    if (rateLimitDisabled()) return true
+    const ch = typeof req.body?.channelId === 'string' ? req.body.channelId.trim() : ''
+    if (ch !== 'human-chat') return true
+    if (req.auth?.userRole !== 'student') return true
+    const r = String(req.body?.role ?? 'user').trim().toLowerCase()
+    if (r === 'assistant' || r === 'system') return true
+    return false
+  },
+  keyGenerator: (req) => {
+    const id = req.auth?.userId
+    return id ? `is2-gemini:${id}` : `is2-gemini-ip:${req.ip}`
+  },
+  handler: json429,
+})
+
 /** POST /api/journal/upload — theo user. */
 export const journalUploadLimiter = rateLimit({
   windowMs: ms('RATE_LIMIT_JOURNAL_WINDOW_MS', 60 * 60_000),

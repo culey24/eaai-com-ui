@@ -50,13 +50,15 @@ function mapRemoteRows(messages) {
  * Tin nhắn kênh chat.
  * - Learner có JWT: poll API theo conversation của kênh.
  * - Assistant có JWT + assistantViewLearnerId: xem thread của learner (cùng kênh).
+ * - Admin có JWT + adminViewLearnerId: xem thread learner trên trang quản trị (cùng kênh).
  * - Khác: localStorage + mock phản hồi.
  *
  * @param {string | null} pollChannelId — kênh đang mở (vd. activeChannel.id).
- * @param {{ assistantViewLearnerId?: string | null }} [options] — backend user id của learner (assistant).
+ * @param {{ assistantViewLearnerId?: string | null, adminViewLearnerId?: string | null }} [options] — backend user id của learner (assistant/admin).
  */
 export function useMessages(pollChannelId = null, options = {}) {
   const assistantViewLearnerId = options.assistantViewLearnerId ?? null
+  const adminViewLearnerId = options.adminViewLearnerId ?? null
   const { user, apiToken } = useAuth()
   const [localMessages, setLocalMessages] = useState(loadMessages)
   const [remoteList, setRemoteList] = useState([])
@@ -71,7 +73,11 @@ export function useMessages(pollChannelId = null, options = {}) {
       pollChannelId
   )
 
-  const useRemoteThread = isRemoteLearner || isRemoteAssistant
+  const isRemoteAdmin = Boolean(
+    apiToken && user?.role === ROLES.ADMIN && adminViewLearnerId && pollChannelId
+  )
+
+  const useRemoteThread = isRemoteLearner || isRemoteAssistant || isRemoteAdmin
 
   /* Tìm conversationId */
   useEffect(() => {
@@ -93,6 +99,7 @@ export function useMessages(pollChannelId = null, options = {}) {
         const conv = data.conversations?.find((c) => {
           if (String(c.channelId) !== String(pollChannelId)) return false
           if (isRemoteLearner) return true
+          if (isRemoteAdmin) return String(c.learnerId) === String(adminViewLearnerId)
           return String(c.learnerId) === String(assistantViewLearnerId)
         })
         setConversationId(conv?.id != null ? String(conv.id) : null)
@@ -107,7 +114,16 @@ export function useMessages(pollChannelId = null, options = {}) {
       cancelled = true
       clearInterval(tConv)
     }
-  }, [useRemoteThread, isRemoteLearner, isRemoteAssistant, pollChannelId, apiToken, assistantViewLearnerId])
+  }, [
+    useRemoteThread,
+    isRemoteLearner,
+    isRemoteAssistant,
+    isRemoteAdmin,
+    pollChannelId,
+    apiToken,
+    assistantViewLearnerId,
+    adminViewLearnerId,
+  ])
 
   /* Poll tin nhắn từ DB */
   useEffect(() => {
@@ -251,6 +267,7 @@ export function useMessages(pollChannelId = null, options = {}) {
   )
 
   const assistantViewerKey = assistantViewLearnerId ? `api-${assistantViewLearnerId}` : null
+  const adminViewerKey = adminViewLearnerId ? `api-${adminViewLearnerId}` : null
 
   const getMessagesForChannel = useCallback(
     (channelId, userId = null) => {
@@ -266,17 +283,27 @@ export function useMessages(pollChannelId = null, options = {}) {
       ) {
         return remoteList
       }
+      if (
+        isRemoteAdmin &&
+        adminViewerKey &&
+        channelId === pollChannelId &&
+        userId === adminViewerKey
+      ) {
+        return remoteList
+      }
       const key = getStorageKey(channelId, userId)
       return localMessages[key] || []
     },
     [
       isRemoteLearner,
       isRemoteAssistant,
+      isRemoteAdmin,
       pollChannelId,
       remoteList,
       localMessages,
       user?.backendUserId,
       assistantViewerKey,
+      adminViewerKey,
     ]
   )
 

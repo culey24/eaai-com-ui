@@ -45,7 +45,7 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const { user, logout, apiToken } = useAuth()
   const { t } = useLanguage()
   const { assignments } = useAdmin()
-  const { allUsers, supporterApiRows } = useAllUsers()
+  const { allUsers, supporterApiRows, supporterApiLearners } = useAllUsers()
   const supporterChat = useSupporterChat()
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
@@ -64,12 +64,9 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const isClassesPage = location.pathname === '/classes'
   const isJournalPage = location.pathname === '/journal'
   const isAssistant = user?.role === ROLES.ASSISTANT
-  const apiIs3ChatLearners = allUsers.filter(
-    (u) => u.role === ROLES.LEARNER && u.fromApi && u.classCode === 'IS-3'
-  )
   const supporterChatUsers =
     isAssistant && user && apiToken && Array.isArray(supporterApiRows)
-      ? apiIs3ChatLearners
+      ? supporterApiLearners
       : assignedUsers
   const isAdmin = user?.role === ROLES.ADMIN
   const isLearner = user?.role === ROLES.LEARNER
@@ -96,14 +93,16 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
         <div className={`flex items-center gap-3 overflow-hidden ${collapsed ? 'min-w-0 justify-center' : ''}`}>
           <img
             src={logo}
-            alt="Logo Bách Khoa"
+            alt={t('auth.logoAlt')}
             className="w-10 h-10 rounded-xl object-contain flex-shrink-0"
           />
           {!collapsed && (
             <div className="min-w-0">
-              <span className="font-bold text-base tracking-tight text-slate-800 dark:text-white block truncate">BK</span>
+              <span className="font-bold text-xs sm:text-sm tracking-tight text-slate-800 dark:text-white block leading-snug line-clamp-2">
+                {t('common.appName')}
+              </span>
               <p className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold leading-tight mt-0.5 truncate">
-                ĐẠI HỌC QUỐC GIA TP.HỒ CHÍ MINH
+                {t('auth.brandUniversity')}
               </p>
             </div>
           )}

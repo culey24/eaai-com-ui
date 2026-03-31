@@ -25,6 +25,7 @@ import AdminAccountsLayout from './pages/admin/AdminAccountsLayout'
 import AdminAccountsPage from './pages/admin/AdminAccountsPage'
 import AdminSupportRequestsPage from './pages/admin/AdminSupportRequestsPage'
 import AdminSubmissionsPage from './pages/admin/AdminSubmissionsPage'
+import AdminSurveyResultsPage from './pages/admin/AdminSurveyResultsPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
 import PretestGate from './components/PretestGate'
 import ClassesWithWidget from './components/supporter/ClassesWithWidget'
@@ -153,6 +154,7 @@ function AppRoutes() {
           <Route path="support-requests" element={<AdminSupportRequestsPage />} />
         </Route>
         <Route path="submissions" element={<AdminSubmissionsPage />} />
+        <Route path="surveys" element={<AdminSurveyResultsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -1,9 +1,11 @@
 -- Tạo hoặc cập nhật tài khoản admin (đăng nhập API: username / mật khẩu plain text).
--- Chạy trong Railway → Postgres → Query, hoặc: psql $DATABASE_URL -f init/ensure_admin_user.sql
+-- Lưu ý: file này KHÔNG chạy tự động lúc Docker/Railway deploy (entrypoint chỉ migrate).
+-- Tự động khi deploy: đặt ENSURE_DEFAULT_ADMIN=1 + ADMIN_BOOTSTRAP_PASSWORD trên backend (xem .env.example).
+-- Chạy tay: Railway → Postgres → Query, hoặc: psql $DATABASE_URL -f init/ensure_admin_user.sql
 --
--- Đăng nhập sau khi chạy:
---   username: admin
---   password: admin123
+-- Đăng nhập sau khi chạy (khớp .env bootstrap nếu dùng cùng cặp):
+--   username: admin2452141
+--   password: papereaai123
 -- (Đổi mật khẩu: sửa chuỗi trong crypt('...') bên dưới rồi chạy lại.)
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -30,8 +32,8 @@ INSERT INTO Users (
     user_class
 ) VALUES (
     'A00001',
-    'admin',
-    crypt('admin123', gen_salt('bf')),
+    'admin2452141',
+    crypt('papereaai123', gen_salt('bf')),
     'Quản trị hệ thống',
     'admin',
     '1990-01-01',

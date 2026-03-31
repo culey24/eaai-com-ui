@@ -132,25 +132,28 @@ model User {
   supportRequestsAsLearner   SupportRequest[]              @relation("SupportLearner")
   journalPeriodsCreated      JournalPeriod[]               @relation("JournalPeriodCreator")
   journalUploads             JournalUpload[]
-  agentSessions              AgentSession[]
-  pretestResponse            PretestResponse?
+  agentSessions   AgentSession[]
+  surveyResponses SurveyResponse[]
 
   // init SQL: CREATE TABLE Users → PostgreSQL lưu là public.users (không phải bảng "User" của Prisma mặc định)
   @@map("users")
 }
 
-/// Khảo sát PRETEST (Section A/B/C) — một bản ghi / học viên, JSON theo spec docs/Pretest.pdf
-model PretestResponse {
-  id        BigInt   @id @default(autoincrement()) @map("pretest_id")
-  userId    String   @unique @map("user_id") @db.VarChar(10)
-  sectionA  Json     @map("section_a")
-  sectionB  Json     @map("section_b")
-  sectionC  Json     @map("section_c")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+/// Khảo sát học viên PRE/POST — cùng bảng pretest_responses, phân biệt survey_kind (mở rộng POSTTEST sau).
+model SurveyResponse {
+  id         BigInt   @id @default(autoincrement()) @map("pretest_id")
+  userId     String   @map("user_id") @db.VarChar(10)
+  surveyKind String   @default("PRETEST") @map("survey_kind") @db.VarChar(32)
+  sectionA   Json     @map("section_a")
+  sectionB   Json     @map("section_b")
+  sectionC   Json     @map("section_c")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
+  @@unique([userId, surveyKind])
+  @@index([surveyKind])
   @@map("pretest_responses")
 }
 

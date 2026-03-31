@@ -218,6 +218,20 @@
     "autoMode": "Auto mode (first come first served)",
     "messageCount": "{count} tin nhắn",
     "classWithCode": "Lớp {code}",
+    "surveys": {
+      "title": "Kết quả khảo sát",
+      "intro": "Xem bài nộp của học viên theo loại khảo sát. PRETEST đã dùng; POST-TEST dùng cùng cơ sở dữ liệu (survey_kind) và sẽ hiện ở đây khi bật trên server và thêm luồng phía học viên.",
+      "tabPretest": "PRETEST",
+      "tabPosttest": "POST-TEST",
+      "posttestHint": "POST-TEST: khi sẵn sàng, đặt SURVEY_POSTTEST_ENABLED=1 ở backend; sau đó thêm validate và giao diện nộp bài (cùng bảng với PRETEST, survey_kind = POSTTEST).",
+      "loadError": "Không tải được dữ liệu khảo sát.",
+      "empty": "Chưa có bài nộp cho khảo sát này.",
+      "colUser": "Người dùng",
+      "colClass": "Lớp",
+      "colSubmitted": "Thời gian nộp",
+      "colDetail": "Chi tiết",
+      "view": "Xem JSON"
+    },
     "teachingMode": {
       "AGENT": "AGENT",
       "LLM": "LLM",

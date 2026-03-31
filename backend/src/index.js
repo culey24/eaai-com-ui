@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { createApp } from './app.js'
 import { prisma } from './lib/prisma.js'
 import { applyLightweightSchemaPatches } from './lib/ensureDbPatches.js'
+import { ensureBootstrapAdmin } from './lib/ensureBootstrapAdmin.js'
 
 console.log('[eaai] boot — NODE_ENV=%s PORT=%s', process.env.NODE_ENV || '', process.env.PORT || '(default 3000)')
 
@@ -45,6 +46,7 @@ async function main() {
     await prisma.$connect()
     console.log('[prisma] connected to database')
     await applyLightweightSchemaPatches(prisma)
+    await ensureBootstrapAdmin()
   } catch (err) {
     /* Không exit — tránh crash loop → Railway 502. / và /health vẫn phản hồi để debug. */
     console.error('[prisma] connect failed — kiểm tra DATABASE_URL / Postgres plugin trên Railway', err)

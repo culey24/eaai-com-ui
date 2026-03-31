@@ -15,6 +15,7 @@ import {
   FileText,
   LayoutDashboard,
   UserCog,
+  ClipboardList,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -193,6 +194,19 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
               >
                 <FileText className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && <span className="text-sm font-medium truncate">{t('admin.submissions.title')}</span>}
+              </Link>
+              <Link
+                to="/admin/surveys"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  location.pathname === '/admin/surveys'
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <ClipboardList className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{t('admin.surveys.title')}</span>}
               </Link>
               <Link
                 to="/reports"

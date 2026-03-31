@@ -5,6 +5,7 @@ import { authMiddleware } from '../middleware/auth.js'
 import { prismaRoleToApi } from '../lib/roles.js'
 import { jsonSafe } from '../lib/json.js'
 import { validatePretestBody } from '../lib/pretestValidate.js'
+import { SURVEY_KIND_PRETEST } from '../lib/surveyConfig.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -247,8 +248,8 @@ router.get('/pretest', async (req, res) => {
     if (req.auth.userRole !== 'student') {
       return res.status(200).json(jsonSafe({ applicable: false, completed: true }))
     }
-    const row = await prisma.pretestResponse.findUnique({
-      where: { userId: req.auth.userId },
+    const row = await prisma.surveyResponse.findFirst({
+      where: { userId: req.auth.userId, surveyKind: SURVEY_KIND_PRETEST },
       select: { createdAt: true },
     })
     return res.status(200).json(
@@ -291,10 +292,16 @@ router.post('/pretest', async (req, res) => {
 
     const { sectionA, sectionB, sectionC } = req.body
 
-    await prisma.pretestResponse.upsert({
-      where: { userId: req.auth.userId },
+    await prisma.surveyResponse.upsert({
+      where: {
+        userId_surveyKind: {
+          userId: req.auth.userId,
+          surveyKind: SURVEY_KIND_PRETEST,
+        },
+      },
       create: {
         userId: req.auth.userId,
+        surveyKind: SURVEY_KIND_PRETEST,
         sectionA,
         sectionB,
         sectionC,

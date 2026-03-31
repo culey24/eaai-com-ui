@@ -25,7 +25,8 @@ END $$;
 const PRETEST_RESPONSES_TABLE = `
 CREATE TABLE IF NOT EXISTS pretest_responses (
   pretest_id BIGSERIAL PRIMARY KEY,
-  user_id VARCHAR(10) NOT NULL UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+  user_id VARCHAR(10) NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  survey_kind VARCHAR(32) NOT NULL DEFAULT 'PRETEST',
   section_a JSONB NOT NULL DEFAULT '{}',
   section_b JSONB NOT NULL DEFAULT '{}',
   section_c JSONB NOT NULL DEFAULT '{}',
@@ -34,16 +35,41 @@ CREATE TABLE IF NOT EXISTS pretest_responses (
 )
 `
 
-const PRETEST_RESPONSES_INDEX =
-  'CREATE INDEX IF NOT EXISTS idx_pretest_responses_user_id ON pretest_responses(user_id)'
+/** DB cũ từ patch trước (unique chỉ user_id): đồng bộ với migration survey_kind. */
+const PRETEST_SURVEY_KIND_PATCHES = [
+  `ALTER TABLE pretest_responses ADD COLUMN IF NOT EXISTS survey_kind VARCHAR(32) NOT NULL DEFAULT 'PRETEST'`,
+  'ALTER TABLE pretest_responses DROP CONSTRAINT IF EXISTS pretest_responses_user_id_key',
+  'ALTER TABLE pretest_responses DROP CONSTRAINT IF EXISTS "PretestResponse_userId_key"',
+  'CREATE UNIQUE INDEX IF NOT EXISTS pretest_responses_user_id_survey_kind_key ON pretest_responses(user_id, survey_kind)',
+]
+
+const PRETEST_SURVEY_KIND_SECONDARY_INDEX =
+  'CREATE INDEX IF NOT EXISTS idx_pretest_responses_survey_kind ON pretest_responses(survey_kind)'
 
 export async function applyLightweightSchemaPatches(prisma) {
   try {
     await prisma.$executeRawUnsafe(PRETEST_RESPONSES_TABLE)
-    await prisma.$executeRawUnsafe(PRETEST_RESPONSES_INDEX)
   } catch (err) {
     console.warn(
-      '[db-patches] pretest_responses:',
+      '[db-patches] pretest_responses create:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
+  for (const sql of PRETEST_SURVEY_KIND_PATCHES) {
+    try {
+      await prisma.$executeRawUnsafe(sql)
+    } catch (err) {
+      console.warn(
+        '[db-patches] pretest_responses survey_kind:',
+        err instanceof Error ? err.message : String(err)
+      )
+    }
+  }
+  try {
+    await prisma.$executeRawUnsafe(PRETEST_SURVEY_KIND_SECONDARY_INDEX)
+  } catch (err) {
+    console.warn(
+      '[db-patches] pretest_responses survey_kind index:',
       err instanceof Error ? err.message : String(err)
     )
   }

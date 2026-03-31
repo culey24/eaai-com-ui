@@ -5,6 +5,7 @@ import {
   Users,
   UserCog,
   FileText,
+  ClipboardList,
   Flag,
   ChevronRight,
 } from 'lucide-react'
@@ -27,6 +28,7 @@ export default function AdminDashboardPage() {
     { to: '/admin/classes', icon: Users, labelKey: 'admin.classList' },
     { to: '/admin/accounts', icon: UserCog, labelKey: 'admin.accountManagement' },
     { to: '/admin/submissions', icon: FileText, labelKey: 'admin.submissions.title' },
+    { to: '/admin/surveys', icon: ClipboardList, labelKey: 'admin.surveys.title' },
     { to: '/reports', icon: Flag, labelKey: 'sidebar.reports' },
   ]
 

@@ -98,7 +98,23 @@ export function AdminProvider({ children }) {
       const supporterDb =
         meta.supporterUser != null ? uiIdToBackendUserId(meta.supporterUser) : null
 
-      if (apiToken && user?.role === ROLES.ADMIN && learnerDb && supporterDb) {
+      /** Học viên trên DB — bắt buộc ghi PUT; trước đây thiếu id supporter → bỏ qua API nhưng vẫn lưu local → login lại mất gán. */
+      const mustPersistToApi =
+        typeof learnerUiKey === 'string' && learnerUiKey.startsWith('api-')
+
+      if (mustPersistToApi) {
+        if (!apiToken || user?.role !== ROLES.ADMIN) {
+          const msg = 'Cần đăng nhập admin để gán supporter cho tài khoản trên server.'
+          setAssignmentSyncError(msg)
+          return { ok: false, error: msg }
+        }
+        if (!learnerDb || !supporterDb) {
+          const msg = !supporterDb
+            ? 'Supporter phải là tài khoản tồn tại trên server (ví dụ từ seed / tạo ở DB), không thể dùng tài khoản demo chỉ lưu trên trình duyệt.'
+            : 'Không xác định được học viên trên server.'
+          setAssignmentSyncError(msg)
+          return { ok: false, error: msg }
+        }
         const res = await fetch(`${API_BASE}/api/admin/supporter-assignments`, {
           method: 'PUT',
           headers: {
@@ -138,7 +154,20 @@ export function AdminProvider({ children }) {
             ? learnerUiKey.slice(4).slice(0, 10)
             : null
 
-      if (apiToken && user?.role === ROLES.ADMIN && learnerDb) {
+      const mustPersistToApi =
+        typeof learnerUiKey === 'string' && learnerUiKey.startsWith('api-')
+
+      if (mustPersistToApi) {
+        if (!apiToken || user?.role !== ROLES.ADMIN) {
+          const msg = 'Cần đăng nhập admin để bỏ gán supporter trên server.'
+          setAssignmentSyncError(msg)
+          return { ok: false, error: msg }
+        }
+        if (!learnerDb) {
+          const msg = 'Không xác định được học viên trên server.'
+          setAssignmentSyncError(msg)
+          return { ok: false, error: msg }
+        }
         const res = await fetch(
           `${API_BASE}/api/admin/supporter-assignments/${encodeURIComponent(learnerDb)}`,
           {
@@ -196,7 +225,18 @@ export function AdminProvider({ children }) {
         meta.supporterUser != null ? uiIdToBackendUserId(meta.supporterUser) : null
       const mode = CLASS_TO_MODE[requestRow.classCode] || 'MANUAL'
 
-      if (apiToken && user?.role === ROLES.ADMIN && learnerDb && supporterDb) {
+      const learnerUiKey = requestRow.userId
+      const mustPersistToApi =
+        typeof learnerUiKey === 'string' && learnerUiKey.startsWith('api-')
+
+      if (apiToken && user?.role === ROLES.ADMIN && mustPersistToApi) {
+        if (!learnerDb || !supporterDb) {
+          const msg = !supporterDb
+            ? 'Supporter phải là tài khoản trên server.'
+            : 'Không xác định được học viên trên server.'
+          setAssignmentSyncError(msg)
+          return { ok: false, error: msg }
+        }
         const res = await fetch(`${API_BASE}/api/admin/supporter-assignments`, {
           method: 'PUT',
           headers: {

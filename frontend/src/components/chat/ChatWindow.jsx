@@ -42,7 +42,7 @@ export default function ChatWindow({
       return
     }
     let cancelled = false
-    ;(async () => {
+    const pull = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/me/support-assignment`, {
           headers: { Authorization: `Bearer ${apiToken}` },
@@ -57,9 +57,22 @@ export default function ChatWindow({
       } catch {
         if (!cancelled) setHasSupporterAssignment(true)
       }
-    })()
+    }
+
+    void pull()
+    /* Admin có thể gán supporter sau khi học viên đã mở chat — gọi lại định kỳ + khi quay lại tab */
+    const intervalId = window.setInterval(() => {
+      void pull()
+    }, 12_000)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void pull()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+
     return () => {
       cancelled = true
+      window.clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [internalMask, apiToken, user?.role])
 

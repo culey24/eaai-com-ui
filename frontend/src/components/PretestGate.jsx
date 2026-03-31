@@ -1,11 +1,16 @@
 import { useAuth } from '../context/AuthContext'
 import { ROLES } from '../constants/roles'
 import { useLanguage } from '../context/LanguageContext'
+import { isPretestDisabledViaVite } from '../config/featureFlags'
 import PretestModal from './pretest/PretestModal'
 
 export default function PretestGate({ children }) {
   const { t } = useLanguage()
   const { user, apiToken, pretestChecking, pretestNeedsCompletion } = useAuth()
+
+  if (isPretestDisabledViaVite()) {
+    return children
+  }
 
   const isApiLearner =
     user?.role === ROLES.LEARNER && Boolean(apiToken) && user?.backendUserId != null

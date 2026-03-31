@@ -5,6 +5,7 @@ import { useAdmin } from '../../context/AdminContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { ROLES, ROLE_LABELS, VALID_CLASS_CODES } from '../../constants/roles'
 import { CLASS_TO_MODE, hasSupporterMode } from '../../constants/admin'
+import { uiIdToBackendUserId } from '../../lib/userIds'
 
 export default function AdminAccountsPage() {
   const { t } = useLanguage()
@@ -40,9 +41,10 @@ export default function AdminAccountsPage() {
     return matchSearch && matchRole && matchClass
   })
 
-  /** Chỉ assistant (supporter) trên DB mới được gán (tránh roleOverrides UI ASSISTANT giả). */
+  /** Chỉ supporter có user_id trên server mới gán được cho học viên api-* (PUT DB). */
   const supporters = allUsers.filter((u) => {
     if (u.role !== 'ASSISTANT') return false
+    if (uiIdToBackendUserId(u) == null) return false
     const db = u.dbUserRole != null ? String(u.dbUserRole).toLowerCase() : ''
     if (u.fromApi && db && db !== 'support' && db !== 'assistant' && db !== 'teacher') {
       return false

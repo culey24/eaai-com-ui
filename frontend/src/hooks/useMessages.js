@@ -207,25 +207,40 @@ export function useMessages(pollChannelId = null, options = {}) {
         pollChannelId &&
         channelId === pollChannelId &&
         role === 'user' &&
-        conversationId
+        assistantViewLearnerId
       ) {
         try {
+          const body = conversationId
+            ? {
+                channelId,
+                content: content || '',
+                fileName: file?.name || undefined,
+                role: 'assistant',
+                conversationId,
+              }
+            : {
+                channelId,
+                content: content || '',
+                fileName: file?.name || undefined,
+                role: 'assistant',
+                learnerId: assistantViewLearnerId,
+              }
           const res = await fetch(`${API_BASE}/api/messages`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${apiToken}`,
             },
-            body: JSON.stringify({
-              channelId,
-              content: content || '',
-              fileName: file?.name || undefined,
-              role: 'assistant',
-              conversationId,
-            }),
+            body: JSON.stringify(body),
           })
-          if (res.ok) {
-            const r2 = await fetch(`${API_BASE}/api/messages/${conversationId}`, {
+          const data = await res.json().catch(() => ({}))
+          const cid =
+            data.message?.conversationId != null
+              ? String(data.message.conversationId)
+              : conversationId
+          if (res.ok && cid) {
+            setConversationId(cid)
+            const r2 = await fetch(`${API_BASE}/api/messages/${cid}`, {
               headers: { Authorization: `Bearer ${apiToken}` },
             })
             if (r2.ok) {
@@ -263,7 +278,7 @@ export function useMessages(pollChannelId = null, options = {}) {
         return { ...prev, [key]: [...userMsgs, aiResponse] }
       })
     },
-    [isRemoteLearner, isRemoteAssistant, apiToken, pollChannelId, conversationId]
+    [isRemoteLearner, isRemoteAssistant, apiToken, pollChannelId, conversationId, assistantViewLearnerId]
   )
 
   const assistantViewerKey = assistantViewLearnerId ? `api-${assistantViewLearnerId}` : null

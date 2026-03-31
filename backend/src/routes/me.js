@@ -5,7 +5,7 @@ import { authMiddleware } from '../middleware/auth.js'
 import { prismaRoleToApi } from '../lib/roles.js'
 import { jsonSafe } from '../lib/json.js'
 import { validatePretestBody } from '../lib/pretestValidate.js'
-import { SURVEY_KIND_PRETEST } from '../lib/surveyConfig.js'
+import { SURVEY_KIND_PRETEST, isPretestEnabled } from '../lib/surveyConfig.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -245,6 +245,9 @@ router.patch('/profile', async (req, res) => {
  */
 router.get('/pretest', async (req, res) => {
   try {
+    if (!isPretestEnabled()) {
+      return res.status(200).json(jsonSafe({ applicable: false, completed: true, enabled: false }))
+    }
     if (req.auth.userRole !== 'student') {
       return res.status(200).json(jsonSafe({ applicable: false, completed: true }))
     }
@@ -256,6 +259,7 @@ router.get('/pretest', async (req, res) => {
       jsonSafe({
         applicable: true,
         completed: !!row,
+        enabled: true,
         submittedAt: row?.createdAt ? row.createdAt.toISOString() : null,
       })
     )
@@ -274,6 +278,12 @@ router.get('/pretest', async (req, res) => {
  */
 router.post('/pretest', async (req, res) => {
   try {
+    if (!isPretestEnabled()) {
+      return res.status(403).json({
+        code: 'PRETEST_DISABLED',
+        error: 'PRETEST is disabled on this server',
+      })
+    }
     if (req.auth.userRole !== 'student') {
       return res.status(403).json({
         code: 'PRETEST_LEARNER_ONLY',

@@ -16,10 +16,8 @@ function mapDbRoleToOpenAI(senderRole) {
   return 'user'
 }
 
-/**
- * Kênh human-chat gắn user_class IS-3 sau khi hoán vai IS-2/IS-3.
- */
-export function channelUsesIs2Agent(channel) {
+/** human-chat trong seed/migrate gắn IS-3 — dùng khi cần kiểm tra bản ghi kênh. */
+export function channelMapsHumanChatToIs3(channel) {
   return channel?.userClass === UserClass.IS_3
 }
 
@@ -48,9 +46,23 @@ export async function buildIs2AgentMessages(conversationId) {
 }
 
 /**
+ * Chỉ học viên IS-3, hội thoại trên human-chat — gọi OpenRouter (Gemini).
  * @returns {Promise<string>} nội dung assistant
  */
 export async function generateIs2AgentReply(conversationId) {
+  const conv = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: {
+      channelId: true,
+      learner: { select: { userClass: true } },
+    },
+  })
+  if (!conv) {
+    throw new Error('Không tìm thấy hội thoại')
+  }
+  if (conv.channelId !== 'human-chat' || conv.learner?.userClass !== UserClass.IS_3) {
+    throw new Error('Gemini chỉ dùng cho học viên IS-3 trên kênh human-chat')
+  }
   const messages = await buildIs2AgentMessages(conversationId)
   return openRouterChatCompletion(messages)
 }

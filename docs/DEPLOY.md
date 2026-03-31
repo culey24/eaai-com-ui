@@ -17,7 +17,7 @@ Sửa `.env.deploy`:
 - **`POSTGRES_PASSWORD`**, **`JWT_SECRET`**: bắt buộc, dùng giá trị mạnh trên production.
 - **`VITE_API_URL`**: URL công khai của API (trình duyệt phải truy cập được). Ví dụ `https://api.example.com` hoặc nếu chỉ thử trên máy: `http://localhost:3000` (khớp `API_PORT`).
 - **`CORS_ORIGINS`**: URL gốc của SPA, ví dụ `https://app.example.com` hoặc `http://localhost:8080`. Nhiều gốc thì cách nhau bằng dấu phẩy.
-- **OpenRouter (tuỳ chọn):** `OPENROUTER_API_KEY` để bật chat trực tiếp với model (mặc định `google/gemini-2.0-flash-001`) trên kênh **IS-2** (`human-chat` trong seed). System prompt cố định là **AGENT tư vấn**; nội dung hội thoại = lịch sử tin trong DB (không nhúng journal/file vào prompt). Có thể thêm `OPENROUTER_HTTP_REFERER` theo khuyến nghị OpenRouter. Không set key thì kênh IS-2 trả thông báo “chưa được bật”.
+- **OpenRouter (tuỳ chọn):** `OPENROUTER_API_KEY` để bật **Gemini** qua OpenRouter cho học viên **IS-3** trên kênh **`human-chat`** (mặc định `google/gemini-2.0-flash-001`). System prompt cố định là **AGENT tư vấn**; chỉ lịch sử tin trong DB (không nhúng journal/file). Có thể thêm `OPENROUTER_HTTP_REFERER` theo khuyến nghị OpenRouter. Không set key thì phản hồi báo “chưa được bật”.
 - **Journal / upload file:** API lưu file dưới thư mục `uploads/` (mặc định `uploads/journals`). Với Docker Compose prod, volume `eaai_uploads` gắn vào `/app/uploads` để không mất file khi restart container. Sau khi pull code mới, chạy `npx prisma migrate deploy` trong backend để có cột `extracted_text` (trích văn bản cho chatbot).
 
 ### 2. Build và chạy
@@ -57,7 +57,7 @@ Trên API, đặt `TRUST_PROXY=1` nếu TLS kết thúc tại proxy.
 
   Nếu database đã có schema từ script SQL giống `backend/init` (không rỗng) và gặp lỗi migrate, xem [README](../README.md) phần baseline: `prisma db execute` + `migrate resolve` một lần.
 
-- **Biến môi trường**: `DATABASE_URL`, `JWT_SECRET`, `PORT`, tuỳ chọn `JWT_EXPIRES_IN`, `CORS_ORIGINS`, `TRUST_PROXY`, và `OPENROUTER_*` nếu dùng trợ lý IS-2 (xem mục OpenRouter ở trên).
+- **Biến môi trường**: `DATABASE_URL`, `JWT_SECRET`, `PORT`, tuỳ chọn `JWT_EXPIRES_IN`, `CORS_ORIGINS`, `TRUST_PROXY`, và `OPENROUTER_*` nếu bật Gemini cho IS-3 / `human-chat` (xem mục OpenRouter ở trên).
 
 - **Railway / DB rỗng (P3009):** Entrypoint đã `migrate resolve --rolled-back` cho migration `journal_extracted_text` lỗi cũ; migration đó chỉ thêm cột khi bảng đã tồn tại. Migration **`journal_periods_and_uploads`** tạo đủ `journal_periods` + `journal_uploads` và seed đợt `default` — không bắt buộc chạy `backend/init` trên hosting. Nếu vẫn kẹt: `npx prisma migrate resolve --rolled-back 20260325180000_journal_extracted_text` rồi `npx prisma migrate deploy`.
 

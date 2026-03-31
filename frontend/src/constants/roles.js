@@ -22,7 +22,7 @@ export const VALID_CLASS_CODES = ['IS-1', 'IS-2', 'IS-3']
 /** Mapping mã lớp → kênh chat (labelKey dùng cho i18n) */
 export const CLASS_TO_CHANNEL = {
   'IS-1': { id: 'ai-chat', code: 'IS-1', labelKey: 'chat.agent', icon: 'Bot' },
-  /* IS-2 / IS-3: vai trò kênh đã hoán — nội bộ ↔ human-chat (Gemini) */
+  /* IS-2: chat với supporter (internal-chat). IS-3: chat với Gemini/OpenRouter (human-chat). */
   'IS-2': { id: 'internal-chat', code: 'IS-2', labelKey: 'chat.agent', icon: 'Shield' },
   'IS-3': { id: 'human-chat', code: 'IS-3', labelKey: 'chat.agent', icon: 'UserCircle' },
 }

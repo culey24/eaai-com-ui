@@ -70,7 +70,7 @@ export const jwtMessagePostLimiter = rateLimit({
 })
 
 /**
- * POST /api/messages — học viên gửi tin trên human-chat (lớp IS-3) → gọi OpenRouter/Gemini.
+ * POST /api/messages — human-chat (học viên IS-3 mới gọi Gemini; limiter theo channelId).
  * Mỗi user (userId) tối đa RATE_LIMIT_IS2_GEMINI_MAX lần mỗi RATE_LIMIT_IS2_GEMINI_WINDOW_MS.
  */
 export const is2GeminiPostLimiter = rateLimit({
@@ -90,7 +90,7 @@ export const is2GeminiPostLimiter = rateLimit({
   },
   keyGenerator: (req) => {
     const id = req.auth?.userId
-    return id ? `is2-gemini:${id}` : `is2-gemini-ip:${req.ip}`
+    return id ? `is3-gemini:${id}` : `is3-gemini-ip:${req.ip}`
   },
   handler: json429,
 })

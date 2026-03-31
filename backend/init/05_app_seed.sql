@@ -1,5 +1,6 @@
 -- Kênh chat mặc định; phạm vi supporter; journal period mẫu; settings mặc định.
 
+-- IS-1 ai-chat; IS-2 internal-chat (supporter); IS-3 human-chat (Gemini)
 INSERT INTO chat_channels (channel_id, user_class, display_order) VALUES
 ('ai-chat', 'IS-1', 1),
 ('human-chat', 'IS-3', 2),

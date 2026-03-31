@@ -6,7 +6,8 @@ import { canAccessConversation } from '../lib/access.js'
 import { jsonSafe } from '../lib/json.js'
 import { isMinimalChatBody } from '../lib/lobby.js'
 import { getMinimalMessages, postMinimalMessage } from './minimalMessagesHandlers.js'
-import { channelUsesIs2Agent, generateIs2AgentReply } from '../lib/is2AgentReply.js'
+import { generateIs2AgentReply } from '../lib/is2AgentReply.js'
+import { isSupporterUserRole } from '../lib/roles.js'
 import {
   minimalMessagePostLimiter,
   jwtMessagePostLimiter,
@@ -111,7 +112,14 @@ router.post(
       return res.status(400).json({ error: 'Sai định dạng tin nhắn' })
     }
     try {
-      const { channelId, content, fileName, role, conversationId: bodyConvId } = req.body || {}
+      const {
+        channelId,
+        content,
+        fileName,
+        role,
+        conversationId: bodyConvId,
+        learnerId: bodyLearnerId,
+      } = req.body || {}
       const ch = typeof channelId === 'string' ? channelId.trim() : ''
       const text = typeof content === 'string' ? content : ''
       const file = fileName != null ? String(fileName).slice(0, 512) : null
@@ -129,9 +137,19 @@ router.post(
       let conversationId
       const { userId, userRole } = req.auth
 
+      let learnerUserClass = null
+      if (userRole === 'student') {
+        const lu = await prisma.user.findUnique({
+          where: { userId },
+          select: { userClass: true },
+        })
+        learnerUserClass = lu?.userClass ?? null
+      }
+
       if (
         userRole === 'student' &&
-        channel.userClass === UserClass.IS_2 &&
+        learnerUserClass === UserClass.IS_2 &&
+        ch === 'internal-chat' &&
         senderRole === MessageSender.user
       ) {
         const assign = await prisma.learnerSupporterAssignment.findUnique({
@@ -158,12 +176,7 @@ router.post(
         if (access.conv.channelId !== ch) {
           return res.status(400).json({ error: 'channelId không khớp hội thoại' })
         }
-      } else {
-        if (userRole !== 'student') {
-          return res.status(400).json({
-            error: 'Supporter/Admin cần gửi conversationId khi đăng tin nhắn',
-          })
-        }
+      } else if (userRole === 'student') {
         const conv = await prisma.conversation.upsert({
           where: {
             channelId_learnerId: { channelId: ch, learnerId: userId },
@@ -171,6 +184,61 @@ router.post(
           create: {
             channelId: ch,
             learnerId: userId,
+          },
+          update: {},
+        })
+        conversationId = conv.id
+      } else {
+        const targetLearnerId =
+          typeof bodyLearnerId === 'string' ? bodyLearnerId.trim().slice(0, 10) : ''
+        if (!targetLearnerId) {
+          return res.status(400).json({
+            error:
+              'Supporter/Admin: gửi conversationId (nếu đã có) hoặc learnerId để mở/tiếp tục hội thoại',
+          })
+        }
+        const learner = await prisma.user.findUnique({
+          where: { userId: targetLearnerId },
+          select: { userId: true, userRole: true, userClass: true },
+        })
+        if (!learner || learner.userRole !== 'student') {
+          return res.status(400).json({ error: 'learnerId không hợp lệ' })
+        }
+        if (
+          learner.userClass != null &&
+          learner.userClass !== channel.userClass
+        ) {
+          return res.status(400).json({
+            error: 'Kênh không khớp lớp của học viên',
+          })
+        }
+        if (userRole === 'admin') {
+          /* ok */
+        } else if (isSupporterUserRole(userRole)) {
+          const assign = await prisma.learnerSupporterAssignment.findUnique({
+            where: { learnerId: targetLearnerId },
+            select: { supporterId: true },
+          })
+          const okAssign = assign?.supporterId === userId
+          const scopes = await prisma.assistantManagedClass.findMany({
+            where: { supporterId: userId },
+            select: { userClass: true },
+          })
+          const classes = new Set(scopes.map((s) => s.userClass))
+          const okScope = learner.userClass != null && classes.has(learner.userClass)
+          if (!okAssign && !okScope) {
+            return res.status(403).json({ error: 'Không có quyền nhắn học viên này' })
+          }
+        } else {
+          return res.status(403).json({ error: 'Forbidden' })
+        }
+        const conv = await prisma.conversation.upsert({
+          where: {
+            channelId_learnerId: { channelId: ch, learnerId: targetLearnerId },
+          },
+          create: {
+            channelId: ch,
+            learnerId: targetLearnerId,
           },
           update: {},
         })
@@ -191,12 +259,11 @@ router.post(
         },
       })
 
-      // IS-2 / internal-chat (sau hoán DB): không tự trả lời — supporter trả lời sau.
-      // IS-3 / human-chat: OpenRouter (Gemini). IS-1: echo mặc định.
+      // IS-2: không auto-reply (supporter). IS-3: chỉ Gemini trên human-chat — không echo. IS-1: echo.
       if (userRole === 'student' && senderRole === MessageSender.user) {
-        if (channel.userClass === UserClass.IS_2) {
+        if (learnerUserClass === UserClass.IS_2) {
           /* chỉ lưu tin người học */
-        } else if (channelUsesIs2Agent(channel)) {
+        } else if (learnerUserClass === UserClass.IS_3 && ch === 'human-chat') {
           let assistantContent
           if (process.env.OPENROUTER_API_KEY?.trim()) {
             try {
@@ -215,9 +282,11 @@ router.post(
               senderRole: MessageSender.assistant,
               senderUserId: null,
               content: assistantContent,
-              metadata: { source: 'openrouter_is2' },
+              metadata: { source: 'openrouter_gemini' },
             },
           })
+        } else if (learnerUserClass === UserClass.IS_3) {
+          /* IS-3 ngoài human-chat: không phản hồi giả — chỉ tin người học */
         } else {
           const assistantContent = `Đã nhận tin nhắn của bạn. (Phản hồi từ ${ch})`
           await prisma.message.create({

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { ROLES, VALID_CLASS_CODES } from '../constants/roles'
 import { API_BASE } from '../config/api'
+import { isPretestDisabledViaVite } from '../config/featureFlags'
 import { AuthErrorCode } from '../lib/authErrorUi'
 
 /** Bật đăng nhập/đăng ký mock (localStorage) khi API lỗi — dev/demo. Production: để false. */
@@ -82,6 +83,12 @@ function mapApiRoleToApp(role) {
 
 const PROFILE_PLACEHOLDER = 'Chưa cập nhật'
 
+function pretestStatusFromApiPayload(data) {
+  if (data?.applicable === false || data?.enabled === false) return true
+  if (data?.applicable === true) return !!data?.completed
+  return true
+}
+
 /** Gộp payload GET/PATCH /api/me/profile vào object user trong UI */
 function mergeDbProfileIntoUser(base, p) {
   if (!p || !base) return base
@@ -120,9 +127,15 @@ export function AuthProvider({ children }) {
   })
   const [isLoading, setIsLoading] = useState(true)
   /** null = đang tải; true = đã làm hoặc không áp dụng; false = bắt buộc làm PRETEST */
-  const [pretestCompleted, setPretestCompleted] = useState(null)
+  const [pretestCompleted, setPretestCompleted] = useState(() =>
+    isPretestDisabledViaVite() ? true : null
+  )
 
   const refreshPretestStatus = useCallback(async () => {
+    if (isPretestDisabledViaVite()) {
+      setPretestCompleted(true)
+      return
+    }
     const token = apiToken || localStorage.getItem(API_TOKEN_KEY)
     if (!token || user?.role !== ROLES.LEARNER || user?.backendUserId == null) {
       setPretestCompleted(true)
@@ -133,15 +146,13 @@ export function AuthProvider({ children }) {
         headers: { Authorization: `Bearer ${token}` },
       })
       const data = await res.json().catch(() => ({}))
-      if (res.ok && data.applicable === false) {
+      if (!res.ok) {
         setPretestCompleted(true)
-      } else if (res.ok) {
-        setPretestCompleted(!!data.completed)
-      } else {
-        setPretestCompleted(false)
+        return
       }
+      setPretestCompleted(pretestStatusFromApiPayload(data))
     } catch {
-      setPretestCompleted(false)
+      setPretestCompleted(true)
     }
   }, [apiToken, user])
 
@@ -278,6 +289,10 @@ export function AuthProvider({ children }) {
   }, [apiToken, user?.backendUserId, user?.role])
 
   useEffect(() => {
+    if (isPretestDisabledViaVite()) {
+      setPretestCompleted(true)
+      return
+    }
     if (!apiToken || user?.role !== ROLES.LEARNER || user?.backendUserId == null) {
       setPretestCompleted(true)
       return
@@ -291,11 +306,13 @@ export function AuthProvider({ children }) {
         })
         const data = await res.json().catch(() => ({}))
         if (cancelled) return
-        if (res.ok && data.applicable === false) setPretestCompleted(true)
-        else if (res.ok) setPretestCompleted(!!data.completed)
-        else setPretestCompleted(false)
+        if (!res.ok) {
+          setPretestCompleted(true)
+          return
+        }
+        setPretestCompleted(pretestStatusFromApiPayload(data))
       } catch {
-        if (!cancelled) setPretestCompleted(false)
+        if (!cancelled) setPretestCompleted(true)
       }
     })()
     return () => {

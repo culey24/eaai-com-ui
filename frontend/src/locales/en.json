@@ -221,6 +221,7 @@
     "surveys": {
       "title": "Survey results",
       "intro": "View learner submissions by survey type. PRETEST is live; POST-TEST uses the same storage (survey_kind) and will appear here after you enable it on the server and add the learner flow.",
+      "introStats": "Aggregated answers across all submissions for this survey (no per-user table). Section B counts each time a topic was used (first or second pick).",
       "tabPretest": "PRETEST",
       "tabPosttest": "POST-TEST",
       "posttestHint": "POST-TEST: set SURVEY_POSTTEST_ENABLED=1 on the backend when ready, then add validation and UI (same table as PRETEST, survey_kind = POSTTEST).",
@@ -230,7 +231,34 @@
       "colClass": "Class",
       "colSubmitted": "Submitted at",
       "colDetail": "Detail",
-      "view": "View JSON"
+      "view": "View JSON",
+      "stats": {
+        "total": "Total responses: {count}",
+        "sectionA": "Section A — Background",
+        "sectionB": "Section B — Knowledge assessment",
+        "sectionC": "Section C — AI attitudes (Likert 1–5)",
+        "topicNote": "Each topic block includes all submissions where learners chose that topic (as first or second). Totals per question match the number of responses above.",
+        "qShort": "Q{num}",
+        "freeTextHint": "Answers vary; see sample responses below (not charted).",
+        "aiPurposeSamples": "Primary AI purpose (free text) — sample answers ({count} in total, showing up to 25)",
+        "aKeys": {
+          "yearOfStudy": "1. Current year of study",
+          "gender": "2. Gender",
+          "studentStatus": "3. Current status",
+          "selfLearningScale": "4. Self-learning ability (1–5)",
+          "topicFirst": "5. First knowledge topic",
+          "topicSecond": "6. Second knowledge topic",
+          "studiedTopic1": "7. Studied topic 1 before?",
+          "studiedTopic2": "8. Studied topic 2 before?",
+          "familiarityTopic1Scale": "9. Familiarity with topic 1 (1–5)",
+          "familiarityTopic2Scale": "10. Familiarity with topic 2 (1–5)",
+          "usedGenAi": "11. Used GenAI tools for learning?",
+          "aiLearningFrequency": "12. How often AI for learning?",
+          "aiToolPrimary": "13. Main AI tool",
+          "aiStudyPurpose": "14. Primary purpose (free text) — see list below",
+          "attendedAiTraining": "15. Attended AI training / workshop?"
+        }
+      }
     },
     "teachingMode": {
       "AGENT": "AGENT",

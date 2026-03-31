@@ -92,10 +92,10 @@ router.put('/supporter-assignments', async (req, res) => {
         error: 'learnerId không phải học viên',
       })
     }
-    if (learner.userClass !== UserClass.IS_3) {
+    if (learner.userClass !== UserClass.IS_2) {
       return res.status(400).json({
-        code: 'LEARNER_NOT_IS3',
-        error: 'Chỉ học viên lớp IS-3 được gán supporter',
+        code: 'LEARNER_NOT_IS2',
+        error: 'Chỉ học viên lớp IS-2 được gán supporter (kênh nội bộ)',
       })
     }
     if (!supporter || !isSupporterUserRole(supporter.userRole)) {

@@ -1,20 +1,60 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ClipboardList, Eye } from 'lucide-react'
+import { ArrowLeft, ClipboardList } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import { ADMIN_SURVEY_TABS, SURVEY_KIND_PRETEST, SURVEY_KIND_POSTTEST } from '../../constants/surveyKinds'
 import { ROLES } from '../../constants/roles'
+import { aggregateSurveySubmissions, SURVEY_SECTION_A_KEYS } from '../../lib/surveyAggregate'
+import { PRETEST_TOPICS } from '../../data/pretest/pretestTopics'
+import { SECTION_C_ITEMS } from '../../data/pretest/sectionCItems'
+import { getSectionBQuestions } from '../../data/pretest/sectionB'
+
+function topicLabel(id, lang) {
+  const x = PRETEST_TOPICS.find((p) => p.id === id)
+  if (!x) return id
+  return lang === 'vi' ? x.title.vi : x.title.en
+}
+
+function DistributionBlock({ title, dist, total }) {
+  const entries = Object.entries(dist).sort((a, b) => b[1] - a[1])
+  if (entries.length === 0) return null
+  return (
+    <div className="mb-5">
+      <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mb-2">{title}</p>
+      <div className="space-y-2">
+        {entries.map(([label, count]) => {
+          const pct = total > 0 ? Math.round((count / total) * 1000) / 10 : 0
+          return (
+            <div key={label + String(count)} className="flex flex-col gap-0.5">
+              <div className="flex items-baseline justify-between gap-2 text-sm">
+                <span className="text-slate-600 dark:text-slate-400 break-words min-w-0">{label}</span>
+                <span className="tabular-nums text-slate-800 dark:text-slate-100 shrink-0">
+                  {count} ({pct}%)
+                </span>
+              </div>
+              <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary/80 rounded-full transition-all"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 export default function AdminSurveyResultsPage() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const { apiToken, user } = useAuth()
   const [activeKind, setActiveKind] = useState(SURVEY_KIND_PRETEST)
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [detail, setDetail] = useState(null)
 
   const fetchList = useCallback(async () => {
     if (!apiToken || user?.role !== ROLES.ADMIN) return
@@ -44,6 +84,8 @@ export default function AdminSurveyResultsPage() {
     void fetchList()
   }, [fetchList])
 
+  const stats = useMemo(() => aggregateSurveySubmissions(rows), [rows])
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden">
       <div className="flex-shrink-0 px-8 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-4">
@@ -63,7 +105,7 @@ export default function AdminSurveyResultsPage() {
 
       <div className="flex-1 overflow-y-auto px-8 py-6">
         <p className="text-sm text-slate-600 dark:text-slate-400 max-w-3xl mb-6">
-          {t('admin.surveys.intro')}
+          {t('admin.surveys.introStats')}
         </p>
 
         <div className="flex flex-wrap gap-2 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
@@ -96,112 +138,122 @@ export default function AdminSurveyResultsPage() {
         ) : rows.length === 0 ? (
           <p className="text-slate-500 dark:text-slate-400">{t('admin.surveys.empty')}</p>
         ) : (
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800/50">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-400">
-                    {t('admin.surveys.colUser')}
-                  </th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-400">
-                    {t('admin.surveys.colClass')}
-                  </th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-400">
-                    {t('admin.surveys.colSubmitted')}
-                  </th>
-                  <th className="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-400 w-24">
-                    {t('admin.surveys.colDetail')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                {rows.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                    <td className="px-4 py-3">
-                      <span className="font-medium text-slate-800 dark:text-white">{r.username}</span>
-                      <span className="block text-xs text-slate-500">{r.fullname}</span>
-                      <span className="text-xs text-slate-400">{r.userId}</span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                      {r.classCode || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                      {r.createdAt
-                        ? new Date(r.createdAt).toLocaleString(undefined, {
-                            dateStyle: 'short',
-                            timeStyle: 'short',
-                          })
-                        : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => setDetail(r)}
-                        className="inline-flex items-center gap-1 text-primary hover:underline"
+          <div className="space-y-10 max-w-4xl">
+            <p className="text-base font-semibold text-slate-900 dark:text-white">
+              {t('admin.surveys.stats.total', { count: stats.n })}
+            </p>
+
+            <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 p-6">
+              <h2 className="text-lg font-semibold text-primary mb-4">{t('admin.surveys.stats.sectionA')}</h2>
+              <div className="space-y-6">
+                {SURVEY_SECTION_A_KEYS.filter((key) => key !== 'aiStudyPurpose').map((key) => {
+                  let dist = { ...stats.sectionA[key] }
+                  if (key === 'topicFirst' || key === 'topicSecond') {
+                    dist = Object.fromEntries(
+                      Object.entries(dist).map(([k, v]) => [topicLabel(k, lang), v])
+                    )
+                  }
+                  return (
+                    <DistributionBlock
+                      key={key}
+                      title={t(`admin.surveys.stats.aKeys.${key}`)}
+                      dist={dist}
+                      total={stats.n}
+                    />
+                  )
+                })}
+              <div className="mb-2">
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mb-1">
+                  {t('admin.surveys.stats.aKeys.aiStudyPurpose')}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t('admin.surveys.stats.freeTextHint')}</p>
+              </div>
+              </div>
+              {stats.purposeSamples.length > 0 ? (
+                <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-600">
+                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mb-2">
+                    {t('admin.surveys.stats.aiPurposeSamples', { count: stats.purposeSamples.length })}
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-slate-600 dark:text-slate-400 max-h-48 overflow-y-auto">
+                    {stats.purposeSamples.slice(0, 25).map((s, i) => (
+                      <li key={i} className="break-words">
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </section>
+
+            <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 p-6">
+              <h2 className="text-lg font-semibold text-primary mb-1">{t('admin.surveys.stats.sectionB')}</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">{t('admin.surveys.stats.topicNote')}</p>
+              <div className="space-y-10">
+                {Object.keys(stats.sectionB)
+                  .sort()
+                  .map((topicId) => {
+                    const qs = getSectionBQuestions(topicId)
+                    const topicStats = stats.sectionB[topicId]
+                    return (
+                      <div
+                        key={topicId}
+                        className="border border-slate-200 dark:border-slate-600 rounded-xl p-4 bg-white dark:bg-slate-900/50"
                       >
-                        <Eye className="w-4 h-4" />
-                        {t('admin.surveys.view')}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <h3 className="font-medium text-slate-900 dark:text-white mb-4">
+                          {topicLabel(topicId, lang)}
+                        </h3>
+                        <div className="space-y-6">
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                            const qk = `q${num}`
+                            const dist = topicStats?.[qk] || {}
+                            const qMeta = qs[num - 1]
+                            const title = qMeta
+                              ? `${t('admin.surveys.stats.qShort', { num })} — ${lang === 'vi' ? qMeta.prompt.vi : qMeta.prompt.en}`
+                              : t('admin.surveys.stats.qShort', { num })
+                            return (
+                              <DistributionBlock
+                                key={qk}
+                                title={title}
+                                dist={dist}
+                                total={stats.n}
+                              />
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 p-6">
+              <h2 className="text-lg font-semibold text-primary mb-4">{t('admin.surveys.stats.sectionC')}</h2>
+              <div className="space-y-6">
+                {SECTION_C_ITEMS.map((item, idx) => {
+                  const ck = `c${idx + 1}`
+                  const distRaw = stats.sectionC[ck] || {}
+                  const dist = Object.fromEntries(
+                    [1, 2, 3, 4, 5].map((n) => [
+                      `${n} — ${t(`pretest.likert.${n}`)}`,
+                      distRaw[n] || 0,
+                    ])
+                  )
+                  const title =
+                    (lang === 'vi' ? `${idx + 1}. ${item.vi}` : `${idx + 1}. ${item.en}`)
+                  return (
+                    <DistributionBlock
+                      key={ck}
+                      title={title}
+                      dist={dist}
+                      total={stats.n}
+                    />
+                  )
+                })}
+              </div>
+            </section>
           </div>
         )}
       </div>
-
-      {detail ? (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-3xl w-full max-h-[85vh] flex flex-col shadow-xl">
-            <div className="flex-shrink-0 px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold text-slate-800 dark:text-white">
-                  {detail.username} · {detail.surveyKind}
-                </p>
-                <p className="text-xs text-slate-500">{detail.userId}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDetail(null)}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 text-sm"
-              >
-                {t('common.cancel')}
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs font-mono">
-              <div>
-                <p className="text-sm font-sans font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  sectionA
-                </p>
-                <pre className="whitespace-pre-wrap break-words bg-slate-50 dark:bg-slate-800 p-3 rounded-lg overflow-x-auto">
-                  {JSON.stringify(detail.sectionA, null, 2)}
-                </pre>
-              </div>
-              <div>
-                <p className="text-sm font-sans font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  sectionB
-                </p>
-                <pre className="whitespace-pre-wrap break-words bg-slate-50 dark:bg-slate-800 p-3 rounded-lg overflow-x-auto max-h-64">
-                  {JSON.stringify(detail.sectionB, null, 2)}
-                </pre>
-              </div>
-              <div>
-                <p className="text-sm font-sans font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  sectionC
-                </p>
-                <pre className="whitespace-pre-wrap break-words bg-slate-50 dark:bg-slate-800 p-3 rounded-lg overflow-x-auto">
-                  {JSON.stringify(detail.sectionC, null, 2)}
-                </pre>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   )
 }

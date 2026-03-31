@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext'
 import { ROLES } from '../../constants/roles'
 import { API_BASE } from '../../config/api'
 
-/** Sau khoảng này mà chưa có phản hồi assistant → gợi ý “hệ thống bận” (kênh IS-3). */
+/** Supporter/internal-chat: sau khoảng này chưa có phản hồi → gợi ý hệ thống bận (học viên IS-2). */
 const IS3_BUSY_AFTER_MS = 45_000
 
 export default function ChatWindow({
@@ -30,7 +30,7 @@ export default function ChatWindow({
   const scrollRef = useRef(null)
   const [reportOpen, setReportOpen] = useState(false)
   const [busyClock, setBusyClock] = useState(0)
-  /** null = không áp dụng hoặc đang tải; false = chưa gán supporter (IS-3 + JWT) */
+  /** null = không áp dụng; false = chưa gán supporter (internal-chat / IS-2) */
   const [hasSupporterAssignment, setHasSupporterAssignment] = useState(null)
 
   const internalMask =

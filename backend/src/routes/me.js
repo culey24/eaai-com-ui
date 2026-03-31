@@ -17,7 +17,7 @@ router.get('/', (req, res) => {
 
 /**
  * GET /api/me/support-assignment
- * Học viên IS-3: đã có bản ghi learner_supporter_assignments hay chưa (mở kênh AGENT).
+ * Học viên lớp IS-2 (internal-chat): đã có bản ghi learner_supporter_assignments hay chưa.
  */
 router.get('/support-assignment', async (req, res) => {
   try {

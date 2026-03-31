@@ -16,7 +16,7 @@ function userClassToLabel(uc) {
 
 /**
  * GET /api/supporter/learners
- * Role support (hoặc assistant legacy): học viên IS-3 đã được admin gán cho supporter này.
+ * Role support (hoặc assistant legacy): học viên IS-2 (internal-chat) đã được admin gán cho supporter này.
  */
 router.get('/learners', async (req, res) => {
   try {
@@ -36,7 +36,7 @@ router.get('/learners', async (req, res) => {
     const learners = await prisma.user.findMany({
       where: {
         userRole: 'student',
-        userClass: UserClass.IS_3,
+        userClass: UserClass.IS_2,
         userId: { in: assignedIds },
       },
       select: {

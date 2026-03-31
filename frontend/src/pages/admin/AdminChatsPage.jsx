@@ -10,8 +10,8 @@ import MessageItem from '../../components/chat/MessageItem'
 
 const CLASS_TO_CHANNEL = {
   'IS-1': 'ai-chat',
-  'IS-2': 'human-chat',
-  'IS-3': 'internal-chat',
+  'IS-2': 'internal-chat',
+  'IS-3': 'human-chat',
 }
 
 export default function AdminChatsPage() {

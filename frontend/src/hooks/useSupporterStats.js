@@ -5,7 +5,11 @@ import { useAllUsers } from './useAllUsers'
 import { useJournal } from '../context/JournalContext'
 import { useMessages } from './useMessages'
 
-const CLASS_TO_CHANNEL = { 'IS-1': 'ai-chat', 'IS-2': 'human-chat', 'IS-3': 'internal-chat' }
+const CLASS_TO_CHANNEL = {
+  'IS-1': 'ai-chat',
+  'IS-2': 'internal-chat',
+  'IS-3': 'human-chat',
+}
 
 export function useSupporterStats() {
   const { user } = useAuth()

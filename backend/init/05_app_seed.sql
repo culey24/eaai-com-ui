@@ -2,8 +2,8 @@
 
 INSERT INTO chat_channels (channel_id, user_class, display_order) VALUES
 ('ai-chat', 'IS-1', 1),
-('human-chat', 'IS-2', 2),
-('internal-chat', 'IS-3', 3);
+('human-chat', 'IS-3', 2),
+('internal-chat', 'IS-2', 3);
 
 INSERT INTO assistant_managed_classes (supporter_id, user_class) VALUES
 ('T24002', 'IS-1'),

@@ -131,7 +131,7 @@ router.post(
 
       if (
         userRole === 'student' &&
-        channel.userClass === UserClass.IS_3 &&
+        channel.userClass === UserClass.IS_2 &&
         senderRole === MessageSender.user
       ) {
         const assign = await prisma.learnerSupporterAssignment.findUnique({
@@ -191,10 +191,10 @@ router.post(
         },
       })
 
-      // IS-3 / internal-chat: không tự trả lời — supporter trả lời sau (hiển thị phía client như AGENT).
-      // IS-2: OpenRouter agent. IS-1: echo mặc định.
+      // IS-2 / internal-chat (sau hoán DB): không tự trả lời — supporter trả lời sau.
+      // IS-3 / human-chat: OpenRouter (Gemini). IS-1: echo mặc định.
       if (userRole === 'student' && senderRole === MessageSender.user) {
-        if (channel.userClass === UserClass.IS_3) {
+        if (channel.userClass === UserClass.IS_2) {
           /* chỉ lưu tin người học */
         } else if (channelUsesIs2Agent(channel)) {
           let assistantContent
@@ -202,12 +202,12 @@ router.post(
             try {
               assistantContent = await generateIs2AgentReply(conversationId)
             } catch (agentErr) {
-              console.error('[messages POST] IS-2 agent', agentErr)
-              assistantContent = `Trợ lý IS-2 tạm thời lỗi: ${agentErr instanceof Error ? agentErr.message : String(agentErr)}`
+              console.error('[messages POST] human-chat agent', agentErr)
+              assistantContent = `Trợ lý (human-chat / IS-3) tạm thời lỗi: ${agentErr instanceof Error ? agentErr.message : String(agentErr)}`
             }
           } else {
             assistantContent =
-              'Trợ lý lớp IS-2 chưa được bật trên server (thiếu OPENROUTER_API_KEY). Liên hệ quản trị hoặc dùng kênh khác.'
+              'Trợ lý human-chat chưa được bật trên server (thiếu OPENROUTER_API_KEY). Liên hệ quản trị hoặc dùng kênh khác.'
           }
           await prisma.message.create({
             data: {

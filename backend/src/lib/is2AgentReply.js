@@ -5,7 +5,7 @@ import { openRouterChatCompletion } from './openRouter.js'
 /**
  * Ngữ cảnh cố định: AGENT tư vấn (chat trực tiếp với model, không nhúng journal/DB vào prompt).
  */
-const ADVISOR_AGENT_SYSTEM = `Bạn là AGENT tư vấn học tập cho sinh viên ĐHBK HCMUT (ngữ cảnh lớp IS-2 / kênh hỗ trợ).
+const ADVISOR_AGENT_SYSTEM = `Bạn là AGENT tư vấn học tập cho sinh viên ĐHBK HCMUT (kênh human-chat, lớp đăng ký IS-3).
 Vai trò: tư vấn, gợi ý hướng tiếp cận bài tập và ôn tập, giải thích khái niệm một cách ngắn gọn, thân thiện.
 Nguyên tắc: ưu tiên tiếng Việt khi người dùng dùng tiếng Việt; không thay thế giảng viên hay quyết định chấm điểm; không bịa thông tin; nếu thiếu dữ liệu hãy nói rõ và đề nghị người dùng bổ sung.
 Trả lời trực tiếp theo tin nhắn trong cuộc trò chuyện, không giả định có tài liệu nộp kèm trừ khi người dùng tự dán nội dung.`
@@ -17,10 +17,10 @@ function mapDbRoleToOpenAI(senderRole) {
 }
 
 /**
- * Kênh chat gắn lớp IS-2 (vd. human-chat trong seed).
+ * Kênh human-chat gắn user_class IS-3 sau khi hoán vai IS-2/IS-3.
  */
 export function channelUsesIs2Agent(channel) {
-  return channel?.userClass === UserClass.IS_2
+  return channel?.userClass === UserClass.IS_3
 }
 
 export async function buildIs2AgentMessages(conversationId) {

@@ -41,6 +41,28 @@ function FieldLabel({ en, vi }) {
   )
 }
 
+/** Một lựa chọn được chọn mỗi nhóm — hiển thị checkbox ô vuông (single-select). */
+function CheckboxChoiceGroup({ value, onChange, options, disabled }) {
+  return (
+    <div className={`space-y-2 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+      {options.map((opt) => (
+        <label
+          key={opt.value}
+          className="flex items-start gap-3 cursor-pointer rounded-lg border border-slate-200 dark:border-slate-600 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/80"
+        >
+          <input
+            type="checkbox"
+            checked={value === opt.value}
+            onChange={() => onChange(opt.value)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded-sm border-2 border-slate-400 dark:border-slate-500 accent-primary"
+          />
+          <span className="text-slate-900 dark:text-white text-sm leading-snug">{opt.label}</span>
+        </label>
+      ))}
+    </div>
+  )
+}
+
 export default function PretestModal() {
   const { t, lang } = useLanguage()
   const { apiToken, logout, refreshPretestStatus } = useAuth()
@@ -180,13 +202,6 @@ export default function PretestModal() {
     }
   }
 
-  const topicOptions = (excludeId) =>
-    PRETEST_TOPICS.filter((x) => x.id !== excludeId).map((x) => (
-      <option key={x.id} value={x.id}>
-        {lang === 'vi' ? x.title.vi : x.title.en}
-      </option>
-    ))
-
   const renderSectionA = () => (
     <div className="space-y-5 max-w-3xl">
       <section>
@@ -196,45 +211,42 @@ export default function PretestModal() {
 
       <div>
         <FieldLabel en="1. What is your current year of study?" vi="1. Bạn đang học năm thứ mấy?" />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.yearOfStudy}
-          onChange={(e) => setA('yearOfStudy', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          <option value="2nd year">2nd year / Năm 2</option>
-          <option value="3rd year">3rd year / Năm 3</option>
-          <option value="4th year">4th year / Năm 4</option>
-          <option value="Postgraduate">Postgraduate / Sau đại học</option>
-        </select>
+          onChange={(v) => setA('yearOfStudy', v)}
+          options={[
+            { value: '2nd year', label: '2nd year / Năm 2' },
+            { value: '3rd year', label: '3rd year / Năm 3' },
+            { value: '4th year', label: '4th year / Năm 4' },
+            { value: 'Postgraduate', label: 'Postgraduate / Sau đại học' },
+          ]}
+        />
       </div>
 
       <div>
         <FieldLabel en="2. Gender" vi="2. Giới tính" />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.gender}
-          onChange={(e) => setA('gender', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          <option value="Male">Male / Nam</option>
-          <option value="Female">Female / Nữ</option>
-          <option value="Other">Other / Khác</option>
-          <option value="Prefer not to say">Prefer not to say / Không trả lời</option>
-        </select>
+          onChange={(v) => setA('gender', v)}
+          options={[
+            { value: 'Male', label: 'Male / Nam' },
+            { value: 'Female', label: 'Female / Nữ' },
+            { value: 'Other', label: 'Other / Khác' },
+            { value: 'Prefer not to say', label: 'Prefer not to say / Không trả lời' },
+          ]}
+        />
       </div>
 
       <div>
         <FieldLabel en="3. Current status" vi="3. Tình trạng hiện tại" />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.studentStatus}
-          onChange={(e) => setA('studentStatus', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          <option value="Full-time student">Full-time student / Sinh viên chính quy</option>
-          <option value="Working student">Working student / Vừa học vừa làm</option>
-        </select>
+          onChange={(v) => setA('studentStatus', v)}
+          options={[
+            { value: 'Full-time student', label: 'Full-time student / Sinh viên chính quy' },
+            { value: 'Working student', label: 'Working student / Vừa học vừa làm' },
+          ]}
+        />
       </div>
 
       <div>
@@ -242,18 +254,11 @@ export default function PretestModal() {
           en="4. Self-learning ability (1–5)"
           vi="4. Khả năng tự học (1–5)"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.selfLearningScale}
-          onChange={(e) => setA('selfLearningScale', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <option key={n} value={String(n)}>
-              {n}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setA('selfLearningScale', v)}
+          options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))}
+        />
       </div>
 
       <div>
@@ -261,22 +266,20 @@ export default function PretestModal() {
           en="5. First topic for knowledge assessment"
           vi="5. Chủ đề thứ nhất để đánh giá kiến thức"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.topicFirst}
-          onChange={(e) => {
-            const v = e.target.value
-            setA('topicFirst', v)
-            if (sectionA.topicSecond === v) setA('topicSecond', '')
+          onChange={(v) => {
+            setSectionA((p) => ({
+              ...p,
+              topicFirst: v,
+              topicSecond: p.topicSecond === v ? '' : p.topicSecond,
+            }))
           }}
-        >
-          <option value="">{t('pretest.select')}</option>
-          {PRETEST_TOPICS.map((x) => (
-            <option key={x.id} value={x.id}>
-              {lang === 'vi' ? x.title.vi : x.title.en}
-            </option>
-          ))}
-        </select>
+          options={PRETEST_TOPICS.map((x) => ({
+            value: x.id,
+            label: lang === 'vi' ? x.title.vi : x.title.en,
+          }))}
+        />
       </div>
 
       <div>
@@ -284,15 +287,15 @@ export default function PretestModal() {
           en="6. Second topic for knowledge assessment"
           vi="6. Chủ đề thứ hai để đánh giá kiến thức"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.topicSecond}
-          onChange={(e) => setA('topicSecond', e.target.value)}
+          onChange={(v) => setA('topicSecond', v)}
           disabled={!sectionA.topicFirst}
-        >
-          <option value="">{t('pretest.select')}</option>
-          {topicOptions(sectionA.topicFirst)}
-        </select>
+          options={PRETEST_TOPICS.filter((x) => x.id !== sectionA.topicFirst).map((x) => ({
+            value: x.id,
+            label: lang === 'vi' ? x.title.vi : x.title.en,
+          }))}
+        />
       </div>
 
       <div>
@@ -300,17 +303,16 @@ export default function PretestModal() {
           en="7. Have you studied Topic 1 before?"
           vi="7. Bạn đã từng học Chủ đề 1 chưa?"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.studiedTopic1}
-          onChange={(e) => setA('studiedTopic1', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          <option value="Never">Never / Chưa bao giờ</option>
-          <option value="Self-taught">Self-taught / Tự học</option>
-          <option value="University course">University course / Khóa đại học</option>
-          <option value="Online course">Online course / Khóa trực tuyến</option>
-        </select>
+          onChange={(v) => setA('studiedTopic1', v)}
+          options={[
+            { value: 'Never', label: 'Never / Chưa bao giờ' },
+            { value: 'Self-taught', label: 'Self-taught / Tự học' },
+            { value: 'University course', label: 'University course / Khóa đại học' },
+            { value: 'Online course', label: 'Online course / Khóa trực tuyến' },
+          ]}
+        />
       </div>
 
       <div>
@@ -318,17 +320,16 @@ export default function PretestModal() {
           en="8. Have you studied Topic 2 before?"
           vi="8. Bạn đã từng học Chủ đề 2 chưa?"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.studiedTopic2}
-          onChange={(e) => setA('studiedTopic2', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          <option value="Never">Never / Chưa bao giờ</option>
-          <option value="Self-taught">Self-taught / Tự học</option>
-          <option value="University course">University course / Khóa đại học</option>
-          <option value="Online course">Online course / Khóa trực tuyến</option>
-        </select>
+          onChange={(v) => setA('studiedTopic2', v)}
+          options={[
+            { value: 'Never', label: 'Never / Chưa bao giờ' },
+            { value: 'Self-taught', label: 'Self-taught / Tự học' },
+            { value: 'University course', label: 'University course / Khóa đại học' },
+            { value: 'Online course', label: 'Online course / Khóa trực tuyến' },
+          ]}
+        />
       </div>
 
       <div>
@@ -336,18 +337,11 @@ export default function PretestModal() {
           en="9. Familiarity with Topic 1 (1–5)"
           vi="9. Mức quen thuộc với Chủ đề 1 (1–5)"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.familiarityTopic1Scale}
-          onChange={(e) => setA('familiarityTopic1Scale', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <option key={n} value={String(n)}>
-              {n}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setA('familiarityTopic1Scale', v)}
+          options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))}
+        />
       </div>
 
       <div>
@@ -355,18 +349,11 @@ export default function PretestModal() {
           en="10. Familiarity with Topic 2 (1–5)"
           vi="10. Mức quen thuộc với Chủ đề 2 (1–5)"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.familiarityTopic2Scale}
-          onChange={(e) => setA('familiarityTopic2Scale', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <option key={n} value={String(n)}>
-              {n}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setA('familiarityTopic2Scale', v)}
+          options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))}
+        />
       </div>
 
       <div>
@@ -374,15 +361,14 @@ export default function PretestModal() {
           en="11. Have you used GenAI tools (e.g. ChatGPT, Gemini) for learning?"
           vi="11. Bạn đã dùng công cụ GenAI (ChatGPT, Gemini…) để học chưa?"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.usedGenAi}
-          onChange={(e) => setA('usedGenAi', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          <option value="Yes">Yes / Có</option>
-          <option value="No">No / Không</option>
-        </select>
+          onChange={(v) => setA('usedGenAi', v)}
+          options={[
+            { value: 'Yes', label: 'Yes / Có' },
+            { value: 'No', label: 'No / Không' },
+          ]}
+        />
       </div>
 
       <div>
@@ -390,17 +376,16 @@ export default function PretestModal() {
           en="12. How often do you use AI for learning?"
           vi="12. Bạn dùng AI cho học tập với tần suất nào?"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.aiLearningFrequency}
-          onChange={(e) => setA('aiLearningFrequency', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          <option value="Daily">Daily / Hàng ngày</option>
-          <option value="Several times a week">Several times a week / Vài lần/tuần</option>
-          <option value="Rarely">Rarely / Hiếm</option>
-          <option value="Never">Never / Không bao giờ</option>
-        </select>
+          onChange={(v) => setA('aiLearningFrequency', v)}
+          options={[
+            { value: 'Daily', label: 'Daily / Hàng ngày' },
+            { value: 'Several times a week', label: 'Several times a week / Vài lần/tuần' },
+            { value: 'Rarely', label: 'Rarely / Hiếm' },
+            { value: 'Never', label: 'Never / Không bao giờ' },
+          ]}
+        />
       </div>
 
       <div>
@@ -408,19 +393,18 @@ export default function PretestModal() {
           en="13. AI tool you use most"
           vi="13. Công cụ AI bạn dùng nhiều nhất"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.aiToolPrimary}
-          onChange={(e) => setA('aiToolPrimary', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          <option value="None">None / Không dùng</option>
-          <option value="ChatGPT">ChatGPT</option>
-          <option value="Gemini">Gemini</option>
-          <option value="Copilot">Copilot</option>
-          <option value="Claude">Claude</option>
-          <option value="Other">Other / Khác</option>
-        </select>
+          onChange={(v) => setA('aiToolPrimary', v)}
+          options={[
+            { value: 'None', label: 'None / Không dùng' },
+            { value: 'ChatGPT', label: 'ChatGPT' },
+            { value: 'Gemini', label: 'Gemini' },
+            { value: 'Copilot', label: 'Copilot' },
+            { value: 'Claude', label: 'Claude' },
+            { value: 'Other', label: 'Other / Khác' },
+          ]}
+        />
       </div>
 
       <div>
@@ -441,15 +425,14 @@ export default function PretestModal() {
           en="15. Attended a course or workshop on using AI effectively?"
           vi="15. Đã tham gia khóa học/workshop về sử dụng AI hiệu quả?"
         />
-        <select
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+        <CheckboxChoiceGroup
           value={sectionA.attendedAiTraining}
-          onChange={(e) => setA('attendedAiTraining', e.target.value)}
-        >
-          <option value="">{t('pretest.select')}</option>
-          <option value="Yes">Yes / Có</option>
-          <option value="No">No / Không</option>
-        </select>
+          onChange={(v) => setA('attendedAiTraining', v)}
+          options={[
+            { value: 'Yes', label: 'Yes / Có' },
+            { value: 'No', label: 'No / Không' },
+          ]}
+        />
       </div>
     </div>
   )
@@ -482,11 +465,10 @@ export default function PretestModal() {
                     className="flex items-start gap-2 cursor-pointer rounded-lg border border-slate-200 dark:border-slate-600 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/80"
                   >
                     <input
-                      type="radio"
-                      name={`${topicId}-${qn}`}
+                      type="checkbox"
                       checked={val === ch.key}
                       onChange={() => setVal(ch.key)}
-                      className="mt-1"
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded-sm border-2 border-slate-400 dark:border-slate-500 accent-primary"
                     />
                     <span>
                       <span className="font-mono font-semibold">{ch.key}.</span>{' '}
@@ -534,18 +516,14 @@ export default function PretestModal() {
         return (
           <div key={key}>
             <FieldLabel en={`${idx + 1}. ${item.en}`} vi={item.vi} />
-            <select
-              className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2"
+            <CheckboxChoiceGroup
               value={sectionC[key]}
-              onChange={(e) => setSectionC((p) => ({ ...p, [key]: e.target.value }))}
-            >
-              <option value="">{t('pretest.select')}</option>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={String(n)}>
-                  {n} — {t(`pretest.likert.${n}`)}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setSectionC((p) => ({ ...p, [key]: v }))}
+              options={[1, 2, 3, 4, 5].map((n) => ({
+                value: String(n),
+                label: `${n} — ${t(`pretest.likert.${n}`)}`,
+              }))}
+            />
           </div>
         )
       })}

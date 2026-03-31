@@ -221,6 +221,7 @@
     "surveys": {
       "title": "Kết quả khảo sát",
       "intro": "Xem bài nộp của học viên theo loại khảo sát. PRETEST đã dùng; POST-TEST dùng cùng cơ sở dữ liệu (survey_kind) và sẽ hiện ở đây khi bật trên server và thêm luồng phía học viên.",
+      "introStats": "Thống kê gom theo từng câu hỏi/đáp án trên toàn bộ bài nộp (không hiển thị từng user). Phần B: mỗi chủ đề gồm mọi lượt học viên chọn chủ đề đó (ưu tiên 1 hoặc 2).",
       "tabPretest": "PRETEST",
       "tabPosttest": "POST-TEST",
       "posttestHint": "POST-TEST: khi sẵn sàng, đặt SURVEY_POSTTEST_ENABLED=1 ở backend; sau đó thêm validate và giao diện nộp bài (cùng bảng với PRETEST, survey_kind = POSTTEST).",
@@ -230,7 +231,34 @@
       "colClass": "Lớp",
       "colSubmitted": "Thời gian nộp",
       "colDetail": "Chi tiết",
-      "view": "Xem JSON"
+      "view": "Xem JSON",
+      "stats": {
+        "total": "Tổng số bài nộp: {count}",
+        "sectionA": "Phần A — Thông tin nền",
+        "sectionB": "Phần B — Kiểm tra kiến thức",
+        "sectionC": "Phần C — Thái độ với AI (Likert 1–5)",
+        "topicNote": "Mỗi khối chủ đề gồm mọi bài mà học viên đã chọn chủ đề đó (là chủ đề 1 hoặc 2). Tổng theo từng câu trùng với số bài nộp phía trên.",
+        "qShort": "Câu {num}",
+        "freeTextHint": "Câu trả lời tự do, không gom biểu đồ; xem ví dụ bên dưới.",
+        "aiPurposeSamples": "Mục đích dùng AI (tự do) — mẫu trả lời ({count} bản ghi, hiển thị tối đa 25)",
+        "aKeys": {
+          "yearOfStudy": "1. Năm thứ mấy",
+          "gender": "2. Giới tính",
+          "studentStatus": "3. Tình trạng hiện tại",
+          "selfLearningScale": "4. Khả năng tự học (1–5)",
+          "topicFirst": "5. Chủ đề kiến thức thứ nhất",
+          "topicSecond": "6. Chủ đề kiến thức thứ hai",
+          "studiedTopic1": "7. Đã học chủ đề 1 trước đây?",
+          "studiedTopic2": "8. Đã học chủ đề 2 trước đây?",
+          "familiarityTopic1Scale": "9. Mức quen chủ đề 1 (1–5)",
+          "familiarityTopic2Scale": "10. Mức quen chủ đề 2 (1–5)",
+          "usedGenAi": "11. Đã dùng công cụ GenAI để học?",
+          "aiLearningFrequency": "12. Tần suất dùng AI cho học tập",
+          "aiToolPrimary": "13. Công cụ AI dùng nhiều nhất",
+          "aiStudyPurpose": "14. Mục đích chính (tự do) — danh sách mẫu bên dưới",
+          "attendedAiTraining": "15. Đã tham gia khóa/workshop về AI?"
+        }
+      }
     },
     "teachingMode": {
       "AGENT": "AGENT",

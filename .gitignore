@@ -31,3 +31,12 @@ backend/uploads
 *.njsproj
 *.sln
 *.sw?
+
+# Agent assistant configuration
+agent-assistant/.env
+agent-assistant/node_modules
+agent-assistant/dist-ssr
+agent-assistant/.env.local
+agent-assistant/.env.development.local
+agent-assistant/.env.test.local
+agent-assistant/.env.production.local

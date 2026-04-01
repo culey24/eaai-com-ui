@@ -1,0 +1,12 @@
+# google-adk kéo google-genai; KHÔNG thêm google-generativeai (SDK cũ).
+google-adk==1.8.0
+# ADK lite_llm import cần ChatCompletionFileObject (có từ ~1.71; 1.63.11 quá cũ → ImportError khi /run)
+litellm>=1.71.2,<2
+python-dotenv>=1.0.0
+requests>=2.31.0
+# chatbot_server (FastAPI)
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0
+httpx>=0.28.0
+pandas>=2.0.0
+pydantic>=2.0.0

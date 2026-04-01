@@ -7,6 +7,7 @@ import { jsonSafe } from '../lib/json.js'
 import { isMinimalChatBody } from '../lib/lobby.js'
 import { getMinimalMessages, postMinimalMessage } from './minimalMessagesHandlers.js'
 import { generateIs2AgentReply } from '../lib/is2AgentReply.js'
+import { generateIs1AgenticReply } from '../lib/is1AgenticChatReply.js'
 import { isSupporterUserRole } from '../lib/roles.js'
 import {
   minimalMessagePostLimiter,
@@ -287,6 +288,31 @@ router.post(
           })
         } else if (learnerUserClass === UserClass.IS_3) {
           /* IS-3 ngoài human-chat: không phản hồi giả — chỉ tin người học */
+        } else if (learnerUserClass === UserClass.IS_1 && ch === 'ai-chat') {
+          let assistantContent
+          let metaSource = 'agentic_chatbot'
+          try {
+            const fromAgent = await generateIs1AgenticReply(userId, text)
+            if (fromAgent != null) {
+              assistantContent = fromAgent
+            } else {
+              metaSource = 'echo'
+              assistantContent = `Đã nhận tin nhắn của bạn. (Phản hồi từ ${ch} — chưa cấu hình AGENTIC_CHATBOT_BASE_URL)`
+            }
+          } catch (agentErr) {
+            console.error('[messages POST] ai-chat IS-1 agent', agentErr)
+            metaSource = 'agentic_chatbot_error'
+            assistantContent = `Trợ lý (ai-chat / IS-1) tạm thời lỗi: ${agentErr instanceof Error ? agentErr.message : String(agentErr)}`
+          }
+          await prisma.message.create({
+            data: {
+              conversationId,
+              senderRole: MessageSender.assistant,
+              senderUserId: null,
+              content: assistantContent,
+              metadata: { source: metaSource },
+            },
+          })
         } else {
           const assistantContent = `Đã nhận tin nhắn của bạn. (Phản hồi từ ${ch})`
           await prisma.message.create({

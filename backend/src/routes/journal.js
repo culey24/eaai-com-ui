@@ -100,6 +100,66 @@ function safeBaseName(name) {
   return String(name || 'file').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 200)
 }
 
+function journalAutoEnsurePeriod() {
+  const v = String(process.env.JOURNAL_AUTO_ENSURE_PERIOD ?? '1').toLowerCase()
+  return v !== '0' && v !== 'false' && v !== 'off'
+}
+
+/** epoch ms từ body multipart (số hoặc ISO). */
+function parseOptionalEpochMs(v) {
+  if (v == null || v === '') return null
+  const s = String(v).trim()
+  if (!s) return null
+  const n = Number(s)
+  if (Number.isFinite(n) && n > 0) return n
+  const parsed = Date.parse(s)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+/**
+ * Tạo journal_periods nếu chưa có (learner tạo đợt mới trên UI).
+ * ON CONFLICT DO NOTHING — đợt đã tồn tại thì giữ nguyên metadata cũ.
+ */
+async function ensureJournalPeriod(periodId, body) {
+  const titleRaw = body?.periodTitle ?? body?.submissionTitle
+  const title =
+    String(titleRaw != null && titleRaw !== '' ? titleRaw : periodId)
+      .trim()
+      .slice(0, 255) || periodId
+  const startMs = parseOptionalEpochMs(body?.periodStartsAt)
+  const endMs = parseOptionalEpochMs(body?.periodEndsAt)
+  let startsAt
+  let endsAt
+  if (startMs != null && endMs != null) {
+    const lo = Math.min(startMs, endMs)
+    const hi = Math.max(startMs, endMs)
+    startsAt = new Date(lo)
+    endsAt = new Date(hi === lo ? hi + 60_000 : hi)
+  } else if (startMs != null) {
+    startsAt = new Date(startMs)
+    endsAt = new Date(startMs + 365 * 24 * 60 * 60 * 1000)
+  } else if (endMs != null) {
+    endsAt = new Date(endMs)
+    startsAt = new Date(endMs - 365 * 24 * 60 * 60 * 1000)
+  } else {
+    startsAt = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    endsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+  }
+  await prisma.$executeRaw`
+    INSERT INTO journal_periods (period_id, title, description, starts_at, ends_at, class_id, created_by)
+    VALUES (${periodId}, ${title}, '', ${startsAt}, ${endsAt}, NULL, NULL)
+    ON CONFLICT (period_id) DO NOTHING
+  `
+}
+
+async function periodRowExists(periodId) {
+  const rows = await prisma.$queryRaw`
+    SELECT period_id FROM journal_periods WHERE period_id = ${periodId} LIMIT 1
+  `
+  return Array.isArray(rows) && rows.length > 0
+}
+
+/** GET/DELETE: chỉ dùng period đã có; fallback default nếu client gửi id lạ. */
 async function resolvePeriodId(raw) {
   const first = String(raw || 'default').trim().slice(0, 64)
   const candidates = [first, 'default']
@@ -112,6 +172,26 @@ async function resolvePeriodId(raw) {
     `
     if (Array.isArray(rows) && rows.length > 0) return id
   }
+  return null
+}
+
+/** POST upload: bảo đảm period tồn tại (auto-insert từ metadata UI) nếu bật JOURNAL_AUTO_ENSURE_PERIOD. */
+async function resolvePeriodIdForUpload(raw, body) {
+  const id = String(raw || 'default').trim().slice(0, 64)
+  if (!id) return null
+
+  if (await periodRowExists(id)) return id
+
+  if (journalAutoEnsurePeriod() && id !== 'default') {
+    await ensureJournalPeriod(id, body)
+    if (await periodRowExists(id)) return id
+    return null
+  }
+
+  if (id === 'default') {
+    return (await periodRowExists('default')) ? 'default' : null
+  }
+
   return null
 }
 
@@ -129,9 +209,12 @@ router.post('/upload', authMiddleware, journalUploadLimiter, upload.single('file
     }
 
     const userId = req.auth.userId
-    const periodId = await resolvePeriodId(req.body?.periodId)
+    const periodId = await resolvePeriodIdForUpload(req.body?.periodId, req.body)
     if (!periodId) {
-      return res.status(400).json({ error: 'Không tìm thấy đợt journal (journal_periods). Dùng periodId=hợp lệ hoặc tạo đợt trong DB.' })
+      return res.status(400).json({
+        error:
+          'Không tìm thấy đợt journal (journal_periods). Gửi periodId trùng submission.id; bật JOURNAL_AUTO_ENSURE_PERIOD hoặc tạo đợt trong DB.',
+      })
     }
 
     const original = req.file.originalname || 'upload.bin'

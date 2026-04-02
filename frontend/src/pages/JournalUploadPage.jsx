@@ -7,10 +7,10 @@ import { useAuth } from '../context/AuthContext'
 import { ROLES } from '../constants/roles'
 import { API_BASE } from '../config/api'
 
-/** Đợt journal trong DB (seed: default). Submission local khác id vẫn map về default. */
+/** Khớp journal_periods.period_id với submission.id (tối đa 64 ký tự). */
 function periodIdForApi(submissionId) {
-  if (submissionId === 'default') return 'default'
-  return 'default'
+  const id = String(submissionId ?? 'default').trim().slice(0, 64)
+  return id || 'default'
 }
 
 export default function JournalUploadPage() {
@@ -53,6 +53,9 @@ export default function JournalUploadPage() {
         const fd = new FormData()
         fd.append('file', file)
         fd.append('periodId', periodIdForApi(activeSub.id))
+        fd.append('periodTitle', activeSub.title ?? '')
+        fd.append('periodStartsAt', String(activeSub.startsAt ?? ''))
+        fd.append('periodEndsAt', String(activeSub.endsAt ?? ''))
         const res = await fetch(`${API_BASE}/api/journal/upload`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${apiToken}` },

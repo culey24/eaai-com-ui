@@ -24,14 +24,19 @@ function uploadRootDir() {
   return path.resolve(process.cwd(), rel)
 }
 
+export function safeJournalPathParts(userId, periodId) {
+  const safeUser = String(userId || '').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 32)
+  const safePeriod = String(periodId || '').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 64)
+  return { safeUser, safePeriod }
+}
+
 /**
  * @param {string} userId
  * @param {string} periodId
  * @param {string} storedName
  */
 export function buildGcsObjectName(userId, periodId, storedName) {
-  const safeUser = String(userId || '').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 32)
-  const safePeriod = String(periodId || '').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 64)
+  const { safeUser, safePeriod } = safeJournalPathParts(userId, periodId)
   return `journals/${safeUser}/${safePeriod}/${storedName}`
 }
 
@@ -62,9 +67,10 @@ export async function saveJournalUpload(opts) {
   }
 
   const root = uploadRootDir()
-  const userDir = path.join(root, userId)
-  await mkdir(userDir, { recursive: true })
-  const fullPath = path.join(userDir, storedName)
+  const { safeUser, safePeriod } = safeJournalPathParts(userId, periodId)
+  const userPeriodDir = path.join(root, safeUser, safePeriod)
+  await mkdir(userPeriodDir, { recursive: true })
+  const fullPath = path.join(userPeriodDir, storedName)
   await writeFile(fullPath, buffer)
   const storageKey = path.relative(process.cwd(), fullPath).split(path.sep).join('/')
   return { storageKey }

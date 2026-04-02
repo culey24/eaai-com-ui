@@ -33,6 +33,8 @@ function parseMessageRole(role) {
  */
 router.get('/:conversationId', authMiddleware, async (req, res) => {
   try {
+    res.set('Cache-Control', 'private, no-store, must-revalidate')
+    res.set('Vary', 'Origin, Authorization')
     const rawId = req.params.conversationId
     let conversationId
     try {

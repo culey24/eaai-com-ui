@@ -32,6 +32,8 @@ function corsOptions() {
 
 export function createApp() {
   const app = express()
+  /* Rời ETag → tránh 304 trên JSON có JWT; fetch coi 304 là !ok và useMessages bỏ qua cập nhật. */
+  app.set('etag', false)
   if (process.env.TRUST_PROXY === '1' || process.env.TRUST_PROXY === 'true') {
     app.set('trust proxy', 1)
   }

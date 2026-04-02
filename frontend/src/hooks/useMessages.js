@@ -91,6 +91,7 @@ export function useMessages(pollChannelId = null, options = {}) {
     const resolveConv = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/conversations`, {
+          cache: 'no-store',
           headers: { Authorization: `Bearer ${apiToken}` },
         })
         if (!res.ok) return
@@ -136,6 +137,7 @@ export function useMessages(pollChannelId = null, options = {}) {
     const pull = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/messages/${conversationId}`, {
+          cache: 'no-store',
           headers: { Authorization: `Bearer ${apiToken}` },
         })
         if (!res.ok) return
@@ -172,6 +174,7 @@ export function useMessages(pollChannelId = null, options = {}) {
         try {
           const res = await fetch(`${API_BASE}/api/messages`, {
             method: 'POST',
+            cache: 'no-store',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${apiToken}`,
@@ -188,6 +191,7 @@ export function useMessages(pollChannelId = null, options = {}) {
             const cid = String(data.message.conversationId)
             setConversationId(cid)
             const r2 = await fetch(`${API_BASE}/api/messages/${cid}`, {
+              cache: 'no-store',
               headers: { Authorization: `Bearer ${apiToken}` },
             })
             if (r2.ok) {
@@ -227,6 +231,7 @@ export function useMessages(pollChannelId = null, options = {}) {
               }
           const res = await fetch(`${API_BASE}/api/messages`, {
             method: 'POST',
+            cache: 'no-store',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${apiToken}`,
@@ -241,6 +246,7 @@ export function useMessages(pollChannelId = null, options = {}) {
           if (res.ok && cid) {
             setConversationId(cid)
             const r2 = await fetch(`${API_BASE}/api/messages/${cid}`, {
+              cache: 'no-store',
               headers: { Authorization: `Bearer ${apiToken}` },
             })
             if (r2.ok) {

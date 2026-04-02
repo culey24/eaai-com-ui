@@ -7,6 +7,13 @@ import { isSupporterUserRole } from '../lib/roles.js'
 const router = Router()
 router.use(authMiddleware)
 
+/** Tránh CDN/browser dùng 304 + ETag chung cho JSON theo user → chat “trống” trên production. */
+router.use((_req, res, next) => {
+  res.set('Cache-Control', 'private, no-store, must-revalidate')
+  res.set('Vary', 'Origin, Authorization')
+  next()
+})
+
 /**
  * GET /api/conversations
  * Student: hội thoại của chính mình.

@@ -21,6 +21,17 @@ BEGIN
 END $$;
 `
 
+/**
+ * Railway / DB chỉ chạy prisma migrate: thường thiếu seed từ backend/init → POST /api/messages 400 "Kênh không tồn tại".
+ */
+const CHAT_CHANNELS_SEED = `
+INSERT INTO chat_channels (channel_id, user_class, display_order) VALUES
+  ('ai-chat', 'IS-1', 1),
+  ('human-chat', 'IS-3', 2),
+  ('internal-chat', 'IS-2', 3)
+ON CONFLICT (channel_id) DO NOTHING
+`
+
 /** Mỗi chuỗi một lệnh — Prisma/Postgres không cho nhiều lệnh trong một prepared statement. */
 const PRETEST_RESPONSES_TABLE = `
 CREATE TABLE IF NOT EXISTS pretest_responses (
@@ -47,6 +58,14 @@ const PRETEST_SURVEY_KIND_SECONDARY_INDEX =
   'CREATE INDEX IF NOT EXISTS idx_pretest_responses_survey_kind ON pretest_responses(survey_kind)'
 
 export async function applyLightweightSchemaPatches(prisma) {
+  try {
+    await prisma.$executeRawUnsafe(CHAT_CHANNELS_SEED)
+  } catch (err) {
+    console.warn(
+      '[db-patches] chat_channels seed:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
   try {
     await prisma.$executeRawUnsafe(PRETEST_RESPONSES_TABLE)
   } catch (err) {

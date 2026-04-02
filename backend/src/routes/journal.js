@@ -1,8 +1,7 @@
 import { Router } from 'express'
 import multer from 'multer'
-import path from 'path'
-import { mkdir, writeFile, unlink } from 'fs/promises'
 import { prisma } from '../lib/prisma.js'
+import { removeJournalUpload, saveJournalUpload } from '../lib/journalFileStorage.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { extractDocumentText } from '../lib/extractDocumentText.js'
 import { jsonSafe } from '../lib/json.js'
@@ -101,11 +100,6 @@ function safeBaseName(name) {
   return String(name || 'file').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 200)
 }
 
-function uploadRootDir() {
-  const rel = (process.env.JOURNAL_UPLOAD_DIR || 'uploads/journals').replace(/^\/+/, '')
-  return path.resolve(process.cwd(), rel)
-}
-
 async function resolvePeriodId(raw) {
   const first = String(raw || 'default').trim().slice(0, 64)
   const candidates = [first, 'default']
@@ -146,13 +140,22 @@ router.post('/upload', authMiddleware, journalUploadLimiter, upload.single('file
       original
     )
 
-    const root = uploadRootDir()
-    const userDir = path.join(root, userId)
-    await mkdir(userDir, { recursive: true })
+    const prevRows = await prisma.$queryRaw`
+      SELECT storage_key FROM journal_uploads
+      WHERE user_id = ${userId} AND period_id = ${periodId}
+      LIMIT 1
+    `
+    const prevKey = Array.isArray(prevRows) && prevRows[0]?.storage_key
+    if (prevKey) await removeJournalUpload(prevKey)
+
     const storedName = `${Date.now()}_${safeBaseName(original)}`
-    const fullPath = path.join(userDir, storedName)
-    await writeFile(fullPath, req.file.buffer)
-    const storageKey = path.relative(process.cwd(), fullPath).split(path.sep).join('/')
+    const { storageKey } = await saveJournalUpload({
+      buffer: req.file.buffer,
+      contentType: req.file.mimetype,
+      userId,
+      periodId,
+      storedName,
+    })
 
     await prisma.$executeRaw`
       DELETE FROM journal_uploads WHERE user_id = ${userId} AND period_id = ${periodId}
@@ -210,17 +213,7 @@ router.delete('/upload', authMiddleware, async (req, res) => {
       DELETE FROM journal_uploads WHERE user_id = ${userId} AND period_id = ${periodId}
     `
     const key = Array.isArray(prev) && prev[0]?.storage_key
-    if (key && typeof key === 'string' && !key.includes('..')) {
-      const abs = path.resolve(process.cwd(), key)
-      const root = uploadRootDir()
-      if (abs.startsWith(root)) {
-        try {
-          await unlink(abs)
-        } catch {
-          /* ignore */
-        }
-      }
-    }
+    await removeJournalUpload(key)
     return res.status(200).json({ ok: true })
   } catch (err) {
     console.error('[journal delete]', err)

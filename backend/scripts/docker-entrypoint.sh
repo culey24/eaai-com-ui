@@ -2,6 +2,16 @@
 # Không dùng set -e cho cả file: một lệnh prisma lỗi sẽ khiến exec node không bao giờ chạy → Railway không có log sau generate.
 echo "[entrypoint] start"
 
+# Railway / Docker: dán nguyên nội dung file service account JSON vào biến secret GCP_SERVICE_ACCOUNT_JSON.
+# SDK chỉ đọc từ đường dẫn file → ghi ra /tmp trước khi chạy node.
+if [ -n "$GCP_SERVICE_ACCOUNT_JSON" ]; then
+  _gcp_key_path=/tmp/gcp-service-account.json
+  echo "[entrypoint] GCP_SERVICE_ACCOUNT_JSON set — write ${_gcp_key_path}"
+  printf '%s' "$GCP_SERVICE_ACCOUNT_JSON" > "$_gcp_key_path"
+  chmod 600 "$_gcp_key_path" 2>/dev/null || true
+  export GOOGLE_APPLICATION_CREDENTIALS="$_gcp_key_path"
+fi
+
 if [ "$SKIP_DB_MIGRATE" = "1" ]; then
   echo "[entrypoint] SKIP_DB_MIGRATE=1 — bỏ qua migrate"
 else

@@ -40,3 +40,9 @@ agent-assistant/.env.local
 agent-assistant/.env.development.local
 agent-assistant/.env.test.local
 agent-assistant/.env.production.local
+
+# Backend data
+backend/data/*
+!backend/data/.gitkeep
+!backend/data/gcs-json/.gitkeep
+!backend/data/gcs-json/eaai-system-bucket-key.json.example

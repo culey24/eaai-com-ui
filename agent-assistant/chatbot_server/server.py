@@ -33,6 +33,33 @@ logger = logging.getLogger(__name__)
 
 AGENT_SERVER = get_agent_server_base_url()
 BE_SERVER = get_be_server_base_url()
+logger.info("AGENT_SERVER=%s BE_SERVER=%s", AGENT_SERVER, BE_SERVER)
+
+
+def _requests_post_retry_connect(url: str, **kwargs):
+    """
+    ADK cold start / race với Cloud Run: probe 8003 pass khi uvicorn lên, ADK :8000 có thể chưa bind.
+    """
+    max_attempts = 30
+    delay_s = 2.0
+    last_err = None
+    for attempt in range(max_attempts):
+        try:
+            return requests.post(url, **kwargs)
+        except requests.exceptions.ConnectionError as e:
+            last_err = e
+            if attempt < max_attempts - 1:
+                logger.warning(
+                    "POST %s ConnectionError %s/%s: %s; retry in %ss",
+                    url,
+                    attempt + 1,
+                    max_attempts,
+                    e,
+                    delay_s,
+                )
+                time.sleep(delay_s)
+    raise last_err
+
 
 CURRENT_DIR = Path(__file__).parent
 # agent-assistant/chatbot_server → data cùng cấp với chatbot_server
@@ -169,7 +196,7 @@ async def create_session(user_id: str, app_name: str = APP_NAME):
 
     if session_id:
         url = f"{AGENT_SERVER}/apps/{app_name}/users/{user_id}/sessions/{session_id}"
-        response = requests.post(url, timeout=60)
+        response = await asyncio.to_thread(_requests_post_retry_connect, url, timeout=60)
 
         if response.status_code == 200:
             return JSONResponse(
@@ -260,7 +287,12 @@ async def run_agent(request: Request):
 
     await db_save_message(session_id, "user", message)
     try:
-        response = requests.post(f"{AGENT_SERVER}/run", json=payload, timeout=300)
+        response = await asyncio.to_thread(
+            _requests_post_retry_connect,
+            f"{AGENT_SERVER}/run",
+            json=payload,
+            timeout=300,
+        )
 
         if response.status_code == 200:
             response_json = response.json()

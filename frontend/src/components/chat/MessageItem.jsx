@@ -1,4 +1,5 @@
 import { Bot, User, FileText } from 'lucide-react'
+import { formatAgentChatMarkdown } from '../../lib/chatMarkdown'
 
 /**
  * @param {'learner' | 'supporter'} perspective — learner: tin user bên phải; supporter: tin học viên (user) bên trái, tin supporter (assistant) bên phải.
@@ -41,11 +42,22 @@ export default function MessageItem({ message, agentLabel, perspective = 'learne
             : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 rounded-tl-md'
         }`}
       >
-        {(message.content || message.fileName) && (
-          <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-            {message.content || (message.fileName ? 'Đã đính kèm file' : '')}
-          </p>
-        )}
+        {(message.content || message.fileName) &&
+          (message.content ? (
+            message.role === 'assistant' ? (
+              <div className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                {formatAgentChatMarkdown(message.content)}
+              </div>
+            ) : (
+              <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                {message.content}
+              </p>
+            )
+          ) : (
+            <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+              {message.fileName ? 'Đã đính kèm file' : ''}
+            </p>
+          ))}
         {message.fileName && (
           <div className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-xl ${
             alignEnd ? 'bg-white/20' : 'bg-primary/10'

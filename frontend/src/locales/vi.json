@@ -152,7 +152,10 @@
     "noActiveSubmission": "Hiện không có đợt nộp đang mở.",
     "editFile": "Sửa file",
     "deleteFile": "Xóa file",
-    "confirmDelete": "Xóa file này?"
+    "confirmDelete": "Xóa file này?",
+    "download": "Tải xuống",
+    "openInTab": "Mở xem",
+    "downloadFailed": "Không tải được file."
   },
   "supporter": {
     "totalLearners": "học viên",

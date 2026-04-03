@@ -238,6 +238,17 @@
       "posttestHint": "POST-TEST: set SURVEY_POSTTEST_ENABLED=1 on the backend when ready, then add validation and UI (same table as PRETEST, survey_kind = POSTTEST).",
       "loadError": "Could not load survey data.",
       "empty": "No submissions for this survey yet.",
+      "blacklist": {
+        "title": "Exclude usernames (test accounts)",
+        "hint": "Submissions from these usernames are hidden from the aggregated charts below. Stored in this browser only.",
+        "addPlaceholder": "username",
+        "add": "Add",
+        "inDataset": "Pick from this survey’s submitters",
+        "noneInDataset": "No usernames in loaded data.",
+        "clearAll": "Clear list",
+        "filteredMeta": "Showing {n} of {raw} submissions ({excluded} excluded).",
+        "filteredOutAll": "All loaded submissions are excluded. Clear or edit the list above to see statistics."
+      },
       "colUser": "User",
       "colClass": "Class",
       "colSubmitted": "Submitted at",

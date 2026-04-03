@@ -238,6 +238,17 @@
       "posttestHint": "POST-TEST: khi sẵn sàng, đặt SURVEY_POSTTEST_ENABLED=1 ở backend; sau đó thêm validate và giao diện nộp bài (cùng bảng với PRETEST, survey_kind = POSTTEST).",
       "loadError": "Không tải được dữ liệu khảo sát.",
       "empty": "Chưa có bài nộp cho khảo sát này.",
+      "blacklist": {
+        "title": "BLACKLIST — loại trừ username (tài khoản test)",
+        "hint": "Các bài nộp của username trong danh sách sẽ không được tính vào biểu đồ/thống kê bên dưới. Cài đặt chỉ lưu trên trình duyệt này.",
+        "addPlaceholder": "nhập username",
+        "add": "Thêm",
+        "inDataset": "Chọn từ người đã nộp (dữ liệu khảo sát hiện tại)",
+        "noneInDataset": "Chưa có username trong dữ liệu đã tải.",
+        "clearAll": "Xóa hết danh sách",
+        "filteredMeta": "Đang hiển thị {n}/{raw} bài nộp (đã loại {excluded}).",
+        "filteredOutAll": "Toàn bộ bài đã bị loại bởi blacklist. Xóa hoặc sửa danh sách phía trên để xem thống kê."
+      },
       "colUser": "Người dùng",
       "colClass": "Lớp",
       "colSubmitted": "Thời gian nộp",

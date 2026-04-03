@@ -61,6 +61,7 @@ export function JournalProvider({ children }) {
         const stableId = user.stableId
         const serverEntries = (data.uploads || []).map((u) => ({
           id: `srv-${u.upload_id}`,
+          uploadId: u.upload_id != null ? String(u.upload_id) : undefined,
           fileName: u.original_file_name || 'file',
           fileSize: 0,
           submissionId: u.period_id,

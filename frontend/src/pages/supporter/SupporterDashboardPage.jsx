@@ -6,6 +6,7 @@ import ChatWindow from '../../components/chat/ChatWindow'
 import { MessageSquare, FileText } from 'lucide-react'
 import { useMessages } from '../../hooks/useMessages'
 import { useJournal } from '../../context/JournalContext'
+import JournalEntriesSidebarList from '../../components/journal/JournalEntriesSidebarList'
 import { useLanguage } from '../../context/LanguageContext'
 import { useSupporterStats } from '../../hooks/useSupporterStats'
 import { useSupporterChat } from '../../context/SupporterChatContext'
@@ -46,11 +47,18 @@ export default function SupporterDashboardPage() {
           setApiJournals({ loaded: false, list: null })
           return
         }
-        const list = (out.data.uploads || []).map((u) => ({
-          id: `srv-${u.upload_id}`,
-          fileName: u.original_file_name || '—',
-          uploadedAt: u.submitted_at ? new Date(u.submitted_at).getTime() : Date.now(),
-        }))
+        const list = (out.data.uploads || []).map((u) => {
+          const pid = u.period_id != null && u.period_id !== '' ? String(u.period_id) : null
+          return {
+            id: `srv-${u.upload_id}`,
+            uploadId: u.upload_id != null ? String(u.upload_id) : undefined,
+            fileName: u.original_file_name || '—',
+            uploadedAt: u.submitted_at ? new Date(u.submitted_at).getTime() : Date.now(),
+            submissionId: pid ?? undefined,
+            deadlineId: pid ?? undefined,
+            fromServer: true,
+          }
+        })
         setApiJournals({ loaded: true, list })
       })
       .catch(() => {
@@ -65,12 +73,16 @@ export default function SupporterDashboardPage() {
     u.fullName?.trim() ? `${u.fullName.trim()} (${u.username})` : (u.username || u.id)
 
   const messages = channel && selectedUser ? getMessagesForChannel(channel.id, selectedUser.id) : []
-  const journals =
+  const journalKey = selectedUser?.stableId ?? selectedUser?.id
+  const journalsRaw =
     apiJournals.loaded && apiJournals.list
       ? apiJournals.list
-      : selectedUser
-        ? getJournalsForUser(selectedUser.id)
+      : selectedUser && journalKey
+        ? getJournalsForUser(journalKey)
         : []
+  const journals = Array.isArray(journalsRaw)
+    ? journalsRaw.filter((j) => j && typeof j === 'object')
+    : []
 
   const handleSendMessage = (channelId, content, file) => {
     if (!selectedUser) return
@@ -106,23 +118,10 @@ export default function SupporterDashboardPage() {
                   </h3>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
-                  {journals.length === 0 ? (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('journal.noVersions')}</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {journals.map((j) => (
-                        <li
-                          key={j.id}
-                          className="flex items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 p-2.5"
-                        >
-                          <span className="truncate">{j.fileName}</span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
-                            {new Date(j.uploadedAt).toLocaleDateString('vi-VN')}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <JournalEntriesSidebarList
+                    journals={journals}
+                    downloadLearnerUserId={selectedUser?.backendUserId ?? null}
+                  />
                 </div>
               </aside>
             </>

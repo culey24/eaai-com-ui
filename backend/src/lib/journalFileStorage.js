@@ -1,5 +1,5 @@
 import path from 'path'
-import { mkdir, writeFile, unlink } from 'fs/promises'
+import { mkdir, writeFile, unlink, readFile } from 'fs/promises'
 import { Storage } from '@google-cloud/storage'
 
 const GCS_KEY_PREFIX = 'gcs:'
@@ -79,6 +79,45 @@ export async function saveJournalUpload(opts) {
 /**
  * @param {string | null | undefined} storageKey
  */
+/**
+ * Đọc nội dung file journal (đĩa hoặc GCS). Lỗi path/key → throw.
+ * @returns {Promise<{ buffer: Buffer, contentType: string }>}
+ */
+export async function readJournalUpload(storageKey) {
+  if (!storageKey || typeof storageKey !== 'string') {
+    throw new Error('missing storage key')
+  }
+
+  if (storageKey.startsWith(GCS_KEY_PREFIX)) {
+    if (!journalUsesGcs()) {
+      throw new Error('GCS not configured for this key')
+    }
+    const objectName = storageKey.slice(GCS_KEY_PREFIX.length)
+    if (!objectName || objectName.includes('..')) {
+      throw new Error('invalid GCS object name')
+    }
+    const bucket = getStorage().bucket(getBucketName())
+    const file = bucket.file(objectName)
+    const [buffer] = await file.download()
+    const [metadata] = await file.getMetadata()
+    const contentType =
+      (metadata?.contentType && String(metadata.contentType).slice(0, 200)) ||
+      'application/octet-stream'
+    return { buffer, contentType }
+  }
+
+  if (storageKey.includes('..')) {
+    throw new Error('invalid path')
+  }
+  const abs = path.resolve(process.cwd(), storageKey)
+  const root = uploadRootDir()
+  if (!abs.startsWith(root)) {
+    throw new Error('path outside journal root')
+  }
+  const buffer = await readFile(abs)
+  return { buffer, contentType: 'application/octet-stream' }
+}
+
 export async function removeJournalUpload(storageKey) {
   if (!storageKey || typeof storageKey !== 'string') return
 

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import multer from 'multer'
 import { prisma } from '../lib/prisma.js'
-import { removeJournalUpload, saveJournalUpload } from '../lib/journalFileStorage.js'
+import { removeJournalUpload, saveJournalUpload, readJournalUpload } from '../lib/journalFileStorage.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { extractDocumentText } from '../lib/extractDocumentText.js'
 import { jsonSafe } from '../lib/json.js'
@@ -83,6 +83,112 @@ router.get('/by-user/:learnerId', authMiddleware, async (req, res) => {
     return res.status(200).json(jsonSafe({ uploads: rows || [] }))
   } catch (err) {
     console.error('[journal GET by-user]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+function contentDispositionAttachment(name) {
+  const raw = String(name || 'journal').trim().slice(0, 200) || 'journal'
+  const safe = raw.replace(/["\\]/g, '_')
+  const ascii = safe.replace(/[^\x20-\x7E]/g, '_').slice(0, 180) || 'file'
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(safe)}`
+}
+
+async function assertCanDownloadJournalFile(reqAuth, learnerId) {
+  if (reqAuth.userRole === 'student') {
+    if (reqAuth.userId !== learnerId) {
+      throw Object.assign(new Error('Forbidden'), { status: 403 })
+    }
+    return
+  }
+  if (reqAuth.userRole === 'admin') {
+    const learner = await prisma.user.findUnique({
+      where: { userId: learnerId },
+      select: { userRole: true },
+    })
+    if (!learner || learner.userRole !== 'student') {
+      throw Object.assign(new Error('Forbidden'), { status: 403 })
+    }
+    return
+  }
+  if (!isSupporterUserRole(reqAuth.userRole)) {
+    throw Object.assign(new Error('Forbidden'), { status: 403 })
+  }
+  const learner = await prisma.user.findUnique({
+    where: { userId: learnerId },
+    select: { userId: true, userRole: true, userClass: true },
+  })
+  if (!learner || learner.userRole !== 'student') {
+    throw Object.assign(new Error('Not found'), { status: 404 })
+  }
+  const assign = await prisma.learnerSupporterAssignment.findUnique({
+    where: { learnerId },
+    select: { supporterId: true },
+  })
+  const scopes = await prisma.assistantManagedClass.findMany({
+    where: { supporterId: reqAuth.userId },
+    select: { userClass: true },
+  })
+  const allowed = new Set(scopes.map((s) => s.userClass))
+  const okByAssign = assign?.supporterId === reqAuth.userId
+  const okByClass = learner.userClass != null && allowed.has(learner.userClass)
+  if (!okByAssign && !okByClass) {
+    throw Object.assign(new Error('Forbidden'), { status: 403 })
+  }
+}
+
+/**
+ * GET /api/journal/learner/:learnerId/file/:uploadId
+ * Learner (chính mình), admin, hoặc supporter được phép — tải binary đã lưu.
+ */
+router.get('/learner/:learnerId/file/:uploadId', authMiddleware, async (req, res) => {
+  try {
+    const learnerId = String(req.params.learnerId || '').trim()
+    const uploadIdRaw = String(req.params.uploadId || '').trim()
+    if (!learnerId || !uploadIdRaw || !/^\d+$/.test(uploadIdRaw)) {
+      return res.status(400).json({ error: 'Thiếu learnerId hoặc uploadId không hợp lệ' })
+    }
+    let uploadIdBig
+    try {
+      uploadIdBig = BigInt(uploadIdRaw)
+    } catch {
+      return res.status(400).json({ error: 'uploadId không hợp lệ' })
+    }
+
+    await assertCanDownloadJournalFile(req.auth, learnerId)
+
+    const rows = await prisma.$queryRaw`
+      SELECT ju.storage_key, ju.original_file_name
+      FROM journal_uploads ju
+      WHERE ju.user_id = ${learnerId} AND ju.upload_id = ${uploadIdBig}
+      LIMIT 1
+    `
+    const row = Array.isArray(rows) && rows[0]
+    if (!row?.storage_key) {
+      return res.status(404).json({ error: 'Không tìm thấy file journal' })
+    }
+
+    const { buffer, contentType } = await readJournalUpload(String(row.storage_key))
+    const name =
+      (row.original_file_name && String(row.original_file_name).slice(0, 512)) || 'journal'
+
+    res.setHeader('Content-Type', contentType || 'application/octet-stream')
+    res.setHeader('Content-Disposition', contentDispositionAttachment(name))
+    res.setHeader('Content-Length', String(buffer.length))
+    res.setHeader('Cache-Control', 'private, no-store')
+    return res.status(200).send(buffer)
+  } catch (err) {
+    const status = err?.status
+    if (status === 403) {
+      return res.status(403).json({ error: 'Không có quyền tải file này' })
+    }
+    if (status === 404) {
+      return res.status(404).json({ error: 'Không tìm thấy' })
+    }
+    console.error('[journal GET file]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),

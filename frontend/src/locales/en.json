@@ -152,7 +152,10 @@
     "noActiveSubmission": "No submission is currently open.",
     "editFile": "Edit file",
     "deleteFile": "Delete file",
-    "confirmDelete": "Delete this file?"
+    "confirmDelete": "Delete this file?",
+    "download": "Download",
+    "openInTab": "Open",
+    "downloadFailed": "Could not download the file."
   },
   "supporter": {
     "totalLearners": "learners",

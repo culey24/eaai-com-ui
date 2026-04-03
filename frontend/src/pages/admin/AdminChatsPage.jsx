@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, MessageSquare, User, Search, FileText } from 'lucide-react'
+import { ArrowLeft, MessageSquare, User, Search, FileText, Calendar } from 'lucide-react'
 import { VALID_CLASS_CODES } from '../../constants/roles'
 import { useMessages } from '../../hooks/useMessages'
 import { useAllUsers } from '../../hooks/useAllUsers'
@@ -14,10 +14,33 @@ const CLASS_TO_CHANNEL = {
   'IS-3': 'human-chat',
 }
 
+function formatJournalTs(ts) {
+  if (ts == null || Number.isNaN(Number(ts))) return '—'
+  return new Date(ts).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+function formatFileSizeBytes(n) {
+  if (n == null || n === '' || Number(n) <= 0) return null
+  const v = Number(n)
+  const units = ['B', 'KB', 'MB', 'GB']
+  let i = 0
+  let x = v
+  while (x >= 1024 && i < units.length - 1) {
+    x /= 1024
+    i += 1
+  }
+  return `${i === 0 ? Math.round(x) : x.toFixed(1)} ${units[i]}`
+}
+
 export default function AdminChatsPage() {
   const { t } = useLanguage()
   const { getLearners } = useAllUsers()
-  const { getJournalsForUser } = useJournal()
+  const { getJournalsForUser, getSubmissions } = useJournal()
+  const submissions = getSubmissions()
+  const submissionById = useMemo(
+    () => Object.fromEntries(submissions.map((s) => [s.id, s])),
+    [submissions]
+  )
   const [selectedUser, setSelectedUser] = useState(null)
   const [search, setSearch] = useState('')
 
@@ -29,7 +52,7 @@ export default function AdminChatsPage() {
   const allLearners = getLearners()
   const filteredUsers = search.trim()
     ? allLearners.filter((u) =>
-        u.username.toLowerCase().includes(search.toLowerCase().trim()) ||
+        (u.username && u.username.toLowerCase().includes(search.toLowerCase().trim())) ||
         (u.classCode && u.classCode.toLowerCase().includes(search.toLowerCase().trim()))
       )
     : allLearners
@@ -40,10 +63,17 @@ export default function AdminChatsPage() {
   }, {})
   const usersWithoutClass = filteredUsers.filter((u) => !u.classCode || !VALID_CLASS_CODES.includes(u.classCode))
 
-  const messages = channelId && selectedUser
-    ? getMessagesForChannel(channelId, selectedUser.id)
+  const messagesRaw =
+    channelId && selectedUser ? getMessagesForChannel(channelId, selectedUser.id) : []
+  const messages = Array.isArray(messagesRaw)
+    ? messagesRaw
+        .filter((m) => m && typeof m === 'object')
+        .map((m) => (m.role ? m : { ...m, role: 'user' }))
     : []
-  const journals = selectedUser ? getJournalsForUser(selectedUser.id) : []
+  const journalUserKey = selectedUser?.stableId ?? selectedUser?.id
+  const journalsRaw =
+    selectedUser && journalUserKey ? getJournalsForUser(journalUserKey) : []
+  const journals = Array.isArray(journalsRaw) ? journalsRaw.filter((j) => j && typeof j === 'object') : []
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
@@ -151,70 +181,140 @@ export default function AdminChatsPage() {
           )}
         </div>
 
-        {/* Chat + Journal */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {selectedUser ? (
-            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 dark:bg-slate-800/30">
-              <div className="max-w-3xl mx-auto space-y-6">
-                {/* User header */}
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                  <span className="font-medium">{selectedUser.username}</span>
-                  {selectedUser.classCode && (
-                    <span className="text-sm">— {t('admin.classLabel', { code: selectedUser.classCode })}</span>
-                  )}
-                </div>
+        {/* Chat (center) + Journal (right sidebar) */}
+        {selectedUser ? (
+          <div className="flex-1 flex min-h-0 flex-col md:flex-row overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-50/30 dark:bg-slate-800/30">
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="max-w-3xl mx-auto space-y-6">
+                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                    <span className="font-medium">{selectedUser.username}</span>
+                    {selectedUser.classCode && (
+                      <span className="text-sm">— {t('admin.classLabel', { code: selectedUser.classCode })}</span>
+                    )}
+                  </div>
 
-                {/* Chat */}
-                <div className="space-y-6">
-                  <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                    {t('admin.chatSection')}
-                  </h3>
-                  {messages.length === 0 ? (
-                    <p className="text-slate-500 dark:text-slate-400 py-4">{t('admin.noMessages')}</p>
-                  ) : (
-                    messages.map((msg) => (
-                      <MessageItem
-                        key={msg.id}
-                        message={msg}
-                        agentLabel={msg.role === 'assistant' ? 'AGENT' : null}
-                      />
-                    ))
-                  )}
-                </div>
-
-                {/* Journal info */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
-                  <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3 flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    {t('journal.title')}
-                  </h3>
-                  {journals.length === 0 ? (
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">{t('journal.noVersions')}</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {journals.map((j) => (
-                        <li
-                          key={j.id}
-                          className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300"
-                        >
-                          <span className="truncate">{j.fileName}</span>
-                          <span className="text-slate-500 dark:text-slate-400 text-xs flex-shrink-0 ml-2">
-                            {new Date(j.uploadedAt).toLocaleDateString('vi-VN')}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <div className="space-y-6">
+                    <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                      {t('admin.chatSection')}
+                    </h3>
+                    {messages.length === 0 ? (
+                      <p className="text-slate-500 dark:text-slate-400 py-4">{t('admin.noMessages')}</p>
+                    ) : (
+                      messages.map((msg, idx) => (
+                        <MessageItem
+                          key={msg.id != null ? String(msg.id) : `m-${idx}`}
+                          message={msg}
+                          agentLabel={msg.role === 'assistant' ? 'AGENT' : null}
+                        />
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
-              <MessageSquare className="w-12 h-12 mb-4 opacity-50" />
-              <p>{t('admin.selectUserToViewChat')}</p>
-            </div>
-          )}
-        </div>
+
+            <aside
+              className="flex w-full md:w-[min(22rem,40vw)] md:shrink-0 flex-col border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 max-h-[min(42vh,22rem)] md:max-h-none min-h-0"
+              aria-label={t('journal.title')}
+            >
+              <div className="flex-shrink-0 px-4 py-4 border-b border-slate-100 dark:border-slate-700">
+                <h2 className="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary flex-shrink-0" />
+                  {t('journal.title')}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+                  {selectedUser.username}
+                </p>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4">
+                {journals.length === 0 ? (
+                  <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                    {t('journal.noVersions')}
+                  </p>
+                ) : (
+                  <ul className="space-y-3">
+                    {journals.map((j, jIdx) => {
+                      const periodId = j.submissionId || j.deadlineId
+                      const sub = periodId ? submissionById[periodId] : null
+                      const sizeLabel = formatFileSizeBytes(j.fileSize)
+                      return (
+                        <li
+                          key={j.id != null ? String(j.id) : `j-${jIdx}`}
+                          className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/50 px-3 py-2.5 space-y-2"
+                        >
+                          <div className="rounded-md bg-white/70 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-600/80 px-2.5 py-2">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {t('admin.chatJournal.submission')}
+                            </p>
+                            {periodId ? (
+                              <>
+                                <p className="text-sm font-medium text-slate-800 dark:text-slate-100 mt-1 break-words">
+                                  {sub?.title ??
+                                    t('admin.chatJournal.serverPeriod', {
+                                      id: String(periodId).slice(0, 8),
+                                    })}
+                                </p>
+                                {sub?.description ? (
+                                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 line-clamp-3 leading-snug">
+                                    {sub.description}
+                                  </p>
+                                ) : null}
+                                {sub ? (
+                                  <div className="mt-2 space-y-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                    <p>
+                                      <span className="font-medium text-slate-600 dark:text-slate-300">
+                                        {t('admin.submissions.startsAtLabel')}:
+                                      </span>{' '}
+                                      {formatJournalTs(sub.startsAt)}
+                                    </p>
+                                    <p>
+                                      <span className="font-medium text-slate-600 dark:text-slate-300">
+                                        {t('admin.submissions.endsAtLabel')}:
+                                      </span>{' '}
+                                      {formatJournalTs(sub.endsAt)}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
+                                    {t('admin.chatJournal.noSubmissionLink')}
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {t('admin.chatJournal.noSubmissionLink')}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              {t('admin.chatJournal.submittedFile')}
+                            </p>
+                            <p className="text-sm text-slate-800 dark:text-slate-200 break-words mt-1">
+                              {j.fileName ?? '—'}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              {[sizeLabel, formatJournalTs(j.uploadedAt)].filter(Boolean).join(' · ')}
+                            </p>
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </div>
+            </aside>
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 bg-slate-50/30 dark:bg-slate-800/30">
+            <MessageSquare className="w-12 h-12 mb-4 opacity-50" />
+            <p>{t('admin.selectUserToViewChat')}</p>
+          </div>
+        )}
       </div>
     </div>
   )

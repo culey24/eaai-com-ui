@@ -7,6 +7,7 @@ strip_port_quotes() {
 }
 CHATBOT_PORT=$(strip_port_quotes "${CHATBOT_SERVER_PORT:-8003}")
 AGENT_PORT=$(strip_port_quotes "${AGENT_SERVER_PORT:-8000}")
+INGESTOR_PORT=$(strip_port_quotes "${INGESTOR_PORT:-8001}")
 
 # Trong cùng một container: chatbot gọi ADK qua loopback
 if [ -z "${AGENT_SERVER_BASE_URL:-}" ] && [ -z "${AGENT_SERVER_HOST:-}" ]; then
@@ -17,6 +18,7 @@ fi
 ADK_LOG=/tmp/adk-boot.log
 
 kill_children() {
+  [ -n "${INGESTOR_PID:-}" ] && kill "$INGESTOR_PID" 2>/dev/null || true
   [ -n "${UV_PID:-}" ] && kill "$UV_PID" 2>/dev/null || true
   [ -n "${ADK_PID:-}" ] && kill "$ADK_PID" 2>/dev/null || true
 }
@@ -75,6 +77,20 @@ if [ "$i" -eq "$ADK_WAIT_SEC" ]; then
   exit 1
 fi
 
+# Ingestor (tuỳ chọn): cùng DATABASE_URL với Prisma — bật INGESTOR_ENABLED=1
+INGESTOR_LOG=/tmp/ingestor.log
+INGESTOR_ENABLED_RAW="${INGESTOR_ENABLED:-0}"
+case "$INGESTOR_ENABLED_RAW" in 1|true|yes|YES|on|ON) INGESTOR_START=1 ;; *) INGESTOR_START=0 ;; esac
+if [ "$INGESTOR_START" -eq 1 ]; then
+  if [ -z "${DATABASE_URL:-}" ]; then
+    echo "[entrypoint] INGESTOR_ENABLED but DATABASE_URL is empty — skip ingestor" >&2
+  else
+    echo "[entrypoint] starting ingestor uvicorn on :$INGESTOR_PORT (log: $INGESTOR_LOG)"
+    nohup uvicorn ingestor.server:app --host 0.0.0.0 --port "$INGESTOR_PORT" >"$INGESTOR_LOG" 2>&1 &
+    INGESTOR_PID=$!
+  fi
+fi
+
 echo "[entrypoint] starting uvicorn on :$CHATBOT_PORT (ADK already listening)"
 uvicorn chatbot_server.server:app --host 0.0.0.0 --port "$CHATBOT_PORT" &
 UV_PID=$!
@@ -86,11 +102,15 @@ if ! adk_http_ready; then
   exit 1
 fi
 
-while kill -0 "$UV_PID" 2>/dev/null && kill -0 "$ADK_PID" 2>/dev/null; do
+while
+  kill -0 "$UV_PID" 2>/dev/null && kill -0 "$ADK_PID" 2>/dev/null &&
+    { [ -z "${INGESTOR_PID:-}" ] || kill -0 "$INGESTOR_PID" 2>/dev/null; }
+do
   sleep 3
 done
-echo "[entrypoint] uvicorn or adk exited" >&2
+echo "[entrypoint] uvicorn, adk, or ingestor exited" >&2
 cat "$ADK_LOG" >&2 2>/dev/null || true
+[ -n "${INGESTOR_PID:-}" ] && cat "$INGESTOR_LOG" >&2 2>/dev/null || true
 kill_children
 wait 2>/dev/null || true
 exit 1

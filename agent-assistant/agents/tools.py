@@ -1,6 +1,10 @@
 import logging
+from pathlib import Path
 
 from google.adk.tools import ToolContext, agent_tool
+
+from utils.file_reader import FileReader
+from utils.upload_paths import uploaded_data_dir
 
 from .sub_agents.persona_agent import create_agent as create_persona_agent
 from .sub_agents.provider_agent import create_agent as create_provider_agent
@@ -13,6 +17,40 @@ logging.basicConfig(
     format='%(asctime)s %(name)s:%(filename)s:%(lineno)d %(levelname)s %(process)d %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+_MAX_UPLOAD_EXTRACT = 100_000
+
+
+async def read_uploaded_data_file(file_name: str, tool_context: ToolContext):
+    """
+    Đọc nội dung file người dùng đã upload qua POST /upload (tên file trả về API).
+    Chỉ chấp nhận tên file đơn, không đường dẫn.
+    """
+    if not file_name or not isinstance(file_name, str):
+        return 'Thiếu tên file.'
+    safe = Path(file_name.strip()).name
+    if safe != file_name.strip():
+        return 'Tên file không hợp lệ (không được chứa đường dẫn).'
+    path = uploaded_data_dir() / safe
+    if not path.is_file():
+        return f'Không tìm thấy file "{safe}". Hãy upload trước qua /upload.'
+    reader = FileReader(path)
+    ext = path.suffix.lower()
+    if ext in ('.xlsx', '.xls', '.csv'):
+        raw = reader.extract_text()
+        if raw is None:
+            return 'Không đọc được bảng tính.'
+        text = raw.head(80).to_string() if hasattr(raw, 'head') else str(raw)
+    else:
+        text = reader.extract_text() or ''
+    if not text.strip():
+        return 'Không trích được chữ từ file.'
+    if len(text) > _MAX_UPLOAD_EXTRACT:
+        return (
+            text[:_MAX_UPLOAD_EXTRACT]
+            + f'\n\n… (đã cắt còn {_MAX_UPLOAD_EXTRACT} ký tự)'
+        )
+    return text
 
 
 async def call_persona_agent(query: str, tool_context: ToolContext):

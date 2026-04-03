@@ -40,6 +40,7 @@ agent-assistant/.env.local
 agent-assistant/.env.development.local
 agent-assistant/.env.test.local
 agent-assistant/.env.production.local
+agent-assistant/.venv/*
 
 # Backend data
 backend/data/*

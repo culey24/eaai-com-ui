@@ -437,6 +437,68 @@ router.post('/sessions/:sessionId/conversations', async (req, res) => {
 })
 
 /**
+ * GET /sessions/:sessionId/conversations
+ * Liệt kê tin đã lưu (agent_session_messages) — nguồn thật khi ADK mất RAM.
+ */
+router.get('/sessions/:sessionId/conversations', async (req, res) => {
+  try {
+    const sessionIdParam = String(req.params.sessionId || '').trim()
+    if (!isUuid(sessionIdParam)) {
+      warnBadRequest(req, 'session_id path không phải UUID')
+      return res.status(400).json({ error: 'session_id path không hợp lệ' })
+    }
+
+    const session = await prisma.agentSession.findUnique({
+      where: { sessionId: sessionIdParam },
+      select: { sessionId: true, userId: true },
+    })
+    if (!session) {
+      return res.status(404).json({ error: 'Không tìm thấy session' })
+    }
+
+    const rows = await prisma.agentSessionMessage.findMany({
+      where: { sessionId: sessionIdParam },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        chatRole: true,
+        content: true,
+        fileIds: true,
+        dynamicProfile: true,
+        tokensCount: true,
+        createdAt: true,
+      },
+    })
+
+    const data = rows.map((r) =>
+      jsonSafe({
+        conversation_id: String(r.id),
+        content: r.content,
+        chat_role: r.chatRole,
+        files: r.fileIds,
+        dynamic_profile: r.dynamicProfile,
+        tokens_count: r.tokensCount,
+        created_at: r.createdAt.toISOString(),
+      })
+    )
+
+    return res.status(200).json(
+      jsonSafe({
+        user_id: session.userId,
+        session_id: sessionIdParam,
+        data,
+      })
+    )
+  } catch (err) {
+    console.error('[agentIntegration GET conversations]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
  * GET /users/:userId/learning_history
  */
 router.get('/users/:userId/learning_history', async (req, res) => {
@@ -543,6 +605,125 @@ router.get('/users/:userId/schedule', async (req, res) => {
     )
   } catch (err) {
     console.error('[agentIntegration GET schedule]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * POST /users/:userId/reminders — đăng ký nhắc việc (Reminder Agent / tool).
+ */
+router.post('/users/:userId/reminders', async (req, res) => {
+  try {
+    const userId = String(req.params.userId || '').trim()
+    const body = integrationBody(req)
+    const bodyUserId = pickStr(body, 'user_id', 'userId')
+    const messageRaw =
+      body.message !== undefined && body.message !== null ? String(body.message) : ''
+    const message = messageRaw.trim()
+    const reminderRaw = body.reminder_at ?? body.reminderAt
+
+    if (!userId || !bodyUserId || bodyUserId !== userId) {
+      warnBadRequest(req, 'user_id path/body không khớp (reminders)')
+      return res.status(400).json({ error: 'user_id path và body phải nhất quán' })
+    }
+    if (!message) {
+      warnBadRequest(req, 'thiếu message reminder')
+      return res.status(400).json({ error: 'message không được để trống' })
+    }
+
+    const reminderAt =
+      reminderRaw instanceof Date ? reminderRaw : new Date(reminderRaw)
+    if (Number.isNaN(reminderAt.getTime())) {
+      warnBadRequest(req, 'reminder_at không parse được thành ngày giờ', {
+        got: reminderRaw,
+      })
+      return res.status(400).json({
+        error: 'reminder_at phải là ISO 8601 hoặc timestamp hợp lệ',
+      })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { userId: true },
+    })
+    if (!user) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
+    }
+
+    const row = await prisma.agentUserReminder.create({
+      data: {
+        userId,
+        reminderAt,
+        message,
+      },
+    })
+
+    return res.status(201).json(
+      jsonSafe({
+        reminder_id: String(row.id),
+        user_id: userId,
+        reminder_at: row.reminderAt.toISOString(),
+        message: row.message,
+      })
+    )
+  } catch (err) {
+    console.error('[agentIntegration POST reminders]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /users/:userId/reminders — danh sách nhắc việc (sắp xếp theo thời gian).
+ */
+router.get('/users/:userId/reminders', async (req, res) => {
+  try {
+    const userId = String(req.params.userId || '').trim()
+    if (!userId) {
+      warnBadRequest(req, 'thiếu user_id path (reminders GET)')
+      return res.status(400).json({ error: 'Thiếu user_id' })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { userId: true },
+    })
+    if (!user) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
+    }
+
+    const limitRaw = Number.parseInt(String(req.query.limit ?? '50'), 10)
+    const limit = Math.min(Number.isFinite(limitRaw) ? limitRaw : 50, 200)
+
+    const rows = await prisma.agentUserReminder.findMany({
+      where: { userId },
+      orderBy: { reminderAt: 'asc' },
+      take: limit,
+      select: {
+        id: true,
+        reminderAt: true,
+        message: true,
+        createdAt: true,
+      },
+    })
+
+    const reminders = rows.map((r) =>
+      jsonSafe({
+        reminder_id: String(r.id),
+        reminder_at: r.reminderAt.toISOString(),
+        message: r.message,
+        created_at: r.createdAt.toISOString(),
+      })
+    )
+
+    return res.status(200).json(jsonSafe({ user_id: userId, reminders }))
+  } catch (err) {
+    console.error('[agentIntegration GET reminders]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),

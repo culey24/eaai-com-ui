@@ -134,9 +134,24 @@ model User {
   journalUploads             JournalUpload[]
   agentSessions   AgentSession[]
   surveyResponses SurveyResponse[]
+  agentReminders  AgentUserReminder[]
 
   // init SQL: CREATE TABLE Users → PostgreSQL lưu là public.users (không phải bảng "User" của Prisma mặc định)
   @@map("users")
+}
+
+/// Nhắc việc đăng ký qua chatbot agent (POST agent integration).
+model AgentUserReminder {
+  id         BigInt   @id @default(autoincrement()) @map("reminder_id")
+  userId     String   @map("user_id") @db.VarChar(10)
+  reminderAt DateTime @map("reminder_at")
+  message    String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, reminderAt])
+  @@map("agent_user_reminders")
 }
 
 /// Khảo sát học viên PRE/POST — cùng bảng pretest_responses, phân biệt survey_kind (mở rộng POSTTEST sau).

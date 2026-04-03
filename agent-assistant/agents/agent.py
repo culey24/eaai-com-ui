@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from datetime import datetime
 from dotenv import load_dotenv
@@ -13,7 +14,13 @@ from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
 from .prompt import MANAGER_AGENT_INSTRUCTION_PROMPT
-from .tools import call_persona_agent, call_provider_agent, call_supporter_agent, call_reminder_agent
+from .tools import (
+    call_persona_agent,
+    call_provider_agent,
+    call_supporter_agent,
+    call_reminder_agent,
+    read_uploaded_data_file,
+)
 
 load_dotenv()  # Load environment variables from .env file
 logging.basicConfig(
@@ -23,10 +30,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 from utils.llm_provider import get_adk_model
+from utils.be_integration import be_integration_headers
 
 from .service_urls import get_be_server_base_url
 
 BE_SERVER = get_be_server_base_url()
+ADK_APP_NAME = (os.getenv("ADK_APP_NAME") or "agents").strip() or "agents"
 
 MAX_RETRIES = 4
 MAX_FUNCTION_CALLS = 3
@@ -86,16 +95,25 @@ def process_after_agent_call(callback_context: CallbackContext) -> Optional[type
 def init_session_state(callback_context: CallbackContext) -> None:
 
     def get_user_role(user_id: str) -> str:
-        response = requests.get(f"{BE_SERVER}/users/{user_id}/role")
+        response = requests.get(
+            f"{BE_SERVER}/users/{user_id}/role",
+            headers=be_integration_headers(),
+            timeout=15,
+        )
         if response.status_code == 200:
-            return response.json().get("user_role", "user")
-        return "user"
+            return response.json().get("user_role", "student")
+        return "student"
 
-    def get_learning_history(user_id: str) -> dict:
-        response = requests.get(f"{BE_SERVER}/users/{user_id}/learning_history")
+    def get_learning_history(user_id: str) -> list:
+        response = requests.get(
+            f"{BE_SERVER}/users/{user_id}/learning_history",
+            headers=be_integration_headers(),
+            timeout=30,
+        )
         if response.status_code == 200:
-            return response.json().get("learning_history", {})
-        return {}
+            data = response.json().get("learning_history")
+            return data if isinstance(data, list) else []
+        return []
 
     # Initialize the session state for the agent
     if "current_attempt" not in callback_context.state:
@@ -152,10 +170,11 @@ def create_agent() -> Agent:
         after_agent_callback=process_after_agent_call,
         tools=[
             call_persona_agent,
+            read_uploaded_data_file,
             call_provider_agent,
             call_supporter_agent,
-            call_reminder_agent
-        ], 
+            call_reminder_agent,
+        ],
         generate_content_config=types.GenerateContentConfig(
             temperature=0.2,
             top_p=0.1,
@@ -174,6 +193,6 @@ def create_agent() -> Agent:
 root_agent = create_agent()
 runner = Runner(
     agent=root_agent,
-    app_name="agent_app",
+    app_name=ADK_APP_NAME,
     session_service=InMemorySessionService()
 )

@@ -92,6 +92,13 @@ Giữ đúng tinh thần [recommended_table.sql](./recommended_table.sql): `Educ
 | `learner_supporter_assignments` | Gán supporter cho learner + `teaching_mode` (`AGENT` / `LLM` / `MANUAL`). |
 | `support_requests` | Yêu cầu hỗ trợ chờ admin duyệt. |
 | `app_settings` | Key–value JSON, ví dụ `auto_mode`, `deadlines`. |
+| `agent_sessions` | Phiên chatbot ADK (UUID); trạng thái `active` / `deactive`. |
+| `agent_session_messages` | Tin trong phiên agent (`chat_role` `user` / `model` / `TA`, `file_ids`, …). |
+| `agent_user_reminders` | Nhắc việc đăng ký qua tool Reminder + API integration (`reminder_at`, `message`, FK `user_id`). |
+
+Migration Prisma: **`20260331120000_agent_integration_sessions`**, **`20260403140000_agent_user_reminders`**.
+
+Xem thêm: [AGENT_ASSISTANT.md](./AGENT_ASSISTANT.md).
 
 ## Mapping frontend (UI) ↔ DB
 
@@ -139,3 +146,4 @@ SELECT username, pwd = crypt('admin123', pwd) AS ok FROM users WHERE username = 
 |------|-----------|
 | 2025-03-25 | PostgreSQL trong `backend/` (Docker + `init/*`), ENUM `admin`, bảng app; tách workspace với `frontend/`. Trước đó từng nằm dưới `database/`; UI từng ở `Frontend/`. |
 | 2025-03-26 | Thêm Express + Prisma (`schema.prisma`, migration timestamp, `src/index.js`). |
+| 2026-04-03 | Bảng `agent_user_reminders` (nhắc việc từ agent Python); additive, FK `users`. Chi tiết [AGENT_ASSISTANT.md](./AGENT_ASSISTANT.md). |

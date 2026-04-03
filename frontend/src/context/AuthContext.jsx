@@ -74,10 +74,13 @@ function mapApiClassToUi(code) {
   return m[code] || String(code)
 }
 
+/** Role từ API / JWT (LEARNER hoặc Prisma: student, admin, support, …) */
 function mapApiRoleToApp(role) {
-  if (role === 'LEARNER') return ROLES.LEARNER
-  if (role === 'ASSISTANT') return ROLES.ASSISTANT
-  if (role === 'ADMIN') return ROLES.ADMIN
+  if (role == null || role === '') return ROLES.LEARNER
+  const r = String(role).trim().toUpperCase()
+  if (r === 'LEARNER' || r === 'STUDENT') return ROLES.LEARNER
+  if (r === 'ASSISTANT' || r === 'SUPPORT' || r === 'TEACHER') return ROLES.ASSISTANT
+  if (r === 'ADMIN') return ROLES.ADMIN
   return ROLES.LEARNER
 }
 
@@ -613,6 +616,63 @@ export function AuthProvider({ children }) {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated))
     return { ok: true, user: updated }
   }
+
+  /**
+   * Sau khi hydrate từ localStorage: đồng bộ role với JWT (GET /api/me).
+   * Tránh cảnh token là admin nhưng object trong storage còn LEARNER (tab cũ, merge lỗi, v.v.).
+   */
+  useEffect(() => {
+    if (!apiToken || isLoading) return
+    let cancelled = false
+    const ac = new AbortController()
+    ;(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/me`, {
+          cache: 'no-store',
+          headers: { Authorization: `Bearer ${apiToken}` },
+          signal: ac.signal,
+        })
+        if (!res.ok || cancelled) return
+        const data = await res.json().catch(() => ({}))
+        const me = data.user
+        if (!me || cancelled) return
+        const raw = me.apiRole ?? me.userRole
+        const appRole = mapApiRoleToApp(raw)
+        setUser((prev) => {
+          if (prev && prev.role === appRole) return prev
+          if (!prev && me.userId) {
+            const built = createUserObject(me.username || 'user', appRole, {
+              backendUserId: me.userId,
+              classCode: 'Chưa cập nhật',
+              managedClasses: [],
+              name: me.username,
+              fullName: '',
+            }, 'provisioned')
+            try {
+              localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(built))
+            } catch {
+              /* ignore */
+            }
+            return built
+          }
+          if (!prev) return prev
+          const merged = { ...prev, role: appRole }
+          try {
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(merged))
+          } catch {
+            /* ignore */
+          }
+          return merged
+        })
+      } catch {
+        /* mạng / hủy */
+      }
+    })()
+    return () => {
+      cancelled = true
+      ac.abort()
+    }
+  }, [apiToken, isLoading])
 
   const isProfileComplete = (u = user) => {
     if (!u) return true

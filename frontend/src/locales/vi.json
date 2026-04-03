@@ -219,6 +219,12 @@
     "confirmDelete": "Xóa tài khoản này? Không thể hoàn tác.",
     "autoMode": "Auto mode (first come first served)",
     "messageCount": "{count} tin nhắn",
+    "chatJournal": {
+      "submission": "Đợt nộp",
+      "submittedFile": "File đã nộp",
+      "serverPeriod": "Đợt trên máy chủ ({id}…)",
+      "noSubmissionLink": "Không gắn đợt nộp trong danh sách quản trị"
+    },
     "classWithCode": "Lớp {code}",
     "surveys": {
       "title": "Kết quả khảo sát",

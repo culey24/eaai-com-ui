@@ -15,6 +15,7 @@ from google.adk.planners import BuiltInPlanner
 from google.genai import types
  
 from utils.llm_provider import get_adk_model
+from utils.be_integration import be_integration_headers
 
 from .prompt import PERSONA_AGENT_INSTRUCTION_PROMPT
 from ...service_urls import get_be_server_base_url
@@ -138,16 +139,25 @@ def process_after_agent_call(callback_context: CallbackContext) -> Optional[type
 def init_session_state(callback_context: CallbackContext) -> None:
 
     def get_user_role(user_id: str) -> str:
-        response = requests.get(f"{BE_SERVER}/users/{user_id}/role")
+        response = requests.get(
+            f"{BE_SERVER}/users/{user_id}/role",
+            headers=be_integration_headers(),
+            timeout=15,
+        )
         if response.status_code == 200:
-            return response.json().get("user_role", "user")
-        return "user"
+            return response.json().get("user_role", "student")
+        return "student"
 
-    def get_learning_history(user_id: str) -> dict:
-        response = requests.get(f"{BE_SERVER}/users/{user_id}/learning_history")
+    def get_learning_history(user_id: str) -> list:
+        response = requests.get(
+            f"{BE_SERVER}/users/{user_id}/learning_history",
+            headers=be_integration_headers(),
+            timeout=30,
+        )
         if response.status_code == 200:
-            return response.json().get("learning_history", {})
-        return {}
+            data = response.json().get("learning_history")
+            return data if isinstance(data, list) else []
+        return []
 
     # Initialize the session state for the agent
     if "current_attempt" not in callback_context.state:

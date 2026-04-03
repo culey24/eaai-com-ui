@@ -31,6 +31,8 @@ docker compose -f docker-compose.prod.yml --env-file .env.deploy up -d --build
 
 Lần đầu, Postgres chạy script trong `backend/init/`. Container API chạy `prisma db execute` + `migrate deploy` rồi mới khởi động Express.
 
+**Sau khi pull bản có nhắc việc agent:** migration `20260403140000_agent_user_reminders` tạo bảng mới — không đổi bảng cũ. Nếu entrypoint/production **đã** chạy `prisma migrate deploy` thì không cần thao tác thêm; nếu **không** migrate, các API `…/reminders` và tool Reminder trên chatbot Python sẽ lỗi khi ghi/đọc DB (các phần còn lại của app vẫn chạy). Chi tiết: [AGENT_ASSISTANT.md](./AGENT_ASSISTANT.md).
+
 ### 3. HTTPS và tên miền (khuyến nghị production)
 
 Đặt reverse proxy (Caddy, Nginx, Traefik) phía trước:
@@ -57,7 +59,12 @@ Trên API, đặt `TRUST_PROXY=1` nếu TLS kết thúc tại proxy.
 
   Nếu database đã có schema từ script SQL giống `backend/init` (không rỗng) và gặp lỗi migrate, xem [README](../README.md) phần baseline: `prisma db execute` + `migrate resolve` một lần.
 
-- **Biến môi trường**: `DATABASE_URL`, `JWT_SECRET`, `PORT`, tuỳ chọn `JWT_EXPIRES_IN`, `CORS_ORIGINS`, `TRUST_PROXY`, và `OPENROUTER_*` nếu bật Gemini cho IS-3 / `human-chat` (xem mục OpenRouter ở trên).
+- **Biến môi trường**: `DATABASE_URL`, `JWT_SECRET`, `PORT`, tuỳ chọn `JWT_EXPIRES_IN`, `CORS_ORIGINS`, `TRUST_PROXY`, và `OPENROUTER_*` nếu bật Gemini cho IS-3 / `human-chat` (xem mục OpenRouter ở trên). Tuỳ chọn **`AGENT_INTEGRATION_SECRET`**: nếu đặt, mọi request từ **`agent-assistant`** (Python) tới route `agentIntegration` phải gửi header `x-agent-integration-secret` trùng giá trị.
+
+### Agent-assistant / Ingestor (tuỳ chọn, service riêng)
+
+- Stack trong **`agent-assistant/`**: xem [AGENT_ASSISTANT.md](./AGENT_ASSISTANT.md). Backend cần **`AGENTIC_CHATBOT_BASE_URL`** (và tuỳ chọn token Cloud Run) nếu dùng chat IS-1 qua chatbot này.
+- **Ingestor** dùng cùng **`DATABASE_URL`**; triển khai thêm process/container nếu cần nhập liệu `majors`/`subjects` bằng file/crawl — không bắt buộc cho SPA mặc định.
 
 - **Railway / DB rỗng (P3009):** Entrypoint đã `migrate resolve --rolled-back` cho migration `journal_extracted_text` lỗi cũ; migration đó chỉ thêm cột khi bảng đã tồn tại. Migration **`journal_periods_and_uploads`** tạo đủ `journal_periods` + `journal_uploads` và seed đợt `default` — không bắt buộc chạy `backend/init` trên hosting. Nếu vẫn kẹt: `npx prisma migrate resolve --rolled-back 20260325180000_journal_extracted_text` rồi `npx prisma migrate deploy`.
 

@@ -16,15 +16,20 @@ Xem `.env.example`. Quan trọng:
 
 ## Chạy local (hai terminal)
 
+Dùng **virtualenv** và gọi `adk` từ trong venv để tránh trùng tên: trên một số máy lệnh `adk` toàn cục là **công cụ khác** (`adk --help` chỉ thấy `start` / `config` — đó không phải Google ADK). Google ADK đến từ gói `google-adk` trong `requirements.txt`.
+
 ```bash
 cd agent-assistant
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 export PYTHONPATH="$PWD"
 pip install -r requirements.txt
 
-# Terminal 1 — ADK
-adk web --host 0.0.0.0 --port 8000 agents
+# Terminal 1 — ADK (dùng đúng binary trong venv)
+./.venv/bin/adk web --host 0.0.0.0 --port 8000 agents
 
-# Terminal 2 — chatbot (gọi agent ở 8000)
+# Terminal 2 — chatbot (gọi agent ở 8000); kích hoạt cùng venv nếu cần
+source .venv/bin/activate
 export AGENT_SERVER_HOST=127.0.0.1
 export AGENT_SERVER_PORT=8000
 python -m uvicorn chatbot_server.server:app --host 0.0.0.0 --port 8003

@@ -23,6 +23,8 @@ from google.genai.errors import APIError as GeminiAPIError
 from utils.types import timestamp_to_datetime, clean_llm_json
 from utils.service_urls import get_agent_server_base_url, get_be_server_base_url
 from utils.llm_provider import chat_completion_text, use_openrouter
+from utils.be_integration import be_integration_headers
+from utils.upload_paths import uploaded_data_dir
 
 load_dotenv()
 logging.basicConfig(
@@ -68,7 +70,7 @@ DATA_FOLDER.mkdir(parents=True, exist_ok=True)
 EVALUATION_DIR = DATA_FOLDER / "eval_data"
 EVALUATION_DIR.mkdir(parents=True, exist_ok=True)
 
-APP_NAME = "agents"
+APP_NAME = (os.getenv("ADK_APP_NAME") or "agents").strip() or "agents"
 MAX_RETRIES = 5
 
 
@@ -97,9 +99,10 @@ async def db_save_session(user_id: str):
     # JSON body must use primitives; uuid.UUID is not JSON-serializable for httpx.
     payload = {"user_id": user_id, "session_id": session_id}
 
+    headers = be_integration_headers()
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(url, json=payload, timeout=10.0)
+            response = await client.post(url, json=payload, timeout=10.0, headers=headers)
             if response.status_code == 201:
                 logger.info(f"Successfully created session for user {user_id}")
                 return session_id
@@ -118,9 +121,10 @@ async def db_update_session_status(session_id: str, status: str):
         "new_status": status
     }
 
+    headers = be_integration_headers()
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(url, json=payload, timeout=10.0)
+            response = await client.post(url, json=payload, timeout=10.0, headers=headers)
             if response.status_code == 201:
                 logger.info(f"Successfully updated session {session_id} to {status}")
                 return True
@@ -134,9 +138,10 @@ async def db_update_session_status(session_id: str, status: str):
 
 async def db_get_user_role(user_id: str) -> str:
     url = f"{BE_SERVER}/users/{user_id}/role"
+    headers = be_integration_headers()
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(url, timeout=5.0)
+            response = await client.get(url, timeout=5.0, headers=headers)
             if response.status_code == 200:
                 data = response.json()
                 return data.get("user_role", "user")
@@ -162,9 +167,10 @@ async def db_save_message(
         "tokens_count": tokens_count
     }
 
+    headers = be_integration_headers()
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(url, json=payload, timeout=10.0)
+            response = await client.post(url, json=payload, timeout=10.0, headers=headers)
             if response.status_code == 201:
                 logger.info(f"Message saved: {role} for session {session_id}")
                 return True
@@ -177,6 +183,45 @@ async def db_save_message(
 
 
 # =============================================================================================== #
+
+
+@app.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    user_id: str = Form(..., description="User ID."),
+    session_id: str = Form(..., description="Session ID (UUID phiên agent)."),
+):
+    """
+    Lưu file upload: `{session_id}_{tên_gốc}{đuôi}` trong data/uploaded_data/.
+    Dùng `file_name` trả về với tool `read_uploaded_data_file` của agent.
+    """
+    try:
+        original_path = Path(file.filename or "unnamed")
+        original_name = original_path.stem
+        extension = original_path.suffix
+        new_filename = f"{session_id}_{original_name}{extension}"
+        save_path = uploaded_data_dir() / new_filename
+
+        with open(save_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "user_id": user_id,
+                "session_id": session_id,
+                "file_name": new_filename,
+                "message": "File uploaded successfully",
+            },
+        )
+    except Exception as e:
+        logger.error("upload failed: %s", e)
+        return JSONResponse(
+            status_code=500,
+            content={"user_id": user_id, "session_id": session_id, "error": str(e)},
+        )
+    finally:
+        await file.close()
 
 
 @app.get("/health")
@@ -211,6 +256,67 @@ async def create_session(user_id: str, app_name: str = APP_NAME):
 
 @app.get("/users/{user_id}/sessions/{session_id}")
 async def get_session(user_id: str, session_id: str, app_name: str = APP_NAME):
+    """Ưu tiên PostgreSQL (agent_session_messages); fallback ADK khi không có bản ghi / lỗi."""
+    be_url = f"{BE_SERVER}/sessions/{session_id}/conversations"
+    headers = be_integration_headers()
+    try:
+        async with httpx.AsyncClient() as client:
+            be_resp = await client.get(be_url, headers=headers, timeout=30.0)
+        if be_resp.status_code == 401:
+            logger.error("Backend agent integration 401 — kiểm tra AGENT_INTEGRATION_SECRET")
+            return JSONResponse(
+                status_code=502,
+                content={
+                    "user_id": user_id,
+                    "session_id": session_id,
+                    "error": "Backend integration unauthorized",
+                },
+            )
+        if be_resp.status_code == 200:
+            payload = be_resp.json()
+            owner = payload.get("user_id")
+            if owner and owner != user_id:
+                logger.warning(
+                    "session %s thuộc user_id=%s, path user_id=%s",
+                    session_id,
+                    owner,
+                    user_id,
+                )
+            rows = payload.get("data") or []
+            conversations = []
+            events = []
+            for conv in rows:
+                ts_raw = conv.get("created_at")
+                conversations.append({
+                    "conversation_id": conv.get("conversation_id"),
+                    "text": conv.get("content"),
+                    "role": conv.get("chat_role"),
+                    "files": conv.get("files"),
+                    "dynamic_profile": conv.get("dynamic_profile"),
+                    "timestamp": ts_raw,
+                })
+                events.append({
+                    "text": conv.get("content") or "",
+                    "role": conv.get("chat_role"),
+                    "timestamp": timestamp_to_datetime(ts_raw),
+                })
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "user_id": user_id,
+                    "session_id": session_id,
+                    "events": events,
+                    "conversations": conversations,
+                    "source": "database",
+                },
+            )
+        if be_resp.status_code != 404:
+            logger.warning(
+                "GET %s → %s %s", be_url, be_resp.status_code, be_resp.text[:500]
+            )
+    except Exception as e:
+        logger.warning("Đọc session từ BE lỗi: %s", e)
+
     url = f"{AGENT_SERVER}/apps/{app_name}/users/{user_id}/sessions/{session_id}"
     response = requests.get(url, timeout=60)
     if response.status_code == 200:
@@ -232,7 +338,8 @@ async def get_session(user_id: str, session_id: str, app_name: str = APP_NAME):
                 content={
                     "user_id": user_id,
                     "session_id": session_id,
-                    "events": list_event
+                    "events": list_event,
+                    "source": "adk",
                 }
             )
 
@@ -242,7 +349,8 @@ async def get_session(user_id: str, session_id: str, app_name: str = APP_NAME):
                 content={
                     "user_id": user_id,
                     "session_id": session_id,
-                    "events": []
+                    "events": [],
+                    "source": "adk",
                 }
             )
     else:
@@ -251,7 +359,8 @@ async def get_session(user_id: str, session_id: str, app_name: str = APP_NAME):
             content={
                 "user_id": user_id,
                 "session_id": session_id,
-                "error": "Failed to get session"
+                "error": "Failed to get session",
+                "source": "adk",
             }
         )
 

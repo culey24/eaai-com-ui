@@ -219,6 +219,12 @@
     "confirmDelete": "Delete this account? This cannot be undone.",
     "autoMode": "Auto mode (first come first served)",
     "messageCount": "{count} messages",
+    "chatJournal": {
+      "submission": "Submission round",
+      "submittedFile": "Submitted file",
+      "serverPeriod": "Server-managed period ({id}…)",
+      "noSubmissionLink": "Not linked to a managed submission"
+    },
     "classWithCode": "Class {code}",
     "surveys": {
       "title": "Survey results",

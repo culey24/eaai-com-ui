@@ -22,6 +22,32 @@ function normalizeSubmission(s) {
   return { ...s, endsAt, startsAt, deadline: endsAt }
 }
 
+/** Phản hồi GET /api/journal/periods → submission UI */
+function mapApiPeriodToSubmission(p) {
+  const startsAt = Date.parse(p.startsAt)
+  const endsAt = Date.parse(p.endsAt)
+  const createdAt = Number.isFinite(Date.parse(p.createdAt)) ? Date.parse(p.createdAt) : Date.now()
+  if (!Number.isFinite(startsAt) || !Number.isFinite(endsAt)) {
+    const now = Date.now()
+    return normalizeSubmission({
+      id: p.periodId,
+      title: p.title ?? '',
+      description: p.description ?? '',
+      startsAt: now,
+      endsAt: now + 30 * 24 * 60 * 60 * 1000,
+      createdAt,
+    })
+  }
+  return normalizeSubmission({
+    id: p.periodId,
+    title: p.title ?? '',
+    description: p.description ?? '',
+    startsAt,
+    endsAt,
+    createdAt,
+  })
+}
+
 function loadSubmissions() {
   const list = loadJson(SUBMISSIONS_STORAGE_KEY, [])
   if (list.length === 0) {
@@ -48,6 +74,34 @@ export function JournalProvider({ children }) {
   const { apiToken, user } = useAuth()
   const [submissions, setSubmissions] = useState(loadSubmissions)
   const [journals, setJournals] = useState(loadJournals)
+
+  const loadPeriodsFromApi = useCallback(async () => {
+    if (!apiToken) return null
+    const r = await fetch(`${API_BASE}/api/journal/periods`, {
+      headers: { Authorization: `Bearer ${apiToken}` },
+    })
+    if (!r.ok) return null
+    const data = await r.json().catch(() => ({}))
+    const periods = data.periods
+    if (!Array.isArray(periods)) return null
+    return periods.map(mapApiPeriodToSubmission).sort((a, b) => a.endsAt - b.endsAt)
+  }, [apiToken])
+
+  /** Đăng nhập: lấy đợt từ server; đăng xuất: trả localStorage */
+  useEffect(() => {
+    if (!apiToken) {
+      setSubmissions(loadSubmissions())
+      return
+    }
+    let cancelled = false
+    loadPeriodsFromApi().then((mapped) => {
+      if (cancelled || !mapped) return
+      setSubmissions(mapped)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [apiToken, loadPeriodsFromApi])
 
   useEffect(() => {
     if (!apiToken || user?.role !== ROLES.LEARNER || !user?.backendUserId || !user?.stableId) return
@@ -147,56 +201,133 @@ export function JournalProvider({ children }) {
 
   const getSubmissions = useCallback(() => submissions, [submissions])
 
-  const addSubmission = useCallback((title, description, startsAt, endsAt) => {
-    const id = `sub-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    const start = new Date(startsAt).getTime()
-    const end = new Date(endsAt).getTime()
-    const sub = normalizeSubmission({
-      id,
-      title,
-      description: description || '',
-      startsAt: start,
-      endsAt: end,
-      createdAt: Date.now(),
-    })
-    setSubmissions((prev) => [...prev, sub].sort((a, b) => a.endsAt - b.endsAt))
-    return sub
-  }, [])
+  const addSubmission = useCallback(
+    async (title, description, startsAt, endsAt) => {
+      const id = `sub-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const start = new Date(startsAt).getTime()
+      const end = new Date(endsAt).getTime()
+      const sub = normalizeSubmission({
+        id,
+        title,
+        description: description || '',
+        startsAt: start,
+        endsAt: end,
+        createdAt: Date.now(),
+      })
 
-  const updateSubmission = useCallback((id, updates) => {
-    setSubmissions((prev) =>
-      prev
-        .map((s) => {
-          if (s.id !== id) return s
-          const merged = { ...s, ...updates }
-          if (updates.startsAt !== undefined) {
-            merged.startsAt =
-              typeof updates.startsAt === 'number' ? updates.startsAt : new Date(updates.startsAt).getTime()
-          }
-          if (updates.endsAt !== undefined) {
-            merged.endsAt =
-              typeof updates.endsAt === 'number' ? updates.endsAt : new Date(updates.endsAt).getTime()
-          }
-          if (updates.deadline !== undefined) {
-            merged.endsAt =
-              typeof updates.deadline === 'number' ? updates.deadline : new Date(updates.deadline).getTime()
-          }
-          return normalizeSubmission(merged)
+      if (apiToken && user?.role === ROLES.ADMIN) {
+        const res = await fetch(`${API_BASE}/api/admin/journal-periods`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiToken}`,
+          },
+          body: JSON.stringify({
+            periodId: sub.id,
+            title: sub.title,
+            description: sub.description,
+            startsAt: sub.startsAt,
+            endsAt: sub.endsAt,
+          }),
         })
-        .sort((a, b) => a.endsAt - b.endsAt)
-    )
-  }, [])
-
-  const deleteSubmission = useCallback((id) => {
-    setSubmissions((prev) => prev.filter((s) => s.id !== id))
-    setJournals((prev) => {
-      const next = {}
-      for (const [userId, entries] of Object.entries(prev)) {
-        next[userId] = (entries || []).filter((j) => j.submissionId !== id)
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          throw new Error(data.error || data.message || `HTTP ${res.status}`)
+        }
+        const mapped = await loadPeriodsFromApi()
+        if (mapped) setSubmissions(mapped)
+        return mapped?.find((s) => s.id === sub.id) ?? sub
       }
-      return next
-    })
-  }, [])
+
+      setSubmissions((prev) => [...prev, sub].sort((a, b) => a.endsAt - b.endsAt))
+      return sub
+    },
+    [apiToken, user?.role, loadPeriodsFromApi]
+  )
+
+  const updateSubmission = useCallback(
+    async (id, updates) => {
+      let merged = null
+      setSubmissions((prev) => {
+        const next = prev
+          .map((s) => {
+            if (s.id !== id) return s
+            const u = { ...s, ...updates }
+            if (updates.startsAt !== undefined) {
+              u.startsAt =
+                typeof updates.startsAt === 'number'
+                  ? updates.startsAt
+                  : new Date(updates.startsAt).getTime()
+            }
+            if (updates.endsAt !== undefined) {
+              u.endsAt =
+                typeof updates.endsAt === 'number' ? updates.endsAt : new Date(updates.endsAt).getTime()
+            }
+            if (updates.deadline !== undefined) {
+              u.endsAt =
+                typeof updates.deadline === 'number' ? updates.deadline : new Date(updates.deadline).getTime()
+            }
+            merged = normalizeSubmission(u)
+            return merged
+          })
+          .sort((a, b) => a.endsAt - b.endsAt)
+        return next
+      })
+
+      if (!(apiToken && user?.role === ROLES.ADMIN) || !merged) return
+
+      const res = await fetch(`${API_BASE}/api/admin/journal-periods`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiToken}`,
+        },
+        body: JSON.stringify({
+          periodId: merged.id,
+          title: merged.title,
+          description: merged.description,
+          startsAt: merged.startsAt,
+          endsAt: merged.endsAt,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        const rollback = await loadPeriodsFromApi()
+        if (rollback) setSubmissions(rollback)
+        throw new Error(data.error || data.message || `HTTP ${res.status}`)
+      }
+      const mapped = await loadPeriodsFromApi()
+      if (mapped) setSubmissions(mapped)
+    },
+    [apiToken, user?.role, loadPeriodsFromApi]
+  )
+
+  const deleteSubmission = useCallback(
+    async (id) => {
+      if (apiToken && user?.role === ROLES.ADMIN) {
+        const res = await fetch(
+          `${API_BASE}/api/admin/journal-periods/${encodeURIComponent(id)}`,
+          { method: 'DELETE', headers: { Authorization: `Bearer ${apiToken}` } }
+        )
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          throw new Error(data.error || data.message || `HTTP ${res.status}`)
+        }
+        const mapped = await loadPeriodsFromApi()
+        if (mapped) setSubmissions(mapped)
+      } else {
+        setSubmissions((prev) => prev.filter((s) => s.id !== id))
+      }
+      setJournals((prev) => {
+        const next = {}
+        for (const [userId, entries] of Object.entries(prev)) {
+          next[userId] = (entries || []).filter((j) => j.submissionId !== id)
+        }
+        return next
+      })
+    },
+    [apiToken, user?.role, loadPeriodsFromApi]
+  )
 
   const getJournalsForUser = useCallback(
     (userId, submissionId = null) => {

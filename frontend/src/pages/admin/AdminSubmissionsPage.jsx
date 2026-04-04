@@ -34,35 +34,48 @@ export default function AdminSubmissionsPage() {
   const isOpenWindow = (sub) => sub.startsAt <= now && sub.endsAt > now
   const isScheduled = (sub) => sub.startsAt > now
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!formTitle.trim() || !formStartsAt || !formEndsAt) return
     if (new Date(formStartsAt).getTime() >= new Date(formEndsAt).getTime()) return
-    addSubmission(formTitle.trim(), formDescription.trim(), formStartsAt, formEndsAt)
-    setFormTitle('')
-    setFormDescription('')
-    setFormStartsAt('')
-    setFormEndsAt('')
-    setShowForm(false)
+    try {
+      await addSubmission(formTitle.trim(), formDescription.trim(), formStartsAt, formEndsAt)
+      setFormTitle('')
+      setFormDescription('')
+      setFormStartsAt('')
+      setFormEndsAt('')
+      setShowForm(false)
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e))
+    }
   }
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!editingId || !formTitle.trim() || !formStartsAt || !formEndsAt) return
     if (new Date(formStartsAt).getTime() >= new Date(formEndsAt).getTime()) return
-    updateSubmission(editingId, {
-      title: formTitle.trim(),
-      description: formDescription.trim(),
-      startsAt: new Date(formStartsAt).getTime(),
-      endsAt: new Date(formEndsAt).getTime(),
-    })
-    setEditingId(null)
-    setFormTitle('')
-    setFormDescription('')
-    setFormStartsAt('')
-    setFormEndsAt('')
+    try {
+      await updateSubmission(editingId, {
+        title: formTitle.trim(),
+        description: formDescription.trim(),
+        startsAt: new Date(formStartsAt).getTime(),
+        endsAt: new Date(formEndsAt).getTime(),
+      })
+      setEditingId(null)
+      setFormTitle('')
+      setFormDescription('')
+      setFormStartsAt('')
+      setFormEndsAt('')
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e))
+    }
   }
 
-  const handleDelete = (id) => {
-    if (window.confirm(t('admin.submissions.confirmDelete'))) deleteSubmission(id)
+  const handleDelete = async (id) => {
+    if (!window.confirm(t('admin.submissions.confirmDelete'))) return
+    try {
+      await deleteSubmission(id)
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e))
+    }
   }
 
   const startEdit = (sub) => {

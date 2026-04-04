@@ -9,6 +9,8 @@ import journalRoutes from './routes/journal.js'
 import adminUsersRoutes from './routes/adminUsers.js'
 import adminSurveySubmissionsRoutes from './routes/adminSurveySubmissions.js'
 import adminSupporterAssignmentsRoutes from './routes/adminSupporterAssignments.js'
+import adminJournalStatsRoutes from './routes/adminJournalStats.js'
+import adminJournalPeriodsRoutes from './routes/adminJournalPeriods.js'
 import supporterRoutes from './routes/supporter.js'
 import meRoutes from './routes/me.js'
 import agentIntegrationRoutes from './routes/agentIntegration.js'
@@ -64,6 +66,8 @@ export function createApp() {
   app.use('/api/admin', adminUsersRoutes)
   app.use('/api/admin', adminSurveySubmissionsRoutes)
   app.use('/api/admin', adminSupporterAssignmentsRoutes)
+  app.use('/api/admin', adminJournalStatsRoutes)
+  app.use('/api/admin', adminJournalPeriodsRoutes)
   app.use('/api/supporter', supporterRoutes)
   app.use('/api/me', meRoutes)
 

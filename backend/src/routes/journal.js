@@ -11,6 +11,36 @@ import { isSupporterUserRole } from '../lib/roles.js'
 const router = Router()
 
 /**
+ * GET /api/journal/periods
+ * Mọi user đã đăng nhập: danh sách đợt nộp (đồng bộ UI với journal_periods).
+ */
+router.get('/periods', authMiddleware, async (req, res) => {
+  try {
+    const rows = await prisma.journalPeriod.findMany({
+      orderBy: { endsAt: 'asc' },
+    })
+    return res.status(200).json(
+      jsonSafe({
+        periods: rows.map((p) => ({
+          periodId: p.periodId,
+          title: p.title,
+          description: p.description,
+          startsAt: p.startsAt.toISOString(),
+          endsAt: p.endsAt.toISOString(),
+          createdAt: p.createdAt.toISOString(),
+        })),
+      })
+    )
+  } catch (err) {
+    console.error('[journal GET /periods]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
  * GET /api/journal/me
  * Learner: danh sách bản nộp của chính mình.
  */

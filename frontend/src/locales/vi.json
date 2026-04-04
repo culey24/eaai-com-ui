@@ -302,11 +302,13 @@
       "descriptionPlaceholder": "Mô tả chi tiết về đợt nộp này...",
       "startsAtLabel": "Bắt đầu lúc",
       "endsAtLabel": "Kết thúc lúc",
-      "confirmDelete": "Xóa submission này? Dữ liệu đã nộp sẽ bị xóa.",
+      "confirmDelete": "Xóa đợt submission này? Đợt đã có bản nộp sẽ không xóa được (cần xóa nộp trước hoặc giữ đợt).",
       "active": "Đang mở",
       "scheduled": "Chưa mở",
       "ended": "Đã kết thúc",
-      "noSubmissions": "Chưa có submission nào"
+      "noSubmissions": "Chưa có submission nào",
+      "statsLoading": "Đang tải thống kê nộp từ máy chủ…",
+      "noClassBreakdown": "Chưa có dòng theo lớp: học viên có thể chưa được gán lớp trên CSDL, hoặc chưa có người học."
     }
   },
   "pretest": {

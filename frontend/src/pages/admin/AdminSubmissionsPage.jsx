@@ -1,15 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, FileText, Plus, Pencil, Trash2, Calendar } from 'lucide-react'
 import { useJournal } from '../../context/JournalContext'
 import { useLanguage } from '../../context/LanguageContext'
-import { useAllUsers } from '../../hooks/useAllUsers'
-import { VALID_CLASS_CODES } from '../../constants/roles'
+import { useAuth } from '../../context/AuthContext'
+import { API_BASE } from '../../config/api'
+import { ROLES } from '../../constants/roles'
 
 export default function AdminSubmissionsPage() {
   const { t } = useLanguage()
-  const { getSubmissions, addSubmission, updateSubmission, deleteSubmission, getSubmissionStats } = useJournal()
-  const { getByClass } = useAllUsers()
+  const { getSubmissions, addSubmission, updateSubmission, deleteSubmission } = useJournal()
+  const { apiToken, user } = useAuth()
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [formTitle, setFormTitle] = useState('')
@@ -18,14 +19,73 @@ export default function AdminSubmissionsPage() {
   const [formEndsAt, setFormEndsAt] = useState('')
 
   const submissions = getSubmissions()
+  const submissionIdsKey = useMemo(() => submissions.map((s) => s.id).join('|'), [submissions])
 
-  const getStatsByClass = (submissionId) =>
-    VALID_CLASS_CODES.map((classCode) => {
-      const learners = getByClass(classCode)
-      const userIds = learners.map((l) => l.id)
-      const stats = getSubmissionStats(userIds, submissionId)
-      return { classCode, ...stats }
-    }).filter((s) => s.total > 0)
+  /** periodId → { loading_, error, submitted, total, byClass } từ journal_uploads + users */
+  const [periodServerStats, setPeriodServerStats] = useState({})
+
+  useEffect(() => {
+    if (!apiToken || user?.role !== ROLES.ADMIN) {
+      setPeriodServerStats({})
+      return
+    }
+    const ids = submissions.map((s) => s.id)
+    if (ids.length === 0) {
+      setPeriodServerStats({})
+      return
+    }
+    let cancelled = false
+    setPeriodServerStats((prev) => {
+      const next = { ...prev }
+      for (const id of ids) {
+        next[id] = { loading: true, error: null, submitted: 0, total: 0, byClass: [] }
+      }
+      return next
+    })
+    Promise.all(
+      ids.map(async (periodId) => {
+        try {
+          const r = await fetch(
+            `${API_BASE}/api/admin/journal-upload-stats?periodId=${encodeURIComponent(periodId)}`,
+            { headers: { Authorization: `Bearer ${apiToken}` } }
+          )
+          const data = await r.json().catch(() => ({}))
+          if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+          return {
+            periodId,
+            payload: {
+              loading: false,
+              error: null,
+              submitted: Number(data.submitted) || 0,
+              total: Number(data.total) || 0,
+              byClass: Array.isArray(data.byClass) ? data.byClass : [],
+            },
+          }
+        } catch (e) {
+          return {
+            periodId,
+            payload: {
+              loading: false,
+              error: e instanceof Error ? e.message : String(e),
+              submitted: 0,
+              total: 0,
+              byClass: [],
+            },
+          }
+        }
+      })
+    ).then((results) => {
+      if (cancelled) return
+      const next = {}
+      for (const { periodId, payload } of results) {
+        next[periodId] = payload
+      }
+      setPeriodServerStats(next)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [apiToken, user?.role, submissionIdsKey])
 
   const formatTs = (ts) =>
     new Date(ts).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
@@ -215,7 +275,11 @@ export default function AdminSubmissionsPage() {
           ) : (
             <div className="space-y-4">
               {submissions.map((sub) => {
-                const statsByClass = getStatsByClass(sub.id)
+                const srv = periodServerStats[sub.id]
+                const statsByClass =
+                  srv && !srv.loading && !srv.error && Array.isArray(srv.byClass)
+                    ? srv.byClass.filter((row) => row.total > 0)
+                    : []
                 const open = isOpenWindow(sub)
                 const scheduled = isScheduled(sub)
                 const isEditing = editingId === sub.id
@@ -300,13 +364,27 @@ export default function AdminSubmissionsPage() {
                                   : t('admin.submissions.ended')}
                             </span>
                             <div className="mt-2 space-y-1">
-                              {statsByClass.map(({ classCode, submitted, total }) => (
-                                <p key={classCode} className="text-sm text-slate-500 dark:text-slate-400">
-                                  {t('admin.classLabel', { code: classCode })}: {t('admin.journalSubmitted', { submitted, total })}
-                                </p>
-                              ))}
-                              {statsByClass.length === 0 && (
-                                <p className="text-sm text-slate-500 dark:text-slate-400">{t('admin.noMembers')}</p>
+                              {!srv || srv.loading ? (
+                                <p className="text-sm text-slate-500 dark:text-slate-400">{t('admin.submissions.statsLoading')}</p>
+                              ) : srv.error ? (
+                                <p className="text-sm text-red-600 dark:text-red-400">{srv.error}</p>
+                              ) : (
+                                <>
+                                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                                    {t('admin.membersSubmitted', { submitted: srv.submitted, total: srv.total })}
+                                  </p>
+                                  {statsByClass.map(({ classCode, submitted, total }) => (
+                                    <p key={classCode} className="text-sm text-slate-500 dark:text-slate-400 pl-0">
+                                      {t('admin.classLabel', { code: classCode })}:{' '}
+                                      {t('admin.journalSubmitted', { submitted, total })}
+                                    </p>
+                                  ))}
+                                  {statsByClass.length === 0 && (
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                                      {srv.total === 0 ? t('admin.noMembers') : t('admin.submissions.noClassBreakdown')}
+                                    </p>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>

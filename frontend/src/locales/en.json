@@ -302,11 +302,13 @@
       "descriptionPlaceholder": "Describe this submission round...",
       "startsAtLabel": "Starts at",
       "endsAtLabel": "Ends at",
-      "confirmDelete": "Delete this submission? Submitted data will be removed.",
+      "confirmDelete": "Delete this submission period? Periods with uploads cannot be removed (delete uploads first or keep the period).",
       "active": "Open",
       "scheduled": "Scheduled",
       "ended": "Ended",
-      "noSubmissions": "No submissions yet"
+      "noSubmissions": "No submissions yet",
+      "statsLoading": "Loading submission stats from server…",
+      "noClassBreakdown": "No per-class row: students may have no class set in the database, or there are no learners yet."
     }
   },
   "pretest": {

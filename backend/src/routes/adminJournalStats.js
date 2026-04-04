@@ -1,13 +1,16 @@
+import { Prisma } from '@prisma/client'
 import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
+import { getStatsExcludedUsernamesNormalized } from '../lib/statsExcludedUsernames.js'
 
 const router = Router()
 
 /**
  * GET /api/admin/journal-upload-stats?periodId=...
  * Admin: số học viên (role student) đã có bản nộp journal trên server cho period_id.
+ * Không tính username trong blacklist (stats_analytics_exclusions).
  */
 router.get('/journal-upload-stats', authMiddleware, async (req, res) => {
   try {
@@ -21,29 +24,47 @@ router.get('/journal-upload-stats', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Thiếu periodId' })
     }
 
+    const excluded = await getStatsExcludedUsernamesNormalized(prisma)
+    const excludeUsernameSql =
+      excluded.length === 0
+        ? Prisma.empty
+        : Prisma.sql`AND LOWER(u.username) NOT IN (${Prisma.join(excluded)})`
+
     const countRows = await prisma.$queryRaw`
-      SELECT COUNT(DISTINCT user_id)::int AS c
-      FROM journal_uploads
-      WHERE period_id = ${periodId}
+      SELECT COUNT(DISTINCT ju.user_id)::int AS c
+      FROM journal_uploads ju
+      INNER JOIN users u ON u.user_id = ju.user_id AND u.user_role = 'student'
+      WHERE ju.period_id = ${periodId}
+      ${excludeUsernameSql}
     `
     const submitted =
       Array.isArray(countRows) && countRows[0]?.c != null ? Number(countRows[0].c) : 0
 
-    const total = await prisma.user.count({
-      where: { userRole: 'student' },
-    })
+    const totalWhere = {
+      userRole: 'student',
+      ...(excluded.length
+        ? {
+            AND: excluded.map((ex) => ({
+              username: { not: { equals: ex, mode: 'insensitive' } },
+            })),
+          }
+        : {}),
+    }
+    const total = await prisma.user.count({ where: totalWhere })
 
     const totalByClassRows = await prisma.$queryRaw`
-      SELECT user_class::text AS "classCode", COUNT(*)::int AS total
-      FROM users
-      WHERE user_role = 'student' AND user_class IS NOT NULL
-      GROUP BY user_class
+      SELECT u.user_class::text AS "classCode", COUNT(*)::int AS total
+      FROM users u
+      WHERE u.user_role = 'student' AND u.user_class IS NOT NULL
+      ${excludeUsernameSql}
+      GROUP BY u.user_class
     `
     const submittedByClassRows = await prisma.$queryRaw`
       SELECT u.user_class::text AS "classCode", COUNT(DISTINCT ju.user_id)::int AS submitted
       FROM journal_uploads ju
       INNER JOIN users u ON u.user_id = ju.user_id AND u.user_role = 'student'
       WHERE ju.period_id = ${periodId} AND u.user_class IS NOT NULL
+      ${excludeUsernameSql}
       GROUP BY u.user_class
     `
 

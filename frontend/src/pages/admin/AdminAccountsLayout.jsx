@@ -46,6 +46,18 @@ export default function AdminAccountsLayout() {
           >
             {t('admin.supportRequests')}
           </NavLink>
+          <NavLink
+            to="/admin/accounts/blacklist"
+            className={({ isActive }) =>
+              `px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-primary text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`
+            }
+          >
+            {t('admin.blacklistTab')}
+          </NavLink>
         </nav>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto">

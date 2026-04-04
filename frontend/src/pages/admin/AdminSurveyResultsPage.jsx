@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ClipboardList, UserX, X } from 'lucide-react'
+import { ArrowLeft, ClipboardList } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
@@ -10,34 +10,6 @@ import { aggregateSurveySubmissions, SURVEY_SECTION_A_KEYS } from '../../lib/sur
 import { PRETEST_TOPICS } from '../../data/pretest/pretestTopics'
 import { SECTION_C_ITEMS } from '../../data/pretest/sectionCItems'
 import { getSectionBQuestions } from '../../data/pretest/sectionB'
-
-const SURVEY_USERNAME_BLACKLIST_KEY = 'eeai_admin_survey_username_blacklist'
-
-function normalizeSurveyUsername(s) {
-  return String(s ?? '')
-    .trim()
-    .toLowerCase()
-}
-
-function readBlacklistFromStorage() {
-  try {
-    const raw = localStorage.getItem(SURVEY_USERNAME_BLACKLIST_KEY)
-    if (!raw) return []
-    const p = JSON.parse(raw)
-    if (!Array.isArray(p)) return []
-    return [...new Set(p.map((x) => String(x ?? '').trim()).filter(Boolean))]
-  } catch {
-    return []
-  }
-}
-
-function writeBlacklistToStorage(list) {
-  try {
-    localStorage.setItem(SURVEY_USERNAME_BLACKLIST_KEY, JSON.stringify(list))
-  } catch {
-    /* ignore */
-  }
-}
 
 function topicLabel(id, lang) {
   const x = PRETEST_TOPICS.find((p) => p.id === id)
@@ -83,35 +55,6 @@ export default function AdminSurveyResultsPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [blacklist, setBlacklist] = useState(() => readBlacklistFromStorage())
-  const [blacklistInput, setBlacklistInput] = useState('')
-
-  useEffect(() => {
-    writeBlacklistToStorage(blacklist)
-  }, [blacklist])
-
-  const blacklistNormSet = useMemo(
-    () => new Set(blacklist.map((u) => normalizeSurveyUsername(u))),
-    [blacklist]
-  )
-
-  const submittersInRows = useMemo(() => {
-    const byNorm = new Map()
-    for (const r of rows) {
-      const u = r?.username
-      if (u == null || String(u).trim() === '') continue
-      const n = normalizeSurveyUsername(u)
-      if (!byNorm.has(n)) byNorm.set(n, String(u).trim())
-    }
-    return [...byNorm.entries()]
-      .sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: 'base' }))
-      .map(([norm, display]) => ({ norm, display }))
-  }, [rows])
-
-  const filteredRows = useMemo(
-    () => rows.filter((r) => !blacklistNormSet.has(normalizeSurveyUsername(r?.username))),
-    [rows, blacklistNormSet]
-  )
 
   const fetchList = useCallback(async () => {
     if (!apiToken || user?.role !== ROLES.ADMIN) return
@@ -141,37 +84,7 @@ export default function AdminSurveyResultsPage() {
     void fetchList()
   }, [fetchList])
 
-  const stats = useMemo(() => aggregateSurveySubmissions(filteredRows), [filteredRows])
-
-  const addBlacklistFromInput = () => {
-    const u = blacklistInput.trim()
-    if (!u) return
-    const n = normalizeSurveyUsername(u)
-    if (blacklistNormSet.has(n)) {
-      setBlacklistInput('')
-      return
-    }
-    setBlacklist((prev) => {
-      if (prev.some((x) => normalizeSurveyUsername(x) === n)) return prev
-      return [...prev, u]
-    })
-    setBlacklistInput('')
-  }
-
-  const removeBlacklist = (norm) => {
-    setBlacklist((prev) => prev.filter((x) => normalizeSurveyUsername(x) !== norm))
-  }
-
-  const togglePickerUsername = (display, norm) => {
-    if (blacklistNormSet.has(norm)) {
-      removeBlacklist(norm)
-    } else {
-      setBlacklist((prev) => {
-        if (prev.some((x) => normalizeSurveyUsername(x) === norm)) return prev
-        return [...prev, display]
-      })
-    }
-  }
+  const stats = useMemo(() => aggregateSurveySubmissions(rows), [rows])
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden">
@@ -218,120 +131,12 @@ export default function AdminSurveyResultsPage() {
           </div>
         )}
 
-        {!error && !loading && rows.length > 0 ? (
-          <section className="rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-800/40 p-5 mb-6 max-w-4xl">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-              <UserX className="w-4 h-4 text-primary shrink-0" />
-              {t('admin.surveys.blacklist.title')}
-            </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">{t('admin.surveys.blacklist.hint')}</p>
-
-            <div className="flex flex-wrap gap-2 mb-4 min-h-[2rem]">
-              {blacklist.length === 0 ? (
-                <span className="text-xs text-slate-500 dark:text-slate-500">—</span>
-              ) : (
-                blacklist.map((u) => {
-                  const n = normalizeSurveyUsername(u)
-                  return (
-                    <span
-                      key={n}
-                      className="inline-flex items-center gap-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 pl-2.5 pr-1 py-1 text-xs font-medium"
-                    >
-                      {u}
-                      <button
-                        type="button"
-                        onClick={() => removeBlacklist(n)}
-                        className="p-0.5 rounded-md hover:bg-slate-300/80 dark:hover:bg-slate-600"
-                        aria-label="remove"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </span>
-                  )
-                })
-              )}
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-4">
-              <input
-                type="text"
-                value={blacklistInput}
-                onChange={(e) => setBlacklistInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addBlacklistFromInput()
-                  }
-                }}
-                placeholder={t('admin.surveys.blacklist.addPlaceholder')}
-                className="flex-1 min-w-[10rem] rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100"
-              />
-              <button
-                type="button"
-                onClick={addBlacklistFromInput}
-                className="rounded-xl bg-slate-200 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-100 hover:bg-slate-300 dark:hover:bg-slate-600"
-              >
-                {t('admin.surveys.blacklist.add')}
-              </button>
-              {blacklist.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={() => setBlacklist([])}
-                  className="rounded-xl border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  {t('admin.surveys.blacklist.clearAll')}
-                </button>
-              ) : null}
-            </div>
-
-            <div>
-              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">
-                {t('admin.surveys.blacklist.inDataset')}
-              </p>
-              {submittersInRows.length === 0 ? (
-                <p className="text-xs text-slate-500">{t('admin.surveys.blacklist.noneInDataset')}</p>
-              ) : (
-                <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-600 divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-900/60">
-                  {submittersInRows.map(({ norm, display }) => (
-                    <label
-                      key={norm}
-                      className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={blacklistNormSet.has(norm)}
-                        onChange={() => togglePickerUsername(display, norm)}
-                        className="rounded border-slate-300 dark:border-slate-600"
-                      />
-                      <span className="text-slate-800 dark:text-slate-100">{display}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {rows.length > 0 ? (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 tabular-nums">
-                {t('admin.surveys.blacklist.filteredMeta', {
-                  n: filteredRows.length,
-                  raw: rows.length,
-                  excluded: rows.length - filteredRows.length,
-                })}
-              </p>
-            ) : null}
-          </section>
-        ) : null}
-
         {error ? (
           <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
         ) : loading ? (
           <p className="text-slate-500">{t('common.loading')}</p>
         ) : rows.length === 0 ? (
           <p className="text-slate-500 dark:text-slate-400">{t('admin.surveys.empty')}</p>
-        ) : filteredRows.length === 0 ? (
-          <p className="text-amber-700 dark:text-amber-300 text-sm max-w-4xl">
-            {t('admin.surveys.blacklist.filteredOutAll')}
-          </p>
         ) : (
           <div className="space-y-10 max-w-4xl">
             <p className="text-base font-semibold text-slate-900 dark:text-white">

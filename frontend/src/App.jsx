@@ -24,6 +24,7 @@ import AdminClassesPage from './pages/admin/AdminClassesPage'
 import AdminAccountsLayout from './pages/admin/AdminAccountsLayout'
 import AdminAccountsPage from './pages/admin/AdminAccountsPage'
 import AdminSupportRequestsPage from './pages/admin/AdminSupportRequestsPage'
+import AdminStatsBlacklistPage from './pages/admin/AdminStatsBlacklistPage'
 import AdminSubmissionsPage from './pages/admin/AdminSubmissionsPage'
 import AdminSurveyResultsPage from './pages/admin/AdminSurveyResultsPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
@@ -152,6 +153,7 @@ function AppRoutes() {
         <Route path="accounts" element={<AdminAccountsLayout />}>
           <Route index element={<AdminAccountsPage />} />
           <Route path="support-requests" element={<AdminSupportRequestsPage />} />
+          <Route path="blacklist" element={<AdminStatsBlacklistPage />} />
         </Route>
         <Route path="submissions" element={<AdminSubmissionsPage />} />
         <Route path="surveys" element={<AdminSurveyResultsPage />} />

@@ -100,6 +100,14 @@ CREATE TABLE support_requests (
 
 CREATE INDEX idx_support_requests_status ON support_requests (status, created_at);
 
+-- Loại username khỏi thống kê admin (journal, khảo sát); quản lý qua UI Blacklist.
+CREATE TABLE stats_analytics_exclusions (
+    exclusion_id BIGSERIAL PRIMARY KEY,
+    username_normalized VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by VARCHAR(10) REFERENCES Users(user_id) ON DELETE SET NULL
+);
+
 -- Cấu hình key–value (auto_mode, deadlines, …).
 CREATE TABLE app_settings (
     setting_key VARCHAR(128) PRIMARY KEY,

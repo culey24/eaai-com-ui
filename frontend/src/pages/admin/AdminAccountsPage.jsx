@@ -32,9 +32,11 @@ export default function AdminAccountsPage() {
 
   const filtered = allUsers.filter((u) => {
     const q = (search || '').toLowerCase()
+    const fullNameLc = (u.fullName || '').trim().toLowerCase()
     const matchSearch =
       !q ||
       u.username.toLowerCase().includes(q) ||
+      fullNameLc.includes(q) ||
       u.id.toLowerCase().includes(q)
     const matchRole = !filterRole || u.role === filterRole
     const matchClass = !filterClass || u.classCode === filterClass

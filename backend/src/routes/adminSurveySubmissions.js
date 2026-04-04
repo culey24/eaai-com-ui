@@ -7,6 +7,7 @@ import {
   normalizeSurveyKind,
   SURVEY_KIND_PRETEST,
 } from '../lib/surveyConfig.js'
+import { getStatsExcludedUsernamesNormalized } from '../lib/statsExcludedUsernames.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -32,8 +33,21 @@ router.get('/survey-submissions', async (req, res) => {
       return res.status(400).json({ code: 'INVALID_KIND', error: 'kind không hợp lệ' })
     }
 
+    const excluded = await getStatsExcludedUsernamesNormalized(prisma)
+    const whereSurvey =
+      excluded.length === 0
+        ? { surveyKind: kind }
+        : {
+            surveyKind: kind,
+            AND: excluded.map((ex) => ({
+              user: {
+                username: { not: { equals: ex, mode: 'insensitive' } },
+              },
+            })),
+          }
+
     const rows = await prisma.surveyResponse.findMany({
-      where: { surveyKind: kind },
+      where: whereSurvey,
       include: {
         user: {
           select: {

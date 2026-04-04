@@ -127,4 +127,19 @@ export async function applyLightweightSchemaPatches(prisma) {
       console.warn('[db-patches] users profile cols:', err instanceof Error ? err.message : String(err))
     }
   }
+  const STATS_ANALYTICS_EXCLUSIONS_TABLE = `
+CREATE TABLE IF NOT EXISTS stats_analytics_exclusions (
+    exclusion_id BIGSERIAL PRIMARY KEY,
+    username_normalized VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by VARCHAR(10) REFERENCES users(user_id) ON DELETE SET NULL
+)`
+  try {
+    await prisma.$executeRawUnsafe(STATS_ANALYTICS_EXCLUSIONS_TABLE)
+  } catch (err) {
+    console.warn(
+      '[db-patches] stats_analytics_exclusions:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
 }

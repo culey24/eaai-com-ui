@@ -21,3 +21,14 @@ export const CLASS_TO_MODE = {
 /** Lớp có supporter: IS-2. IS-1 AGENT; IS-3 LLM (Gemini). */
 export const hasSupporterMode = (classCode) =>
   (CLASS_TO_MODE[classCode] || TEACHING_MODES.MANUAL) === TEACHING_MODES.MANUAL
+
+/** Sĩ số lớp dự kiến (lý thuyết) — có thể lệch thực tế; tỉ lệ đăng ký có thể >100%. */
+export const CLASS_THEORETICAL_ROSTER = {
+  'IS-1': 27,
+  'IS-2': 36,
+  'IS-3': 56,
+}
+
+export function getTheoreticalRosterForClass(classCode) {
+  return CLASS_THEORETICAL_ROSTER[classCode] ?? null
+}

@@ -249,6 +249,17 @@
       "noSubmissionLink": "Không gắn đợt nộp trong danh sách quản trị"
     },
     "classWithCode": "Lớp {code}",
+    "classListPage": {
+      "intro": "Sĩ số và journal dưới đây chỉ tính học viên đã đăng ký, sau khi trừ tài khoản trong blacklist thống kê. Sĩ số lý thuyết là ước lượng; tỉ lệ đăng ký có thể trên 100% nếu thực tế vượt dự kiến.",
+      "theoretical": "Sĩ số lý thuyết",
+      "registeredNet": "Đã đăng ký (trừ blacklist)",
+      "registeredGross": "Tổng đăng ký (gồm blacklist)",
+      "participation": "Tỉ lệ đăng ký website",
+      "excludedSection": "Tài khoản blacklist — không tính thống kê ({count})",
+      "badgeExcluded": "Blacklist",
+      "loadExclusionsError": "Không tải danh sách blacklist.",
+      "countUnit": "người"
+    },
     "surveys": {
       "title": "Kết quả khảo sát",
       "intro": "Xem bài nộp của học viên theo loại khảo sát. PRETEST đã dùng; POST-TEST dùng cùng cơ sở dữ liệu (survey_kind) và sẽ hiện ở đây khi bật trên server và thêm luồng phía học viên.",

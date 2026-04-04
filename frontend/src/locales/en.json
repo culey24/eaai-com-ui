@@ -249,6 +249,17 @@
       "noSubmissionLink": "Not linked to a managed submission"
     },
     "classWithCode": "Class {code}",
+    "classListPage": {
+      "intro": "Counts and journal stats below include only enrolled learners, after excluding accounts on the stats blacklist. Theoretical class size is an estimate; registration rate can exceed 100% if enrollment surpasses it.",
+      "theoretical": "Theoretical roster",
+      "registeredNet": "Registered (excl. blacklist)",
+      "registeredGross": "Registered total (incl. blacklist)",
+      "participation": "Website signup rate",
+      "excludedSection": "Stats blacklist — excluded ({count})",
+      "badgeExcluded": "Blacklist",
+      "loadExclusionsError": "Could not load stats blacklist.",
+      "countUnit": "learners"
+    },
     "surveys": {
       "title": "Survey results",
       "intro": "View learner submissions by survey type. PRETEST is live; POST-TEST uses the same storage (survey_kind) and will appear here after you enable it on the server and add the learner flow.",

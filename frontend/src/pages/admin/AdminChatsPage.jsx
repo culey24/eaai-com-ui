@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, MessageSquare, User, Search, FileText } from 'lucide-react'
 import { VALID_CLASS_CODES } from '../../constants/roles'
@@ -7,6 +7,7 @@ import { useAllUsers } from '../../hooks/useAllUsers'
 import { useJournal } from '../../context/JournalContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
+import { API_BASE } from '../../config/api'
 import MessageItem from '../../components/chat/MessageItem'
 import JournalEntriesSidebarList from '../../components/journal/JournalEntriesSidebarList'
 
@@ -23,11 +24,55 @@ export default function AdminChatsPage() {
   const { getJournalsForUser } = useJournal()
   const [selectedUser, setSelectedUser] = useState(null)
   const [search, setSearch] = useState('')
+  const [apiJournals, setApiJournals] = useState({ loaded: false, list: null })
 
   const channelId = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
   const { getMessagesForChannel, remoteConversationId } = useMessages(channelId, {
     adminViewLearnerId: selectedUser?.backendUserId ?? null,
   })
+
+  useEffect(() => {
+    if (!apiToken || !selectedUser?.backendUserId) {
+      setApiJournals({ loaded: false, list: null })
+      return
+    }
+    let cancelled = false
+    fetch(
+      `${API_BASE}/api/journal/by-user/${encodeURIComponent(selectedUser.backendUserId)}`,
+      { headers: { Authorization: `Bearer ${apiToken}` } }
+    )
+      .then(async (r) => {
+        if (!r.ok) return { ok: false }
+        const data = await r.json().catch(() => ({ uploads: [] }))
+        return { ok: true, data }
+      })
+      .then((out) => {
+        if (cancelled) return
+        if (!out.ok) {
+          setApiJournals({ loaded: false, list: null })
+          return
+        }
+        const list = (out.data.uploads || []).map((u) => {
+          const pid = u.period_id != null && u.period_id !== '' ? String(u.period_id) : null
+          return {
+            id: `srv-${u.upload_id}`,
+            uploadId: u.upload_id != null ? String(u.upload_id) : undefined,
+            fileName: u.original_file_name || '—',
+            uploadedAt: u.submitted_at ? new Date(u.submitted_at).getTime() : Date.now(),
+            submissionId: pid ?? undefined,
+            deadlineId: pid ?? undefined,
+            fromServer: true,
+          }
+        })
+        setApiJournals({ loaded: true, list })
+      })
+      .catch(() => {
+        if (!cancelled) setApiJournals({ loaded: false, list: null })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [apiToken, selectedUser?.backendUserId])
 
   const allLearners = getLearners()
   const filteredUsers = search.trim()
@@ -51,8 +96,14 @@ export default function AdminChatsPage() {
         .map((m) => (m.role ? m : { ...m, role: 'user' }))
     : []
   const journalUserKey = selectedUser?.stableId ?? selectedUser?.id
-  const journalsRaw =
+  const journalsLocal =
     selectedUser && journalUserKey ? getJournalsForUser(journalUserKey) : []
+  const journalsRaw =
+    apiJournals.loaded && apiJournals.list
+      ? apiJournals.list
+      : Array.isArray(journalsLocal)
+        ? journalsLocal
+        : []
   const journals = Array.isArray(journalsRaw) ? journalsRaw.filter((j) => j && typeof j === 'object') : []
 
   return (

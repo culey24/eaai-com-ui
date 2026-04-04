@@ -68,13 +68,10 @@ router.get('/me', authMiddleware, async (req, res) => {
 
 /**
  * GET /api/journal/by-user/:learnerId
- * Supporter (support/assistant): xem journal của learner được gán hoặc thuộc lớp quản lý.
+ * Admin: mọi học viên. Supporter: learner được gán hoặc thuộc lớp quản lý.
  */
 router.get('/by-user/:learnerId', authMiddleware, async (req, res) => {
   try {
-    if (!isSupporterUserRole(req.auth.userRole)) {
-      return res.status(403).json({ error: 'Chỉ supporter (role support)' })
-    }
     const learnerId = String(req.params.learnerId || '').trim()
     if (!learnerId) {
       return res.status(400).json({ error: 'Thiếu learnerId' })
@@ -88,20 +85,26 @@ router.get('/by-user/:learnerId', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Không tìm thấy learner' })
     }
 
-    const assign = await prisma.learnerSupporterAssignment.findUnique({
-      where: { learnerId },
-      select: { supporterId: true },
-    })
-    const scopes = await prisma.assistantManagedClass.findMany({
-      where: { supporterId: req.auth.userId },
-      select: { userClass: true },
-    })
-    const allowed = new Set(scopes.map((s) => s.userClass))
-    const okByAssign = assign?.supporterId === req.auth.userId
-    const okByClass =
-      learner.userClass != null && allowed.has(learner.userClass)
-    if (!okByAssign && !okByClass) {
-      return res.status(403).json({ error: 'Không có quyền xem journal của learner này' })
+    if (req.auth.userRole === 'admin') {
+      /* full list */
+    } else if (isSupporterUserRole(req.auth.userRole)) {
+      const assign = await prisma.learnerSupporterAssignment.findUnique({
+        where: { learnerId },
+        select: { supporterId: true },
+      })
+      const scopes = await prisma.assistantManagedClass.findMany({
+        where: { supporterId: req.auth.userId },
+        select: { userClass: true },
+      })
+      const allowed = new Set(scopes.map((s) => s.userClass))
+      const okByAssign = assign?.supporterId === req.auth.userId
+      const okByClass =
+        learner.userClass != null && allowed.has(learner.userClass)
+      if (!okByAssign && !okByClass) {
+        return res.status(403).json({ error: 'Không có quyền xem journal của learner này' })
+      }
+    } else {
+      return res.status(403).json({ error: 'Không có quyền' })
     }
 
     const rows = await prisma.$queryRaw`

@@ -50,7 +50,7 @@ export default function SupporterPicker({
             return next
           })
         }}
-        className="w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm text-left min-w-[140px]"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm text-left min-w-[140px]"
       >
         <span className="truncate">{display}</span>
         <ChevronDown
@@ -59,7 +59,7 @@ export default function SupporterPicker({
         />
       </button>
       {open && (
-        <div className="absolute z-[100] mt-1 left-0 right-0 min-w-[min(100%,280px)] rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-lg overflow-hidden">
+        <div className="absolute z-[100] mt-1.5 left-0 right-0 min-w-[min(100%,320px)] rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-lg overflow-hidden">
           <input
             type="text"
             autoFocus

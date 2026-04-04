@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Search, Plus, Trash2 } from 'lucide-react'
 import { useAllUsers } from '../../hooks/useAllUsers'
 import { useAdmin } from '../../context/AdminContext'
@@ -6,7 +6,6 @@ import { useLanguage } from '../../context/LanguageContext'
 import { ROLES, ROLE_LABELS, VALID_CLASS_CODES } from '../../constants/roles'
 import { CLASS_TO_MODE, hasSupporterMode } from '../../constants/admin'
 import { uiIdToBackendUserId } from '../../lib/userIds'
-import SupporterPicker from '../../components/admin/SupporterPicker'
 
 export default function AdminAccountsPage() {
   const { t } = useLanguage()
@@ -58,6 +57,16 @@ export default function AdminAccountsPage() {
     return false
   })
 
+  const supportersSorted = useMemo(
+    () =>
+      [...supporters].sort((a, b) => {
+        const la = (a.fullName?.trim() || a.username || a.id).toLowerCase()
+        const lb = (b.fullName?.trim() || b.username || b.id).toLowerCase()
+        return la.localeCompare(lb)
+      }),
+    [supporters]
+  )
+
   const handleCreate = () => {
     if (!newUser.username.trim()) return
     if (newUser.role === 'LEARNER' && !VALID_CLASS_CODES.includes(newUser.classCode)) return
@@ -81,18 +90,18 @@ export default function AdminAccountsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
-      <div className="flex-shrink-0 px-8 py-5 flex items-center justify-end">
+    <div className="flex flex-col h-full min-h-0 overflow-y-auto">
+      <div className="flex-shrink-0 px-6 sm:px-10 lg:px-12 py-5 flex items-center justify-end">
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white hover:opacity-90"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:opacity-90 text-sm font-medium"
         >
           <Plus className="w-4 h-4" />
           {t('admin.createAccount')}
         </button>
       </div>
-      <div className="flex-1 px-8 pb-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex-1 px-6 sm:px-10 lg:px-12 pb-10 min-h-0">
+        <div className="w-full max-w-[min(100%,88rem)] mx-auto space-y-8">
           {assignmentSyncError && (
             <div
               className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-200 flex items-center justify-between gap-3"
@@ -109,21 +118,21 @@ export default function AdminAccountsPage() {
             </div>
           )}
           {/* Filters */}
-          <div className="flex flex-wrap gap-4">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-5">
+            <div className="relative flex-1 min-w-[min(100%,240px)]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 placeholder={t('admin.searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-[15px]"
               />
             </div>
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+              className="px-4 py-2.5 min-w-[11rem] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-[15px]"
             >
               <option value="">{t('admin.allRoles')}</option>
               {Object.keys(ROLE_LABELS).map((k) => (
@@ -133,7 +142,7 @@ export default function AdminAccountsPage() {
             <select
               value={filterClass}
               onChange={(e) => setFilterClass(e.target.value)}
-              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+              className="px-4 py-2.5 min-w-[9rem] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-[15px]"
             >
               <option value="">{t('admin.allClasses')}</option>
               {VALID_CLASS_CODES.map((c) => (
@@ -142,99 +151,125 @@ export default function AdminAccountsPage() {
             </select>
           </div>
 
-          {/* Table */}
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-slate-800/50">
-                <tr>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.nameOrId')}</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.fullName')}</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.class')}</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.role')}</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.supporter')}</th>
-                  <th className="text-left px-6 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">{t('admin.actions')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                {filtered.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                    <td className="px-6 py-4">
-                      <span className="font-medium text-slate-800 dark:text-white">{u.username}</span>
-                      <span className="block text-xs text-slate-500">{u.id}</span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                      {u.fullName?.trim() || '—'}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{u.classCode || '-'}</td>
-                    <td className="px-6 py-4">
-                      <select
-                        value={u.role}
-                        onChange={(e) => {
-                          void updateUserRole(u.id, e.target.value)
-                        }}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm"
-                      >
-                        {Object.keys(ROLE_LABELS).map((k) => (
-                          <option key={k} value={k}>{t(`roles.${k.toLowerCase()}`)}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4">
-                      {u.role === 'LEARNER' ? (
-                        hasSupporterMode(u.classCode) ? (
-                          <SupporterPicker
-                            supporters={supporters}
-                            value={assignments[u.id]?.supporterId ?? ''}
-                            noSupporterLabel={t('admin.noSupporter')}
-                            searchPlaceholder={t('admin.supporterSearchPlaceholder')}
-                            noResultsLabel={t('admin.supporterSearchNoResults')}
-                            onChange={async (val) => {
-                              const sup = supporters.find((s) => s.id === val)
-                              if (!val) {
-                                await kickSupporter(u.id, { learnerUser: u })
-                              } else {
-                                const mode = CLASS_TO_MODE[u.classCode] || 'MANUAL'
-                                await assignSupporter(u.id, val, mode, {
-                                  learnerUser: u,
-                                  supporterUser: sup,
-                                })
-                              }
-                            }}
-                            className="min-w-[160px]"
-                          />
-                        ) : (
-                          <span className="text-sm text-slate-500">
-                            {t(`admin.teachingMode.${CLASS_TO_MODE[u.classCode] || 'MANUAL'}`)}
-                          </span>
-                        )
-                      ) : (
-                        <span className="text-sm text-slate-500">—</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 flex items-center gap-2">
-                      <span className="text-sm text-slate-500">{u.source}</span>
-                      {!u.id.startsWith('prov-') && (
-                        <button
-                          onClick={() => {
-                            if (!window.confirm(t('admin.confirmDelete'))) return
-                            void (async () => {
-                              if (assignments[u.id]) {
-                                await kickSupporter(u.id, { learnerUser: u })
-                              }
-                              deleteUser(u.id)
-                            })()
-                          }}
-                          className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          title={t('admin.deleteAccount')}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
+          {/* Table — cuộn ngang trên màn hẹp, cột supporter đủ rộng */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/20 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto overscroll-x-contain">
+              <table className="w-full min-w-[860px] text-[15px]">
+                <thead className="bg-slate-50 dark:bg-slate-800/60">
+                  <tr>
+                    <th className="text-left px-5 sm:px-6 py-4 font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      {t('admin.nameOrId')}
+                    </th>
+                    <th className="text-left px-5 sm:px-6 py-4 font-medium text-slate-600 dark:text-slate-400 min-w-[8rem]">
+                      {t('admin.fullName')}
+                    </th>
+                    <th className="text-left px-5 sm:px-6 py-4 font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      {t('admin.class')}
+                    </th>
+                    <th className="text-left px-5 sm:px-6 py-4 font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      {t('admin.role')}
+                    </th>
+                    <th className="text-left px-5 sm:px-6 py-4 font-medium text-slate-600 dark:text-slate-400 min-w-[14rem] w-[18rem]">
+                      {t('admin.supporter')}
+                    </th>
+                    <th className="text-left px-5 sm:px-6 py-4 font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      {t('admin.actions')}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                  {filtered.map((u) => (
+                    <tr key={u.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 align-top">
+                      <td className="px-5 sm:px-6 py-5 align-top">
+                        <span className="font-medium text-slate-800 dark:text-white">{u.username}</span>
+                        <span className="block text-xs text-slate-500 mt-0.5 break-all">{u.id}</span>
+                      </td>
+                      <td className="px-5 sm:px-6 py-5 text-slate-600 dark:text-slate-400 align-top max-w-[14rem]">
+                        <span className="line-clamp-3 break-words">{u.fullName?.trim() || '—'}</span>
+                      </td>
+                      <td className="px-5 sm:px-6 py-5 text-slate-600 dark:text-slate-400 align-top whitespace-nowrap">
+                        {u.classCode || '-'}
+                      </td>
+                      <td className="px-5 sm:px-6 py-5 align-top">
+                        <select
+                          value={u.role}
+                          onChange={(e) => {
+                            void updateUserRole(u.id, e.target.value)
+                          }}
+                          className="min-w-[10.5rem] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm"
+                        >
+                          {Object.keys(ROLE_LABELS).map((k) => (
+                            <option key={k} value={k}>{t(`roles.${k.toLowerCase()}`)}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-5 sm:px-6 py-5 align-top min-w-[14rem]">
+                        {u.role === 'LEARNER' ? (
+                          hasSupporterMode(u.classCode) ? (
+                            <select
+                              value={assignments[u.id]?.supporterId ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value
+                                void (async () => {
+                                  const sup = supportersSorted.find((s) => s.id === val)
+                                  if (!val) {
+                                    await kickSupporter(u.id, { learnerUser: u })
+                                  } else {
+                                    const mode = CLASS_TO_MODE[u.classCode] || 'MANUAL'
+                                    await assignSupporter(u.id, val, mode, {
+                                      learnerUser: u,
+                                      supporterUser: sup,
+                                    })
+                                  }
+                                })()
+                              }}
+                              className="min-w-[12rem] w-full max-w-[24rem] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm"
+                            >
+                              <option value="">{t('admin.noSupporter')}</option>
+                              {supportersSorted.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.fullName?.trim()
+                                    ? `${s.fullName.trim()} (@${s.username})`
+                                    : s.username || s.id}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="text-sm text-slate-500 leading-relaxed">
+                              {t(`admin.teachingMode.${CLASS_TO_MODE[u.classCode] || 'MANUAL'}`)}
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-sm text-slate-500">—</span>
+                        )}
+                      </td>
+                      <td className="px-5 sm:px-6 py-5 align-top">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                          <span className="text-sm text-slate-500 shrink-0">{u.source}</span>
+                          {!u.id.startsWith('prov-') && (
+                            <button
+                              onClick={() => {
+                                if (!window.confirm(t('admin.confirmDelete'))) return
+                                void (async () => {
+                                  if (assignments[u.id]) {
+                                    await kickSupporter(u.id, { learnerUser: u })
+                                  }
+                                  deleteUser(u.id)
+                                })()
+                              }}
+                              className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 self-start"
+                              title={t('admin.deleteAccount')}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

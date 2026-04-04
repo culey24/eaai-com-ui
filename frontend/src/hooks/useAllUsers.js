@@ -358,6 +358,8 @@ export function useAllUsers() {
     createUser,
     updateUserRole,
     deleteUser,
+    /** Map userId → role UI khi admin đổi dropdown trước / song song khi GET users sync lại */
+    roleOverrides,
     /** null = chưa có phản hồi / lỗi; mảng (có thể rỗng) = GET /api/supporter/learners đã trả về */
     supporterApiRows,
     supporterApiLearners,

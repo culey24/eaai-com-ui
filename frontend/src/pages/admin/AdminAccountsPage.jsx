@@ -10,7 +10,7 @@ import SupporterPicker from '../../components/admin/SupporterPicker'
 
 export default function AdminAccountsPage() {
   const { t } = useLanguage()
-  const { allUsers, createUser, updateUserRole, deleteUser } = useAllUsers()
+  const { allUsers, createUser, updateUserRole, deleteUser, roleOverrides } = useAllUsers()
   const {
     assignments,
     assignSupporter,
@@ -42,15 +42,20 @@ export default function AdminAccountsPage() {
     return matchSearch && matchRole && matchClass
   })
 
-  /** Chỉ supporter có user_id trên server mới gán được cho học viên api-* (PUT DB). */
+  /**
+   * Supporter có backend user_id để gán học viên.
+   * Với user api-*: sau khi đổi role → ASSISTANT, `dbUserRole` có thể vẫn `student` cho đến khi
+   * GET /api/admin/users refetch xong — dùng roleOverrides / UI role để vẫn hiện trong picker.
+   */
   const supporters = allUsers.filter((u) => {
-    if (u.role !== 'ASSISTANT') return false
+    if (u.role !== ROLES.ASSISTANT) return false
     if (uiIdToBackendUserId(u) == null) return false
+    if (!u.fromApi) return true
     const db = u.dbUserRole != null ? String(u.dbUserRole).toLowerCase() : ''
-    if (u.fromApi && db && db !== 'support' && db !== 'assistant' && db !== 'teacher') {
-      return false
-    }
-    return true
+    const dbIsSupporter = db === 'support' || db === 'assistant' || db === 'teacher'
+    const pendingAssistantUi = roleOverrides[u.id] === ROLES.ASSISTANT
+    if (pendingAssistantUi || dbIsSupporter) return true
+    return false
   })
 
   const handleCreate = () => {

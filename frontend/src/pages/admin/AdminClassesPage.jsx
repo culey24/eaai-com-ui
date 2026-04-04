@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Users, FileText, Check, X, Ban } from 'lucide-react'
+import { ArrowLeft, Users, Ban } from 'lucide-react'
 import { useAllUsers } from '../../hooks/useAllUsers'
 import { useAdmin } from '../../context/AdminContext'
-import { useJournal } from '../../context/JournalContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { VALID_CLASS_CODES, ROLES } from '../../constants/roles'
@@ -20,7 +19,6 @@ export default function AdminClassesPage() {
   const { t } = useLanguage()
   const { apiToken, user } = useAuth()
   const { getByClass } = useAllUsers()
-  const { getSubmissionStats, getJournalsForUser } = useJournal()
   const { assignments } = useAdmin()
   const [expandedClass, setExpandedClass] = useState(null)
   const [blacklistNorm, setBlacklistNorm] = useState(() => new Set())
@@ -74,17 +72,15 @@ export default function AdminClassesPage() {
       const theoretical = getTheoreticalRosterForClass(classCode)
       const participationPct =
         theoretical && theoretical > 0 ? (learnersNet.length / theoretical) * 100 : null
-      const stats = getSubmissionStats(learnersNet.map((m) => m.id))
       return {
         classCode,
         learnersNet,
         learnersExcluded,
         theoretical,
         participationPct,
-        stats,
       }
     })
-  }, [getByClass, getSubmissionStats, blacklistNorm])
+  }, [getByClass, blacklistNorm])
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
@@ -116,7 +112,6 @@ export default function AdminClassesPage() {
               learnersExcluded,
               theoretical,
               participationPct,
-              stats,
             }) => {
               const mode = getTeachingMode(classCode)
               const isExpanded = expandedClass === classCode
@@ -183,14 +178,6 @@ export default function AdminClassesPage() {
                         </p>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2 text-sm flex-wrap">
-                      <FileText className="w-4 h-4 text-primary shrink-0" />
-                      <span>
-                        {t('admin.journalStatus')}:{' '}
-                        {t('admin.journalSubmitted', { submitted: stats.submitted, total: stats.total })}
-                      </span>
-                    </div>
                   </button>
 
                   {isExpanded && (
@@ -203,8 +190,6 @@ export default function AdminClassesPage() {
                         <>
                           {learnersNet.map((m) => {
                             const assignment = assignments[m.id]
-                            const journals = getJournalsForUser(m.id) || []
-                            const submitted = journals.length > 0
                             const modeRow = getTeachingMode(classCode)
                             const usesSupporter = hasSupporterMode(classCode)
 
@@ -223,20 +208,6 @@ export default function AdminClassesPage() {
                                         ? `${t('admin.supporter')}: ${assignment.supporterId}`
                                         : t('admin.noSupporter')
                                       : t(`admin.teachingMode.${modeRow}`)}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                  <span className="text-sm text-slate-500">
-                                    {t('admin.journalStatus')}:{' '}
-                                    {submitted ? (
-                                      <span className="text-green-600 flex items-center gap-1">
-                                        <Check className="w-4 h-4" /> {t('admin.submitted')}
-                                      </span>
-                                    ) : (
-                                      <span className="text-amber-600 flex items-center gap-1">
-                                        <X className="w-4 h-4" /> {t('admin.notSubmitted')}
-                                      </span>
-                                    )}
                                   </span>
                                 </div>
                               </div>

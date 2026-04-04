@@ -32,3 +32,9 @@ export const CLASS_THEORETICAL_ROSTER = {
 export function getTheoreticalRosterForClass(classCode) {
   return CLASS_THEORETICAL_ROSTER[classCode] ?? null
 }
+
+/** Tổng sĩ số lý thuyết (IS-1 + IS-2 + IS-3) — dùng cho tỉ lệ đăng ký tổng trên dashboard. */
+export const TOTAL_THEORETICAL_ROSTER = Object.values(CLASS_THEORETICAL_ROSTER).reduce(
+  (sum, n) => sum + n,
+  0
+)

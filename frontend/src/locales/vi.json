@@ -182,6 +182,9 @@
     "journalRateNoOpenPeriod": "Hiện không có đợt journal đang mở. Thống kê chỉ hiển thị khi có kỳ nộp đang hoạt động.",
     "journalRateLoading": "Đang tải…",
     "journalRateLoadError": "Không tải được thống kê từ máy chủ.",
+    "totalSignupRate": "Tổng tỉ lệ đăng ký website",
+    "totalSignupRateIntro": "Học viên đã đăng ký (trừ blacklist thống kê) so với tổng sĩ số lý thuyết ba lớp IS-1, IS-2, IS-3. Có thể trên 100%.",
+    "totalSignupRateFigures": "{net} / {theoretical} học viên",
     "membersSubmitted": "{submitted}/{total} thành viên đã nộp",
     "chatChannels": "Kênh chat",
     "chatSection": "Kênh chat",
@@ -250,7 +253,7 @@
     },
     "classWithCode": "Lớp {code}",
     "classListPage": {
-      "intro": "Sĩ số và journal dưới đây chỉ tính học viên đã đăng ký, sau khi trừ tài khoản trong blacklist thống kê. Sĩ số lý thuyết là ước lượng; tỉ lệ đăng ký có thể trên 100% nếu thực tế vượt dự kiến.",
+      "intro": "Sĩ số chỉ tính học viên đã đăng ký trên website, sau khi trừ tài khoản trong blacklist thống kê. Sĩ số lý thuyết là ước lượng; tỉ lệ đăng ký có thể trên 100% nếu thực tế vượt dự kiến.",
       "theoretical": "Sĩ số lý thuyết",
       "registeredNet": "Đã đăng ký (trừ blacklist)",
       "registeredGross": "Tổng đăng ký (gồm blacklist)",

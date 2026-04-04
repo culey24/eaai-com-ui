@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   LayoutDashboard,
   MessageSquare,
   Users,
+  UserPlus,
   UserCog,
   FileText,
   ClipboardList,
@@ -13,14 +14,80 @@ import {
 import { useLanguage } from '../../context/LanguageContext'
 import { useJournal } from '../../context/JournalContext'
 import { useAuth } from '../../context/AuthContext'
+import { useAllUsers } from '../../hooks/useAllUsers'
 import { API_BASE } from '../../config/api'
-import { ROLES } from '../../constants/roles'
+import { ROLES, VALID_CLASS_CODES } from '../../constants/roles'
+import { TOTAL_THEORETICAL_ROSTER } from '../../constants/admin'
+
+function normUsername(s) {
+  return String(s ?? '')
+    .trim()
+    .toLowerCase()
+}
 
 export default function AdminDashboardPage() {
   const { t } = useLanguage()
   const { getActiveSubmission } = useJournal()
   const { apiToken, user } = useAuth()
+  const { allUsers } = useAllUsers()
   const activeSubmission = getActiveSubmission()
+
+  const [blacklistNorm, setBlacklistNorm] = useState(() => new Set())
+  const [signupExclusionsError, setSignupExclusionsError] = useState('')
+
+  useEffect(() => {
+    if (!apiToken || user?.role !== ROLES.ADMIN) {
+      setBlacklistNorm(new Set())
+      setSignupExclusionsError('')
+      return
+    }
+    let cancelled = false
+    setSignupExclusionsError('')
+    fetch(`${API_BASE}/api/admin/stats-exclusions`, {
+      headers: { Authorization: `Bearer ${apiToken}` },
+    })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+        return data
+      })
+      .then((data) => {
+        if (cancelled) return
+        setBlacklistNorm(
+          new Set(
+            (Array.isArray(data.exclusions) ? data.exclusions : []).map((e) =>
+              normUsername(e.usernameNormalized)
+            )
+          )
+        )
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBlacklistNorm(new Set())
+          setSignupExclusionsError(t('admin.classListPage.loadExclusionsError'))
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [apiToken, user?.role, t])
+
+  const netSignedUpTotal = useMemo(
+    () =>
+      allUsers.filter(
+        (u) =>
+          u.role === ROLES.LEARNER &&
+          u.classCode &&
+          VALID_CLASS_CODES.includes(u.classCode) &&
+          !blacklistNorm.has(normUsername(u.username))
+      ).length,
+    [allUsers, blacklistNorm]
+  )
+
+  const totalSignupPct =
+    TOTAL_THEORETICAL_ROSTER > 0
+      ? Math.round((netSignedUpTotal / TOTAL_THEORETICAL_ROSTER) * 1000) / 10
+      : null
 
   const [serverStats, setServerStats] = useState({
     loading: false,
@@ -94,6 +161,30 @@ export default function AdminDashboardPage() {
 
       <div className="flex-1 overflow-y-auto p-8">
         <div className="max-w-4xl mx-auto space-y-8">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+            <h2 className="font-semibold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-primary" />
+              {t('admin.totalSignupRate')}
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{t('admin.totalSignupRateIntro')}</p>
+            {signupExclusionsError ? (
+              <p className="text-sm text-amber-700 dark:text-amber-300 mb-3" role="alert">
+                {signupExclusionsError}
+              </p>
+            ) : null}
+            <div className="flex items-end gap-4 flex-wrap">
+              <div className="text-4xl font-bold text-primary tabular-nums">
+                {totalSignupPct != null ? `${totalSignupPct}%` : '—'}
+              </div>
+              <div className="text-slate-500 dark:text-slate-400 text-sm pb-1">
+                {t('admin.totalSignupRateFigures', {
+                  net: netSignedUpTotal,
+                  theoretical: TOTAL_THEORETICAL_ROSTER,
+                })}
+              </div>
+            </div>
+          </div>
+
           {/* Open submission only; counts from API / journal_uploads */}
           <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
             <h2 className="font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">

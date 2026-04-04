@@ -182,6 +182,9 @@
     "journalRateNoOpenPeriod": "No journal window is currently open. Stats appear only while a submission period is active.",
     "journalRateLoading": "Loading…",
     "journalRateLoadError": "Could not load stats from the server.",
+    "totalSignupRate": "Overall website signup rate",
+    "totalSignupRateIntro": "Learners registered on the site (excluding stats blacklist) versus combined theoretical roster for IS-1, IS-2, and IS-3. May exceed 100%.",
+    "totalSignupRateFigures": "{net} / {theoretical} learners",
     "membersSubmitted": "{submitted}/{total} members submitted",
     "chatChannels": "Chat channels",
     "chatSection": "Chat",
@@ -250,7 +253,7 @@
     },
     "classWithCode": "Class {code}",
     "classListPage": {
-      "intro": "Counts and journal stats below include only enrolled learners, after excluding accounts on the stats blacklist. Theoretical class size is an estimate; registration rate can exceed 100% if enrollment surpasses it.",
+      "intro": "Counts include only learners registered on the website, after excluding the stats blacklist. Theoretical class size is an estimate; signup rate can exceed 100% if enrollment surpasses it.",
       "theoretical": "Theoretical roster",
       "registeredNet": "Registered (excl. blacklist)",
       "registeredGross": "Registered total (incl. blacklist)",

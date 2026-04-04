@@ -40,17 +40,21 @@ router.get('/journal-upload-stats', authMiddleware, async (req, res) => {
     const submitted =
       Array.isArray(countRows) && countRows[0]?.c != null ? Number(countRows[0].c) : 0
 
-    const totalWhere = {
-      userRole: 'student',
-      ...(excluded.length
-        ? {
-            AND: excluded.map((ex) => ({
-              username: { not: { equals: ex, mode: 'insensitive' } },
-            })),
-          }
-        : {}),
+    let total
+    if (excluded.length === 0) {
+      total = await prisma.user.count({ where: { userRole: 'student' } })
+    } else {
+      const totalRows = await prisma.$queryRaw`
+        SELECT COUNT(*)::int AS c
+        FROM users u
+        WHERE u.user_role = 'student'
+        ${excludeUsernameSql}
+      `
+      total =
+        Array.isArray(totalRows) && totalRows[0]?.c != null
+          ? Number(totalRows[0].c)
+          : 0
     }
-    const total = await prisma.user.count({ where: totalWhere })
 
     const totalByClassRows = await prisma.$queryRaw`
       SELECT u.user_class::text AS "classCode", COUNT(*)::int AS total

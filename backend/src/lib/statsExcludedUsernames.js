@@ -1,7 +1,6 @@
 /**
  * Username loại khỏi thống kê admin (journal, PRETEST/POSTTEST).
- * Nguồn duy nhất: bảng stats_analytics_exclusions (trang Admin → Blacklist).
- * So khớp không phân biệt hoa thường (lưu chữ thường trong DB).
+ * Nguồn: bảng stats_analytics_exclusions (trang Admin → Blacklist).
  */
 /** @param {import('@prisma/client').PrismaClient} prisma */
 export async function getStatsExcludedUsernamesNormalized(prisma) {
@@ -9,18 +8,33 @@ export async function getStatsExcludedUsernamesNormalized(prisma) {
     const rows = await prisma.statsAnalyticsExclusion.findMany({
       select: { usernameNormalized: true },
     })
-    return [
-      ...new Set(
-        rows
-          .map((r) => String(r.usernameNormalized || '').trim().toLowerCase())
-          .filter(Boolean)
-      ),
-    ]
+    return normalizeList(rows.map((r) => r.usernameNormalized))
   } catch (err) {
     console.warn(
-      '[stats exclusions] DB:',
+      '[stats exclusions] ORM:',
       err instanceof Error ? err.message : String(err)
+    )
+  }
+  try {
+    const rows = await prisma.$queryRaw`
+      SELECT username_normalized AS n FROM stats_analytics_exclusions
+    `
+    return normalizeList((Array.isArray(rows) ? rows : []).map((r) => r.n))
+  } catch (err2) {
+    console.warn(
+      '[stats exclusions] raw:',
+      err2 instanceof Error ? err2.message : String(err2)
     )
     return []
   }
+}
+
+function normalizeList(raw) {
+  return [
+    ...new Set(
+      raw
+        .map((x) => String(x ?? '').trim().toLowerCase())
+        .filter(Boolean)
+    ),
+  ]
 }

@@ -251,6 +251,8 @@ model Message {
   senderUserId   String?       @map("sender_user_id") @db.VarChar(10)
   content        String        @default("") @db.Text
   fileName       String?       @map("file_name") @db.VarChar(512)
+  /// gcs:object hoặc đường dẫn tương đối từ CHAT_UPLOAD_DIR — file đính kèm chat
+  fileStorageKey String?       @map("file_storage_key") @db.VarChar(512)
   metadata       Json          @default("{}") @db.JsonB
 
   createdAt DateTime @default(now()) @map("created_at")

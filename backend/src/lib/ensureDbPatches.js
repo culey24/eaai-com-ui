@@ -9,6 +9,18 @@ const USER_PROFILE_ALTER = [
   'ALTER TABLE users ADD COLUMN IF NOT EXISTS subject_note VARCHAR(255)',
 ]
 
+const MESSAGES_FILE_STORAGE_KEY = `
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'messages'
+  ) THEN
+    ALTER TABLE messages ADD COLUMN IF NOT EXISTS file_storage_key VARCHAR(512);
+  END IF;
+END $$;
+`
+
 const JOURNAL_EXTRACTED_TEXT_PATCH = `
 DO $$
 BEGIN
@@ -89,6 +101,14 @@ export async function applyLightweightSchemaPatches(prisma) {
   } catch (err) {
     console.warn(
       '[db-patches] pretest_responses survey_kind index:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
+  try {
+    await prisma.$executeRawUnsafe(MESSAGES_FILE_STORAGE_KEY)
+  } catch (err) {
+    console.warn(
+      '[db-patches] messages.file_storage_key:',
       err instanceof Error ? err.message : String(err)
     )
   }

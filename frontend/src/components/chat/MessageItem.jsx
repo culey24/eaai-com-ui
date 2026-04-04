@@ -1,14 +1,45 @@
-import { Bot, User, FileText } from 'lucide-react'
+import { Bot, User, FileText, Download } from 'lucide-react'
 import { formatAgentChatMarkdown } from '../../lib/chatMarkdown'
+import { API_BASE } from '../../config/api'
+import { useLanguage } from '../../context/LanguageContext'
 
 /**
  * @param {'learner' | 'supporter'} perspective — learner: tin user bên phải; supporter: tin học viên (user) bên trái, tin supporter (assistant) bên phải.
  */
-export default function MessageItem({ message, agentLabel, perspective = 'learner' }) {
+export default function MessageItem({
+  message,
+  agentLabel,
+  perspective = 'learner',
+  conversationId = null,
+  apiToken = null,
+}) {
+  const { t } = useLanguage()
   const fromLearner = message.role === 'user'
   const alignEnd = perspective === 'learner' ? fromLearner : !fromLearner
   const showAgentLabel = agentLabel && perspective === 'learner' && !fromLearner
   const useBotAvatar = perspective === 'learner' && !fromLearner
+  const canDownloadRemote =
+    Boolean(conversationId && apiToken && message.id && message.fileStorageKey)
+
+  const handleDownload = async () => {
+    if (!canDownloadRemote) return
+    try {
+      const r = await fetch(
+        `${API_BASE}/api/messages/${encodeURIComponent(conversationId)}/files/${encodeURIComponent(message.id)}`,
+        { headers: { Authorization: `Bearer ${apiToken}` } }
+      )
+      if (!r.ok) throw new Error(String(r.status))
+      const blob = await r.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = message.fileName || 'attachment'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      window.alert(t('chat.downloadAttachmentFailed'))
+    }
+  }
 
   if (message.role === 'system') {
     return (
@@ -55,15 +86,32 @@ export default function MessageItem({ message, agentLabel, perspective = 'learne
             )
           ) : (
             <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-              {message.fileName ? 'Đã đính kèm file' : ''}
+              {message.fileName ? t('chat.attachedFileOnly') : ''}
             </p>
           ))}
         {message.fileName && (
-          <div className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-xl ${
-            alignEnd ? 'bg-white/20' : 'bg-primary/10'
-          }`}>
+          <div
+            className={`flex items-center gap-2 mt-2 px-3 py-2 rounded-xl ${
+              alignEnd ? 'bg-white/20' : 'bg-primary/10'
+            }`}
+          >
             <FileText className="w-4 h-4 flex-shrink-0" />
-            <span className="text-sm truncate">{message.fileName}</span>
+            <span className="text-sm truncate flex-1 min-w-0">{message.fileName}</span>
+            {canDownloadRemote && (
+              <button
+                type="button"
+                onClick={handleDownload}
+                className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${
+                  alignEnd
+                    ? 'hover:bg-white/20 text-white'
+                    : 'hover:bg-primary/20 text-primary dark:text-primary'
+                }`}
+                title={t('chat.downloadAttachment')}
+                aria-label={t('chat.downloadAttachment')}
+              >
+                <Download className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
         {message.timestamp && (

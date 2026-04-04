@@ -6,6 +6,7 @@ import { useMessages } from '../../hooks/useMessages'
 import { useAllUsers } from '../../hooks/useAllUsers'
 import { useJournal } from '../../context/JournalContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { useAuth } from '../../context/AuthContext'
 import MessageItem from '../../components/chat/MessageItem'
 import JournalEntriesSidebarList from '../../components/journal/JournalEntriesSidebarList'
 
@@ -17,13 +18,14 @@ const CLASS_TO_CHANNEL = {
 
 export default function AdminChatsPage() {
   const { t } = useLanguage()
+  const { apiToken } = useAuth()
   const { getLearners } = useAllUsers()
   const { getJournalsForUser } = useJournal()
   const [selectedUser, setSelectedUser] = useState(null)
   const [search, setSearch] = useState('')
 
   const channelId = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
-  const { getMessagesForChannel } = useMessages(channelId, {
+  const { getMessagesForChannel, remoteConversationId } = useMessages(channelId, {
     adminViewLearnerId: selectedUser?.backendUserId ?? null,
   })
 
@@ -184,6 +186,8 @@ export default function AdminChatsPage() {
                           key={msg.id != null ? String(msg.id) : `m-${idx}`}
                           message={msg}
                           agentLabel={msg.role === 'assistant' ? 'AGENT' : null}
+                          conversationId={remoteConversationId}
+                          apiToken={apiToken}
                         />
                       ))
                     )}

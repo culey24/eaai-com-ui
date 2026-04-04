@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import multer from 'multer'
 import { MessageSender, UserClass } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
@@ -14,8 +15,30 @@ import {
   jwtMessagePostLimiter,
   is2GeminiPostLimiter,
 } from '../lib/rateLimits.js'
+import { saveChatAttachment, readChatAttachment } from '../lib/chatAttachmentStorage.js'
 
 const router = Router()
+
+const chatUploadMaxBytes = (() => {
+  const n = Number(process.env.CHAT_UPLOAD_MAX_BYTES)
+  return Number.isFinite(n) && n > 0 ? n : 25 * 1024 * 1024
+})()
+
+const chatUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: chatUploadMaxBytes, files: 1 },
+})
+
+function contentDispositionChatAttachment(name) {
+  const raw = String(name || 'file').trim().slice(0, 200) || 'file'
+  const safe = raw.replace(/["\\]/g, '_')
+  const ascii = safe.replace(/[^\x20-\x7E]/g, '_').slice(0, 180) || 'file'
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(safe)}`
+}
+
+function chatSafeBaseName(name) {
+  return String(name || 'file').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 200)
+}
 
 /**
  * GET /api/messages — 50 tin mới nhất (chat tối giản), thời gian tăng dần, không cần auth.
@@ -27,6 +50,51 @@ function parseMessageRole(role) {
   if (role === 'system') return MessageSender.system
   return MessageSender.user
 }
+
+/**
+ * GET /api/messages/:conversationId/files/:messageId
+ * Tải file đính kèm (GCS hoặc đĩa — cùng bucket/env với journal nếu bật GCS).
+ */
+router.get('/:conversationId/files/:messageId', authMiddleware, async (req, res) => {
+  try {
+    res.set('Cache-Control', 'private, no-store')
+    let conversationId
+    let messageId
+    try {
+      conversationId = BigInt(req.params.conversationId)
+      messageId = BigInt(req.params.messageId)
+    } catch {
+      return res.status(400).json({ error: 'Id không hợp lệ' })
+    }
+
+    const access = await canAccessConversation(req.auth, conversationId)
+    if (!access.ok) {
+      return res.status(access.status).json({ error: access.message || 'Lỗi' })
+    }
+
+    const msg = await prisma.message.findFirst({
+      where: { id: messageId, conversationId },
+      select: { fileStorageKey: true, fileName: true },
+    })
+    if (!msg?.fileStorageKey) {
+      return res.status(404).json({ error: 'Không có file đính kèm' })
+    }
+
+    const { buffer, contentType } = await readChatAttachment(msg.fileStorageKey)
+    res.setHeader('Content-Type', contentType)
+    res.setHeader(
+      'Content-Disposition',
+      contentDispositionChatAttachment(msg.fileName || 'file')
+    )
+    return res.send(buffer)
+  } catch (err) {
+    console.error('[messages GET file]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
 
 /**
  * GET /api/messages/:conversationId — theo hội thoại + JWT
@@ -101,6 +169,21 @@ router.get('/:conversationId', authMiddleware, async (req, res) => {
 router.post(
   '/',
   (req, res, next) => {
+    const ct = String(req.headers['content-type'] || '')
+    if (ct.toLowerCase().includes('multipart/form-data')) {
+      return chatUpload.single('file')(req, res, (err) => {
+        if (err) {
+          if (err?.code === 'LIMIT_FILE_SIZE' || err?.name === 'MulterError') {
+            return res.status(413).json({ error: 'File đính kèm vượt quá giới hạn' })
+          }
+          return next(err)
+        }
+        next()
+      })
+    }
+    next()
+  },
+  (req, res, next) => {
     if (!isMinimalChatBody(req.body)) return next()
     return minimalMessagePostLimiter(req, res, (err) => {
       if (err) return next(err)
@@ -115,6 +198,7 @@ router.post(
       return res.status(400).json({ error: 'Sai định dạng tin nhắn' })
     }
     try {
+      const body = req.body && typeof req.body === 'object' ? req.body : {}
       const {
         channelId,
         content,
@@ -122,10 +206,16 @@ router.post(
         role,
         conversationId: bodyConvId,
         learnerId: bodyLearnerId,
-      } = req.body || {}
+      } = body
+      const uploaded = req.file
       const ch = typeof channelId === 'string' ? channelId.trim() : ''
       const text = typeof content === 'string' ? content : ''
-      const file = fileName != null ? String(fileName).slice(0, 512) : null
+      const fileFromField = fileName != null ? String(fileName).slice(0, 512) : null
+      const fileMetaName =
+        uploaded?.originalname != null
+          ? String(uploaded.originalname).slice(0, 512)
+          : fileFromField
+      const file = fileMetaName
       const senderRole = parseMessageRole(role)
 
       if (!ch) {
@@ -251,6 +341,18 @@ router.post(
       const senderUserId =
         senderRole === MessageSender.user ? userId : null
 
+      let fileStorageKey = null
+      if (uploaded?.buffer && uploaded.buffer.length > 0) {
+        const storedName = `${Date.now()}_${chatSafeBaseName(uploaded.originalname || 'file')}`
+        const { storageKey } = await saveChatAttachment({
+          buffer: uploaded.buffer,
+          contentType: uploaded.mimetype,
+          conversationId,
+          storedName,
+        })
+        fileStorageKey = storageKey
+      }
+
       const msg = await prisma.message.create({
         data: {
           conversationId,
@@ -258,6 +360,7 @@ router.post(
           senderUserId,
           content: text,
           fileName: file,
+          fileStorageKey,
           metadata: {},
         },
       })

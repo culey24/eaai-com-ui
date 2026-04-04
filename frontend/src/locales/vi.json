@@ -83,7 +83,10 @@
     "inputLockedHint": "Bạn cần cập nhật đủ thông tin (MSSV, Khoa, chuyên ngành) trong mục Cài đặt trước khi được gửi tin nhắn.",
     "agentMaskLabel": "AGENT",
     "is3SystemBusy": "Hệ thống đang bận. Phản hồi sẽ được gửi đến bạn sớm nhất có thể — bạn có thể tiếp tục chờ trong khung chat này.",
-    "is3NoSupporterBackground": "Hệ thống đang bận, hãy thử lại sau"
+    "is3NoSupporterBackground": "Hệ thống đang bận, hãy thử lại sau",
+    "attachedFileOnly": "Đã đính kèm file",
+    "downloadAttachment": "Tải xuống",
+    "downloadAttachmentFailed": "Không tải được file đính kèm."
   },
   "report": {
     "title": "Báo cáo",

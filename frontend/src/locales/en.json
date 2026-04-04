@@ -83,7 +83,10 @@
     "inputLockedHint": "Please fill in your student ID, faculty, and major in Settings before you can send messages.",
     "agentMaskLabel": "AGENT",
     "is3SystemBusy": "The system is busy. A reply will be sent as soon as possible — you can keep waiting in this chat.",
-    "is3NoSupporterBackground": "The system is busy, please try again later"
+    "is3NoSupporterBackground": "The system is busy, please try again later",
+    "attachedFileOnly": "Attached file",
+    "downloadAttachment": "Download",
+    "downloadAttachmentFailed": "Could not download the attachment."
   },
   "report": {
     "title": "Report",

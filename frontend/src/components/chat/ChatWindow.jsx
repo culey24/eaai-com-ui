@@ -22,6 +22,8 @@ export default function ChatWindow({
   customTitle,
   messagePerspective = 'learner',
   maskAssistantAsAgent = false,
+  /** Khi chat qua API: id hội thoại để tải file đính kèm */
+  remoteConversationId = null,
 }) {
   const { t } = useLanguage()
   const { isProfileComplete, apiToken, user } = useAuth()
@@ -183,6 +185,8 @@ export default function ChatWindow({
                   message={msg}
                   perspective={messagePerspective}
                   agentLabel={agentMaskLabel}
+                  conversationId={remoteConversationId}
+                  apiToken={apiToken}
                 />
               ))}
               {showIs3BusyHint && (

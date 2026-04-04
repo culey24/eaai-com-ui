@@ -42,6 +42,7 @@ function mapRemoteRows(messages) {
           : 'assistant',
     content: m.content || '',
     fileName: m.fileName || null,
+    fileStorageKey: m.fileStorageKey || null,
     timestamp: m.createdAt ? new Date(m.createdAt).getTime() : Date.now(),
   }))
 }
@@ -172,20 +173,36 @@ export function useMessages(pollChannelId = null, options = {}) {
         role === 'user'
       ) {
         try {
-          const res = await fetch(`${API_BASE}/api/messages`, {
-            method: 'POST',
-            cache: 'no-store',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${apiToken}`,
-            },
-            body: JSON.stringify({
-              channelId,
-              content: content || '',
-              fileName: file?.name || undefined,
-              role: 'user',
-            }),
-          })
+          let res
+          if (file) {
+            const fd = new FormData()
+            fd.append('channelId', channelId)
+            fd.append('content', content || '')
+            fd.append('role', 'user')
+            fd.append('file', file)
+            if (conversationId) fd.append('conversationId', String(conversationId))
+            res = await fetch(`${API_BASE}/api/messages`, {
+              method: 'POST',
+              cache: 'no-store',
+              headers: { Authorization: `Bearer ${apiToken}` },
+              body: fd,
+            })
+          } else {
+            res = await fetch(`${API_BASE}/api/messages`, {
+              method: 'POST',
+              cache: 'no-store',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${apiToken}`,
+              },
+              body: JSON.stringify({
+                channelId,
+                content: content || '',
+                role: 'user',
+                ...(conversationId ? { conversationId: String(conversationId) } : {}),
+              }),
+            })
+          }
           const data = await res.json().catch(() => ({}))
           if (res.ok && data.message?.conversationId != null) {
             const cid = String(data.message.conversationId)
@@ -214,30 +231,45 @@ export function useMessages(pollChannelId = null, options = {}) {
         assistantViewLearnerId
       ) {
         try {
-          const body = conversationId
-            ? {
-                channelId,
-                content: content || '',
-                fileName: file?.name || undefined,
-                role: 'assistant',
-                conversationId,
-              }
-            : {
-                channelId,
-                content: content || '',
-                fileName: file?.name || undefined,
-                role: 'assistant',
-                learnerId: assistantViewLearnerId,
-              }
-          const res = await fetch(`${API_BASE}/api/messages`, {
-            method: 'POST',
-            cache: 'no-store',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${apiToken}`,
-            },
-            body: JSON.stringify(body),
-          })
+          let res
+          if (file) {
+            const fd = new FormData()
+            fd.append('channelId', channelId)
+            fd.append('content', content || '')
+            fd.append('role', 'assistant')
+            fd.append('file', file)
+            if (conversationId) fd.append('conversationId', String(conversationId))
+            else fd.append('learnerId', assistantViewLearnerId)
+            res = await fetch(`${API_BASE}/api/messages`, {
+              method: 'POST',
+              cache: 'no-store',
+              headers: { Authorization: `Bearer ${apiToken}` },
+              body: fd,
+            })
+          } else {
+            const body = conversationId
+              ? {
+                  channelId,
+                  content: content || '',
+                  role: 'assistant',
+                  conversationId,
+                }
+              : {
+                  channelId,
+                  content: content || '',
+                  role: 'assistant',
+                  learnerId: assistantViewLearnerId,
+                }
+            res = await fetch(`${API_BASE}/api/messages`, {
+              method: 'POST',
+              cache: 'no-store',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${apiToken}`,
+              },
+              body: JSON.stringify(body),
+            })
+          }
           const data = await res.json().catch(() => ({}))
           const cid =
             data.message?.conversationId != null
@@ -284,7 +316,14 @@ export function useMessages(pollChannelId = null, options = {}) {
         return { ...prev, [key]: [...userMsgs, aiResponse] }
       })
     },
-    [isRemoteLearner, isRemoteAssistant, apiToken, pollChannelId, conversationId, assistantViewLearnerId]
+    [
+      isRemoteLearner,
+      isRemoteAssistant,
+      apiToken,
+      pollChannelId,
+      conversationId,
+      assistantViewLearnerId,
+    ]
   )
 
   const assistantViewerKey = assistantViewLearnerId ? `api-${assistantViewLearnerId}` : null
@@ -328,5 +367,10 @@ export function useMessages(pollChannelId = null, options = {}) {
     ]
   )
 
-  return { messages: localMessages, addMessage, getMessagesForChannel }
+  return {
+    messages: localMessages,
+    addMessage,
+    getMessagesForChannel,
+    remoteConversationId: useRemoteThread ? conversationId : null,
+  }
 }

@@ -37,6 +37,7 @@ CREATE TABLE messages (
     sender_user_id VARCHAR(10) REFERENCES Users(user_id) ON DELETE SET NULL,
     content TEXT NOT NULL DEFAULT '',
     file_name VARCHAR(512),
+    file_storage_key VARCHAR(512),
     metadata JSONB NOT NULL DEFAULT '{}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

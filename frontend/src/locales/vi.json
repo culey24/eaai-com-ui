@@ -86,7 +86,8 @@
     "is3NoSupporterBackground": "Hệ thống đang bận, hãy thử lại sau",
     "attachedFileOnly": "Đã đính kèm file",
     "downloadAttachment": "Tải xuống",
-    "downloadAttachmentFailed": "Không tải được file đính kèm."
+    "downloadAttachmentFailed": "Không tải được file đính kèm.",
+    "thinking": "Đang suy nghĩ…"
   },
   "report": {
     "title": "Báo cáo",

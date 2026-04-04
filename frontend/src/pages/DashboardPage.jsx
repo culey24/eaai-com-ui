@@ -13,7 +13,8 @@ export default function DashboardPage() {
   const location = useLocation()
   const channels = getChannelsByUser(user) || []
   const [activeChannel, setActiveChannel] = useState(null)
-  const { addMessage, getMessagesForChannel, remoteConversationId } = useMessages(activeChannel?.id)
+  const { addMessage, getMessagesForChannel, remoteConversationId, remoteThreadLoading } =
+    useMessages(activeChannel?.id)
   const { addReport } = useReports()
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export default function DashboardPage() {
           messagePerspective="learner"
           maskAssistantAsAgent={activeChannel?.id === 'internal-chat'}
           remoteConversationId={remoteConversationId}
+          threadLoading={remoteThreadLoading}
         />
       </main>
     </div>

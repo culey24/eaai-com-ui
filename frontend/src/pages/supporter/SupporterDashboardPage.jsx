@@ -19,7 +19,9 @@ export default function SupporterDashboardPage() {
   const { apiToken } = useAuth()
   const { selectedUser } = useSupporterChat()
   const channel = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
-  const { getMessagesForChannel, addMessage, remoteConversationId } = useMessages(channel?.id, {
+  const { getMessagesForChannel, addMessage, remoteConversationId, remoteThreadLoading } = useMessages(
+    channel?.id,
+    {
     assistantViewLearnerId: selectedUser?.backendUserId ?? null,
   })
   const { getJournalsForUser } = useJournal()
@@ -109,6 +111,7 @@ export default function SupporterDashboardPage() {
                   messagePerspective="supporter"
                   customTitle={`${getUserDisplayName(selectedUser)} — ${channel ? t('chat.agent', { code: channel.code }) : t('chat.selectChannel')}`}
                   remoteConversationId={remoteConversationId}
+                  threadLoading={remoteThreadLoading}
                 />
               </div>
               <aside className="w-72 flex-shrink-0 border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col overflow-hidden">

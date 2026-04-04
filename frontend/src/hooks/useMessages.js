@@ -64,6 +64,8 @@ export function useMessages(pollChannelId = null, options = {}) {
   const [localMessages, setLocalMessages] = useState(loadMessages)
   const [remoteList, setRemoteList] = useState([])
   const [conversationId, setConversationId] = useState(null)
+  /** Remote thread: false trong lúc resolve conversation hoặc lần pull đầu sau khi có conversationId. */
+  const [remoteReady, setRemoteReady] = useState(true)
 
   const isRemoteLearner = Boolean(apiToken && user?.backendUserId && user?.role === ROLES.LEARNER)
 
@@ -85,17 +87,26 @@ export function useMessages(pollChannelId = null, options = {}) {
     if (!useRemoteThread || !pollChannelId || !apiToken) {
       setConversationId(null)
       setRemoteList([])
+      setRemoteReady(true)
       return
     }
 
+    setRemoteReady(false)
+    setConversationId(null)
+    setRemoteList([])
+
     let cancelled = false
-    const resolveConv = async () => {
+    /** touchLoading: chỉ lần gọi đầu (đổi learner/kênh) — interval không được tắt loading / xoá conversation. */
+    const resolveConv = async (touchLoading = false) => {
       try {
         const res = await fetch(`${API_BASE}/api/conversations`, {
           cache: 'no-store',
           headers: { Authorization: `Bearer ${apiToken}` },
         })
-        if (!res.ok) return
+        if (!res.ok) {
+          if (touchLoading && !cancelled) setRemoteReady(true)
+          return
+        }
         const data = await res.json()
         if (cancelled) return
         const conv = data.conversations?.find((c) => {
@@ -104,14 +115,25 @@ export function useMessages(pollChannelId = null, options = {}) {
           if (isRemoteAdmin) return String(c.learnerId) === String(adminViewLearnerId)
           return String(c.learnerId) === String(assistantViewLearnerId)
         })
-        setConversationId(conv?.id != null ? String(conv.id) : null)
+        const cid = conv?.id != null ? String(conv.id) : null
+        if (touchLoading) {
+          setConversationId(cid)
+          if (!cancelled && cid == null) setRemoteReady(true)
+        } else if (cid != null) {
+          setConversationId(cid)
+        }
       } catch {
-        if (!cancelled) setConversationId(null)
+        if (touchLoading && !cancelled) {
+          setConversationId(null)
+          setRemoteReady(true)
+        }
       }
     }
 
-    resolveConv()
-    const tConv = setInterval(resolveConv, 12000)
+    void resolveConv(true)
+    const tConv = setInterval(() => {
+      void resolveConv(false)
+    }, 12000)
     return () => {
       cancelled = true
       clearInterval(tConv)
@@ -130,23 +152,36 @@ export function useMessages(pollChannelId = null, options = {}) {
   /* Poll tin nhắn từ DB */
   useEffect(() => {
     if (!useRemoteThread || !apiToken || !conversationId) {
-      if (useRemoteThread && pollChannelId && !conversationId) setRemoteList([])
       return
     }
 
     let cancelled = false
+    let initialPull = true
     const pull = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/messages/${conversationId}`, {
           cache: 'no-store',
           headers: { Authorization: `Bearer ${apiToken}` },
         })
-        if (!res.ok) return
+        if (!res.ok) {
+          if (!cancelled && initialPull) {
+            setRemoteReady(true)
+            initialPull = false
+          }
+          return
+        }
         const data = await res.json()
         if (cancelled) return
         setRemoteList(mapRemoteRows(data.messages))
+        if (initialPull) {
+          setRemoteReady(true)
+          initialPull = false
+        }
       } catch {
-        /* giữ list cũ */
+        if (!cancelled && initialPull) {
+          setRemoteReady(true)
+          initialPull = false
+        }
       }
     }
 
@@ -172,6 +207,35 @@ export function useMessages(pollChannelId = null, options = {}) {
         channelId === pollChannelId &&
         role === 'user'
       ) {
+        const useLlmStylePendingUi =
+          channelId === 'ai-chat' || channelId === 'human-chat'
+        const batchId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+        const optimisticUser = {
+          id: `opt-${batchId}`,
+          role: 'user',
+          content: content || '',
+          fileName: file?.name || null,
+          fileStorageKey: null,
+          timestamp: Date.now(),
+        }
+        const thinkingPlaceholder = {
+          id: `thinking-${batchId}`,
+          role: 'assistant',
+          content: '',
+          isThinking: true,
+          fileName: null,
+          fileStorageKey: null,
+          timestamp: Date.now() + 1,
+        }
+        if (useLlmStylePendingUi) {
+          setRemoteList((prev) => [...prev, optimisticUser, thinkingPlaceholder])
+        }
+        const rollbackOptimistic = () => {
+          if (!useLlmStylePendingUi) return
+          setRemoteList((prev) =>
+            prev.filter((m) => m.id !== optimisticUser.id && m.id !== thinkingPlaceholder.id)
+          )
+        }
         try {
           let res
           if (file) {
@@ -214,10 +278,14 @@ export function useMessages(pollChannelId = null, options = {}) {
             if (r2.ok) {
               const d2 = await r2.json()
               setRemoteList(mapRemoteRows(d2.messages))
+            } else {
+              rollbackOptimistic()
             }
+          } else {
+            rollbackOptimistic()
           }
         } catch {
-          /* ignore */
+          rollbackOptimistic()
         }
         return
       }
@@ -367,10 +435,15 @@ export function useMessages(pollChannelId = null, options = {}) {
     ]
   )
 
+  const remoteThreadLoading = Boolean(
+    useRemoteThread && pollChannelId && apiToken && !remoteReady
+  )
+
   return {
     messages: localMessages,
     addMessage,
     getMessagesForChannel,
     remoteConversationId: useRemoteThread ? conversationId : null,
+    remoteThreadLoading,
   }
 }

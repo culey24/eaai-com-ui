@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageSquare, Flag } from 'lucide-react'
+import { MessageSquare, Flag, Loader2 } from 'lucide-react'
 import MessageItem from './MessageItem'
 import ChatInput from './ChatInput'
 import ReportModal from './ReportModal'
@@ -24,6 +24,8 @@ export default function ChatWindow({
   maskAssistantAsAgent = false,
   /** Khi chat qua API: id hội thoại để tải file đính kèm */
   remoteConversationId = null,
+  /** Đang tải thread từ máy chủ (resolve + lần pull đầu) */
+  threadLoading = false,
 }) {
   const { t } = useLanguage()
   const { isProfileComplete, apiToken, user } = useAuth()
@@ -144,6 +146,16 @@ export default function ChatWindow({
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-8 pb-4 space-y-6 bg-slate-50/30 dark:bg-slate-800/30 scrollbar-thin relative"
       >
+        {threadLoading && channel ? (
+          <div
+            className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-white/75 dark:bg-slate-900/75 backdrop-blur-[2px]"
+            role="status"
+            aria-live="polite"
+          >
+            <Loader2 className="w-10 h-10 text-primary animate-spin" aria-hidden />
+            <span className="text-sm text-slate-600 dark:text-slate-400">{t('common.loading')}</span>
+          </div>
+        ) : null}
         {showUnassignedSupporterBg && (
           <div
             className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center px-6 py-12"

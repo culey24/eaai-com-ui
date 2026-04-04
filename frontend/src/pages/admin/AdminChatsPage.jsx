@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, MessageSquare, User, Search, FileText } from 'lucide-react'
+import { ArrowLeft, MessageSquare, User, Search, FileText, Loader2 } from 'lucide-react'
 import { VALID_CLASS_CODES } from '../../constants/roles'
 import { useMessages } from '../../hooks/useMessages'
 import { useAllUsers } from '../../hooks/useAllUsers'
@@ -27,7 +27,7 @@ export default function AdminChatsPage() {
   const [apiJournals, setApiJournals] = useState({ loaded: false, list: null })
 
   const channelId = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
-  const { getMessagesForChannel, remoteConversationId } = useMessages(channelId, {
+  const { getMessagesForChannel, remoteConversationId, remoteThreadLoading } = useMessages(channelId, {
     adminViewLearnerId: selectedUser?.backendUserId ?? null,
   })
 
@@ -215,7 +215,7 @@ export default function AdminChatsPage() {
         {/* Chat (center) + Journal (right sidebar) */}
         {selectedUser ? (
           <div className="flex-1 flex min-h-0 flex-col md:flex-row overflow-hidden">
-            <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-50/30 dark:bg-slate-800/30">
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-50/30 dark:bg-slate-800/30 relative">
               <div className="flex-1 overflow-y-auto p-6">
                 <div className="max-w-3xl mx-auto space-y-6">
                   <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
@@ -225,11 +225,20 @@ export default function AdminChatsPage() {
                     )}
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-6 relative min-h-[12rem]">
                     <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                       {t('admin.chatSection')}
                     </h3>
-                    {messages.length === 0 ? (
+                    {remoteThreadLoading ? (
+                      <div
+                        className="flex flex-col items-center justify-center py-16 gap-3 text-slate-600 dark:text-slate-400"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        <Loader2 className="w-10 h-10 text-primary animate-spin" aria-hidden />
+                        <span className="text-sm">{t('common.loading')}</span>
+                      </div>
+                    ) : messages.length === 0 ? (
                       <p className="text-slate-500 dark:text-slate-400 py-4">{t('admin.noMessages')}</p>
                     ) : (
                       messages.map((msg, idx) => (

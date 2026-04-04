@@ -86,7 +86,8 @@
     "is3NoSupporterBackground": "The system is busy, please try again later",
     "attachedFileOnly": "Attached file",
     "downloadAttachment": "Download",
-    "downloadAttachmentFailed": "Could not download the attachment."
+    "downloadAttachmentFailed": "Could not download the attachment.",
+    "thinking": "Thinking…"
   },
   "report": {
     "title": "Report",

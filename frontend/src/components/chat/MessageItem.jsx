@@ -51,6 +51,31 @@ export default function MessageItem({
     )
   }
 
+  if (message.isThinking && message.role === 'assistant') {
+    return (
+      <div className="flex gap-3.5">
+        <div className="flex flex-col items-center gap-1">
+          {showAgentLabel && (
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{agentLabel}</span>
+          )}
+          <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-glow-primary">
+            <Bot className="w-4 h-4 text-white" />
+          </div>
+        </div>
+        <div className="max-w-[75%] rounded-2xl px-4 py-3 shadow-soft bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700 rounded-tl-md">
+          <p className="text-[15px] leading-relaxed flex items-center gap-2">
+            <span className="inline-flex items-center gap-0.5" aria-hidden>
+              <span className="w-2 h-2 rounded-full bg-primary/70 animate-bounce [animation-duration:900ms]" />
+              <span className="w-2 h-2 rounded-full bg-primary/70 animate-bounce [animation-duration:900ms] [animation-delay:150ms]" />
+              <span className="w-2 h-2 rounded-full bg-primary/70 animate-bounce [animation-duration:900ms] [animation-delay:300ms]" />
+            </span>
+            <span className="italic text-slate-500 dark:text-slate-400">{t('chat.thinking')}</span>
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={`flex gap-3.5 ${alignEnd ? 'flex-row-reverse' : ''}`}>
       <div className="flex flex-col items-center gap-1">

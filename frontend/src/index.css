@@ -31,3 +31,36 @@
     border-radius: 3px;
   }
 }
+
+/* ── Thinking indicator ─────────────────────────────────────────────────── */
+@keyframes thinking-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%            { transform: translateY(-5px); opacity: 1; }
+}
+
+@keyframes thinking-appear {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-thinking-appear {
+  animation: thinking-appear 0.25s ease-out both;
+}
+
+.thinking-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  color: #94a3b8; /* slate-400 */
+  animation: thinking-bounce 1.2s ease-in-out infinite;
+}
+
+.dark .thinking-dot {
+  color: #64748b; /* slate-500 in dark mode */
+}
+
+.thinking-dot-1 { animation-delay: 0s; }
+.thinking-dot-2 { animation-delay: 0.2s; }
+.thinking-dot-3 { animation-delay: 0.4s; }

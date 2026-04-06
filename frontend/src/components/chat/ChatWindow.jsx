@@ -4,6 +4,7 @@ import { MessageSquare, Flag } from 'lucide-react'
 import MessageItem from './MessageItem'
 import ChatInput from './ChatInput'
 import ReportModal from './ReportModal'
+import ThinkingIndicator from './ThinkingIndicator'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { ROLES } from '../../constants/roles'
@@ -185,6 +186,12 @@ export default function ChatWindow({
                   agentLabel={agentMaskLabel}
                 />
               ))}
+              {/* Agent thinking indicator — hiện khi tin cuối là của user (agent chưa trả lời) */}
+              {messagePerspective === 'learner' &&
+                messages.length > 0 &&
+                messages[messages.length - 1]?.role === 'user' && (
+                  <ThinkingIndicator agentLabel={agentMaskLabel} />
+                )}
               {showIs3BusyHint && (
                 <div className="pt-2">
                   <p className="text-sm text-slate-600 dark:text-slate-300 italic border-l-2 border-amber-400 pl-3 py-2.5 bg-amber-50/80 dark:bg-amber-900/20 rounded-r-xl">

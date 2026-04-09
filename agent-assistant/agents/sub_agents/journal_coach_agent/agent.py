@@ -84,17 +84,6 @@ def init_session_state(callback_context: CallbackContext) -> None:
             return response.json().get("user_role", "student")
         return "student"
 
-    def get_learning_history(user_id: str) -> list:
-        response = requests.get(
-            f"{BE_SERVER}/users/{user_id}/learning_history",
-            headers=be_integration_headers(),
-            timeout=30,
-        )
-        if response.status_code == 200:
-            data = response.json().get("learning_history")
-            return data if isinstance(data, list) else []
-        return []
-
     callback_context.state[_ATTEMPT_KEY] = 0
     callback_context.state["current_attempt"] = 0
 
@@ -106,9 +95,7 @@ def init_session_state(callback_context: CallbackContext) -> None:
         callback_context.state["user_role"] = get_user_role(callback_context.state["user_id"])
 
     if "static_profile" not in callback_context.state:
-        callback_context.state["static_profile"] = get_learning_history(
-            callback_context.state["user_id"]
-        )
+        callback_context.state["static_profile"] = []
 
     if "dynamic_profile" not in callback_context.state:
         callback_context.state["dynamic_profile"] = []

@@ -161,6 +161,40 @@ async def get_user_journal_status(tool_context: ToolContext) -> str:
         return f'Lỗi kết nối khi kiểm tra trạng thái journal: {e}'
 
 
+_MAX_JOURNAL_CONTEXT_CHARS = 80_000
+
+
+async def read_journal_submissions_content(tool_context: ToolContext) -> str:
+    """
+    Đọc văn bản đã trích từ các bài journal user đã nộp trên hệ thống (API journal-context).
+    Dùng khi cần nội dung/file submission đã upload — **không** dùng learning_history hay bảng học phụ.
+    """
+    user_id = _session_user_id(tool_context)
+    if not user_id:
+        return _SESSION_USER_MISSING
+    try:
+        r = requests.get(
+            f'{BE_SERVER}/users/{user_id}/journal-context',
+            headers=be_integration_headers(),
+            timeout=45,
+        )
+        if r.status_code != 200:
+            return f'Không đọc được nội dung journal đã nộp: {r.status_code} {r.text[:400]}'
+        ctx = r.json().get('journal_context') or ''
+        text = str(ctx).strip()
+        if not text:
+            return 'Người học chưa có bản journal nào trên server (hoặc chưa trích được văn bản).'
+        if len(text) > _MAX_JOURNAL_CONTEXT_CHARS:
+            return (
+                text[:_MAX_JOURNAL_CONTEXT_CHARS]
+                + f'\n\n… (đã cắt còn {_MAX_JOURNAL_CONTEXT_CHARS} ký tự)'
+            )
+        return text
+    except requests.RequestException as e:
+        logger.error('read_journal_submissions_content: %s', e)
+        return f'Lỗi kết nối khi đọc journal đã nộp: {e}'
+
+
 async def get_active_journal_periods() -> str:
     """
     Lấy danh sách các đợt nộp journal đang diễn ra hoặc sắp tới từ hệ thống.

@@ -107,17 +107,6 @@ def init_session_state(callback_context: CallbackContext) -> None:
             return response.json().get("user_role", "student")
         return "student"
 
-    def get_learning_history(user_id: str) -> list:
-        response = requests.get(
-            f"{BE_SERVER}/users/{user_id}/learning_history",
-            headers=be_integration_headers(),
-            timeout=30,
-        )
-        if response.status_code == 200:
-            data = response.json().get("learning_history")
-            return data if isinstance(data, list) else []
-        return []
-
     # Initialize the session state for the agent
     if "current_attempt" not in callback_context.state:
         # Initialize the step counter if not present
@@ -139,12 +128,10 @@ def init_session_state(callback_context: CallbackContext) -> None:
             get_user_role(session_uid) if session_uid else "student"
         )
 
-    # Initialize static profile from user's learning history
+    # Không gọi GET /learning_history (raw SQL class_students — có thể không tồn tại trên DB).
+    # Cá nhân hoá học phần: để trống; Reminder/Journal dùng API journal-status / journal-context.
     if "static_profile" not in callback_context.state:
-        callback_context.state["static_profile"] = (
-            get_learning_history(session_uid) if session_uid else []
-        )
-        # logger.info(callback_context.state['static_profile'])
+        callback_context.state["static_profile"] = []
 
     # Initialize dynamic profile for user_id
     if "dynamic_profile" not in callback_context.state:

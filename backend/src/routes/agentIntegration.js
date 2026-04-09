@@ -30,6 +30,18 @@ function warnBadRequest(req, reason, extra = {}) {
   })
 }
 
+/**
+ * PostgreSQL undefined_table — DB thiếu bảng học vụ (vd. class_students từ init/02_core_schema.sql).
+ * prisma migrate không tạo các bảng đó; cần chạy SQL init hoặc chấp nhận dữ liệu rỗng.
+ */
+function isMissingRelationError(err) {
+  if (!err || typeof err !== 'object') return false
+  if (err.code !== 'P2010') return false
+  const pg = err.meta?.code
+  const msg = String(err.meta?.message || err.message || '')
+  return pg === '42P01' || msg.includes('does not exist')
+}
+
 /** Body JSON object; tránh Array hoặc primitive làm body. */
 function integrationBody(req) {
   const b = req.body
@@ -503,8 +515,8 @@ router.get('/sessions/:sessionId/conversations', async (req, res) => {
  * GET /users/:userId/learning_history
  */
 router.get('/users/:userId/learning_history', async (req, res) => {
+  const userId = String(req.params.userId || '').trim()
   try {
-    const userId = String(req.params.userId || '').trim()
     if (!userId) {
       warnBadRequest(req, 'thiếu user_id path')
       return res.status(400).json({ error: 'Thiếu user_id' })
@@ -541,6 +553,14 @@ router.get('/users/:userId/learning_history', async (req, res) => {
       })
     )
   } catch (err) {
+    if (isMissingRelationError(err)) {
+      console.warn(
+        '[agentIntegration GET learning_history] thiếu bảng học vụ (class_students / …). Trả learning_history rỗng. Chạy backend/init/02_core_schema.sql nếu cần đầy đủ.'
+      )
+      return res.status(200).json(
+        jsonSafe({ user_id: userId, learning_history: [] })
+      )
+    }
     console.error('[agentIntegration GET learning_history]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',
@@ -553,8 +573,8 @@ router.get('/users/:userId/learning_history', async (req, res) => {
  * GET /users/:userId/schedule
  */
 router.get('/users/:userId/schedule', async (req, res) => {
+  const userId = String(req.params.userId || '').trim()
   try {
-    const userId = String(req.params.userId || '').trim()
     if (!userId) {
       warnBadRequest(req, 'thiếu user_id path')
       return res.status(400).json({ error: 'Thiếu user_id' })
@@ -605,6 +625,14 @@ router.get('/users/:userId/schedule', async (req, res) => {
       })
     )
   } catch (err) {
+    if (isMissingRelationError(err)) {
+      console.warn(
+        '[agentIntegration GET schedule] thiếu bảng học vụ (class_students / …). Trả schedule rỗng. Chạy backend/init/02_core_schema.sql nếu cần đầy đủ.'
+      )
+      return res.status(200).json(
+        jsonSafe({ user_id: userId, schedule: [] })
+      )
+    }
     console.error('[agentIntegration GET schedule]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',

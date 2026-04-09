@@ -36,9 +36,10 @@ logger = logging.getLogger(__name__)
 
 BE_SERVER = get_be_server_base_url()
 
-MAX_RETRIES = 3
+# Tăng để tránh before_model cắt sớm khi có nhiều lượt tool (Manager đôi khi làm tăng bộ đếm).
+MAX_RETRIES = 8
 # Đủ chỗ cho get_user_journal_status + get_active_journal_periods + nhiều set_reminder (nhiều đợt chưa nộp).
-MAX_FUNCTION_CALLS = 14
+MAX_FUNCTION_CALLS = 16
 
 # Không dùng chung `current_attempt` với Manager: sau call_persona + call_reminder, state của Manager
 # làm bộ đếm của Reminder tăng sớm → before_model trả "không tìm thấy thông tin" sau 3–4 tool calls.
@@ -57,14 +58,14 @@ def setup_before_model_call(
     if step >= MAX_RETRIES + 2: # 1 for result from the final function call and 1 for the first exceeded step
         callback_context.state[_ATTEMPT_KEY] = 0
         callback_context.state["current_attempt"] = 0
-        # Skip further model calls – return failure string
+        # Tránh lời xin lỗi chung chung; nhắc gọi tool deadline thay vì “trục trặc kỹ thuật”
         return LlmResponse(
             content=types.Content(
                 role="model",
                 parts=[types.Part(
                     text=(
-                        "Rất tiếc, tôi không tìm thấy thông tin phù hợp. "
-                        "Nếu bạn có thêm chi tiết, tôi sẵn lòng tìm giúp bạn."
+                        "Mình chưa xử lý xong trong phiên này. Bạn gửi lại câu hỏi (ví dụ: hạn nộp submission hiện tại) "
+                        "hoặc xem mục Journal trên ứng dụng để biết đợt nộp và hạn."
                     )
                 )]
             )

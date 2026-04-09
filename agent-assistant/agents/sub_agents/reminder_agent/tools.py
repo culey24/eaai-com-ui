@@ -207,7 +207,10 @@ async def get_active_journal_periods() -> str:
             timeout=30,
         )
         if r.status_code != 200:
-            return f'Không đọc được danh sách đợt nộp: {r.status_code} {r.text[:300]}'
+            return (
+                f'Không lấy được danh sách đợt nộp từ máy chủ (HTTP {r.status_code}). '
+                f'Bạn có thể xem lịch đợt nộp trên trang Journal trong ứng dụng. Chi tiết: {r.text[:200]}'
+            )
         periods = r.json().get('periods') or []
         if not periods:
             return 'Hiện không có đợt nộp journal nào đang diễn ra hoặc sắp tới.'
@@ -221,7 +224,10 @@ async def get_active_journal_periods() -> str:
         return 'Các đợt nộp journal hiện tại:\n' + '\n'.join(lines)
     except requests.RequestException as e:
         logger.error('get_active_journal_periods: %s', e)
-        return f'Lỗi kết nối khi lấy đợt nộp journal: {e}'
+        return (
+            'Không kết nối được máy chủ để lấy danh sách đợt nộp. '
+            f'Xem thử trang Journal trên ứng dụng. ({e})'
+        )
 
 
 async def get_current_schedule(tool_context: ToolContext) -> Optional[list]:

@@ -20,6 +20,7 @@ from .tools import (
     call_supporter_agent,
     call_reminder_agent,
     read_uploaded_data_file,
+    read_user_journal_submissions,
 )
 
 load_dotenv()  # Load environment variables from .env file
@@ -171,6 +172,7 @@ def create_agent() -> Agent:
         tools=[
             call_persona_agent,
             read_uploaded_data_file,
+            read_user_journal_submissions,
             call_provider_agent,
             call_supporter_agent,
             call_reminder_agent,

@@ -6,10 +6,15 @@ from google.adk.tools import ToolContext, agent_tool
 from utils.file_reader import FileReader
 from utils.upload_paths import uploaded_data_dir
 
+from utils.be_integration import be_integration_headers
+from .service_urls import get_be_server_base_url
+
 from .sub_agents.persona_agent import create_agent as create_persona_agent
 from .sub_agents.provider_agent import create_agent as create_provider_agent
 from .sub_agents.reminder_agent import create_agent as create_reminder_agent
 from .sub_agents.supporter_agent import create_agent as create_supporter_agent
+
+_BE_SERVER = get_be_server_base_url()
 
 
 logging.basicConfig(
@@ -51,6 +56,30 @@ async def read_uploaded_data_file(file_name: str, tool_context: ToolContext):
             + f'\n\n… (đã cắt còn {_MAX_UPLOAD_EXTRACT} ký tự)'
         )
     return text
+
+
+async def read_user_journal_submissions(tool_context: ToolContext) -> str:
+    """
+    Đọc toàn bộ nội dung (văn bản trích từ PDF/DOCX/...) các bài journal user đã submit trên hệ thống.
+    Dùng khi người dùng hỏi về nội dung submission của mình, muốn được nhận xét, lời khuyên, hoặc
+    đặt câu hỏi dựa trên ngữ cảnh bài journal đã nộp.
+    """
+    import requests as _requests
+    user_id = tool_context.state.get("user_id", "")
+    if not user_id:
+        return "Không xác định được user_id trong phiên hiện tại."
+    try:
+        r = _requests.get(
+            f"{_BE_SERVER}/users/{user_id}/journal-context",
+            headers=be_integration_headers(),
+            timeout=30,
+        )
+        if r.status_code != 200:
+            return f"Không đọc được journal submissions: {r.status_code} {r.text[:300]}"
+        return r.json().get("journal_context") or "Người học chưa có bản journal nào trên server."
+    except _requests.RequestException as e:
+        logger.error("read_user_journal_submissions: %s", e)
+        return f"Lỗi kết nối khi đọc journal submissions: {e}"
 
 
 async def call_persona_agent(query: str, tool_context: ToolContext):

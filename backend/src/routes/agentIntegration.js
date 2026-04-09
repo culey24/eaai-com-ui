@@ -9,6 +9,7 @@ import {
 import { prisma } from '../lib/prisma.js'
 import { agentIntegrationAuth } from '../middleware/agentIntegrationAuth.js'
 import { jsonSafe } from '../lib/json.js'
+import { getJournalContextSummary } from '../lib/journalContext.js'
 
 const router = Router()
 router.use(agentIntegrationAuth)
@@ -724,6 +725,120 @@ router.get('/users/:userId/reminders', async (req, res) => {
     return res.status(200).json(jsonSafe({ user_id: userId, reminders }))
   } catch (err) {
     console.error('[agentIntegration GET reminders]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /users/:userId/journal-status — trạng thái nộp journal của user theo từng đợt đang active.
+ * Trả về list period + đã nộp (submitted) hay chưa (not_submitted) cho mỗi đợt.
+ */
+router.get('/users/:userId/journal-status', async (req, res) => {
+  try {
+    const userId = String(req.params.userId || '').trim()
+    if (!userId) {
+      warnBadRequest(req, 'thiếu user_id path (journal-status)')
+      return res.status(400).json({ error: 'Thiếu user_id' })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { userId: true },
+    })
+    if (!user) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
+    }
+
+    const now = new Date()
+    const periods = await prisma.journalPeriod.findMany({
+      where: { endsAt: { gte: now } },
+      orderBy: { endsAt: 'asc' },
+    })
+
+    const uploads = await prisma.journalUpload.findMany({
+      where: {
+        userId,
+        periodId: { in: periods.map((p) => p.periodId) },
+      },
+      select: { periodId: true, submittedAt: true, originalFileName: true, status: true },
+    })
+
+    const uploadMap = new Map(uploads.map((u) => [u.periodId, u]))
+
+    const statuses = periods.map((p) => {
+      const upload = uploadMap.get(p.periodId)
+      return jsonSafe({
+        period_id: p.periodId,
+        title: p.title,
+        description: p.description,
+        starts_at: p.startsAt.toISOString(),
+        ends_at: p.endsAt.toISOString(),
+        submitted: upload != null,
+        submitted_at: upload?.submittedAt ? upload.submittedAt.toISOString() : null,
+        file_name: upload?.originalFileName ?? null,
+        upload_status: upload?.status ?? null,
+      })
+    })
+
+    return res.status(200).json(jsonSafe({ user_id: userId, journal_status: statuses }))
+  } catch (err) {
+    console.error('[agentIntegration GET journal-status]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /users/:userId/journal-context — toàn bộ nội dung (extracted_text) journal user đã submit.
+ * Dùng cho Agent đọc context bài viết để đưa lời khuyên / trả lời câu hỏi trong ngữ cảnh submission.
+ */
+router.get('/users/:userId/journal-context', async (req, res) => {
+  try {
+    const userId = String(req.params.userId || '').trim()
+    if (!userId) {
+      warnBadRequest(req, 'thiếu user_id path (journal-context)')
+      return res.status(400).json({ error: 'Thiếu user_id' })
+    }
+    const context = await getJournalContextSummary(userId)
+    return res.status(200).json({ user_id: userId, journal_context: context })
+  } catch (err) {
+    console.error('[agentIntegration GET journal-context]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /journal-periods — danh sách đợt nộp journal đang diễn ra hoặc sắp tới (Reminder Agent).
+ * Không cần userId; trả về các period có ends_at >= now.
+ */
+router.get('/journal-periods', async (req, res) => {
+  try {
+    const now = new Date()
+    const rows = await prisma.journalPeriod.findMany({
+      where: { endsAt: { gte: now } },
+      orderBy: { endsAt: 'asc' },
+    })
+    return res.status(200).json(
+      jsonSafe({
+        periods: rows.map((p) => ({
+          period_id: p.periodId,
+          title: p.title,
+          description: p.description,
+          starts_at: p.startsAt.toISOString(),
+          ends_at: p.endsAt.toISOString(),
+        })),
+      })
+    )
+  } catch (err) {
+    console.error('[agentIntegration GET journal-periods]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),

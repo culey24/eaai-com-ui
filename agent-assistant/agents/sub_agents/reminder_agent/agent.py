@@ -17,7 +17,7 @@ from utils.llm_provider import get_adk_model
 from utils.be_integration import be_integration_headers
 
 from .prompt import REMINDER_AGENT_INSTRUCTION_PROMPT
-from .tools import get_current_schedule, list_user_reminders, set_reminder
+from .tools import get_active_journal_periods, get_current_schedule, get_user_journal_status, list_user_reminders, set_reminder
 from ...service_urls import get_be_server_base_url
 
 load_dotenv()  # Load environment variables from .env file
@@ -30,7 +30,12 @@ logger = logging.getLogger(__name__)
 BE_SERVER = get_be_server_base_url()
 
 MAX_RETRIES = 3
-MAX_FUNCTION_CALLS = 3
+# Đủ chỗ cho get_user_journal_status + get_active_journal_periods + nhiều set_reminder (nhiều đợt chưa nộp).
+MAX_FUNCTION_CALLS = 12
+
+# Không dùng chung `current_attempt` với Manager: sau call_persona + call_reminder, state của Manager
+# làm bộ đếm của Reminder tăng sớm → before_model trả "không tìm thấy thông tin" sau 3–4 tool calls.
+_ATTEMPT_KEY = "_reminder_fc_round"
 
 
 def setup_before_model_call(
@@ -38,14 +43,12 @@ def setup_before_model_call(
 ) -> Optional[LlmResponse]:
     # Update timestamp in the callback context
     callback_context.state["_timestamp"] = datetime.now().isoformat()
- 
-    if "current_attempt" not in callback_context.state:
-        # Initialize the step counter if not present
-        callback_context.state["current_attempt"] = 0
- 
-    step = callback_context.state["current_attempt"]
+
+    step = int(callback_context.state.get(_ATTEMPT_KEY, 0))
+    callback_context.state["current_attempt"] = step
+
     if step >= MAX_RETRIES + 2: # 1 for result from the final function call and 1 for the first exceeded step
-        # Reset the step counter
+        callback_context.state[_ATTEMPT_KEY] = 0
         callback_context.state["current_attempt"] = 0
         # Skip further model calls – return failure string
         return LlmResponse(
@@ -65,7 +68,7 @@ def setup_before_model_call(
 def after_model_call(
     callback_context: CallbackContext, llm_response: LlmResponse
 ) -> Optional[LlmResponse]:
-    step = callback_context.state.get("current_attempt", 0)
+    step = int(callback_context.state.get(_ATTEMPT_KEY, 0))
     if llm_response.content and llm_response.content.parts:
         if llm_response.content.parts[0].text:
             pass # Do nothing with the text part
@@ -73,13 +76,13 @@ def after_model_call(
             # original_text = llm_response.content.parts[0].text
             # print("[Callback] Original text:", original_text)
         if llm_response.content.parts[0].function_call:
-            callback_context.state["current_attempt"] = step + 1
+            callback_context.state[_ATTEMPT_KEY] = step + 1
             # print("[Callback] Function call detected")
     return None
  
  
 def process_after_agent_call(callback_context: CallbackContext) -> Optional[types.Content]:
-    # Reset the step counter after the model call
+    callback_context.state[_ATTEMPT_KEY] = 0
     callback_context.state["current_attempt"] = 0
     return None
  
@@ -107,12 +110,8 @@ def init_session_state(callback_context: CallbackContext) -> None:
             return data if isinstance(data, list) else []
         return []
 
-    # Initialize the session state for the agent
-    if "current_attempt" not in callback_context.state:
-        # Initialize the step counter if not present
-        # This is necessary to ensure the agent can track attempts correctly
-        # across multiple calls
-        callback_context.state["current_attempt"] = 0
+    callback_context.state[_ATTEMPT_KEY] = 0
+    callback_context.state["current_attempt"] = 0
 
     invocation_context = getattr(callback_context, "_invocation_context", {})
     if invocation_context:
@@ -165,7 +164,7 @@ def create_agent(query: Optional[str] = None) -> Agent:
         after_model_callback=after_model_call,
         after_agent_callback=process_after_agent_call,
         output_key="reminded_infos",
-        tools=[get_current_schedule, set_reminder, list_user_reminders],
+        tools=[get_user_journal_status, get_active_journal_periods, get_current_schedule, set_reminder, list_user_reminders],
         generate_content_config=types.GenerateContentConfig(
             temperature=0.1,
             automatic_function_calling=types.AutomaticFunctionCallingConfig(

@@ -4,7 +4,7 @@
 - Hỏi xem liệu AGENT có nhận biết được thông tin cá nhân đã được upload không (expected behaviour là có)
 - Hỏi về các câu chuyên môn liên quan tới Hệ thống thôgn minh
 - Hỏi AGENT xem liệu AGENT có thấy được tài liệu đã gửi, nhận biết được context dựa trên các submission của user đó không.
-- 
+- Là một user, tui muốn hỏi AGENT kiểm tra xem tui đã nộp các submission nào đang hiện có (có submission nào tui chưa nộp không) và các submission đã qua tui có nộp chưa
 
 ## Các tính năng đang dev
 - Reminder Agent: nhắc người dùng các thứ như: Hạn nộp submission,...

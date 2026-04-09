@@ -32,20 +32,20 @@ BE_SERVER = get_be_server_base_url()
 MAX_RETRIES = 3
 MAX_FUNCTION_CALLS = 3
 
+_ATTEMPT_KEY = "_persona_fc_round"
+
 
 def setup_before_model_call(
     callback_context: CallbackContext, llm_request: LlmRequest
 ) -> Optional[LlmResponse]:
     # Update timestamp in the callback context
     callback_context.state["_timestamp"] = datetime.now().isoformat()
- 
-    if "current_attempt" not in callback_context.state:
-        # Initialize the step counter if not present
-        callback_context.state["current_attempt"] = 0
- 
-    step = callback_context.state["current_attempt"]
+
+    step = int(callback_context.state.get(_ATTEMPT_KEY, 0))
+    callback_context.state["current_attempt"] = step
+
     if step >= MAX_RETRIES + 2: # 1 for result from the final function call and 1 for the first exceeded step
-        # Reset the step counter
+        callback_context.state[_ATTEMPT_KEY] = 0
         callback_context.state["current_attempt"] = 0
         # Skip further model calls – return failure string
         return LlmResponse(
@@ -65,7 +65,7 @@ def setup_before_model_call(
 def after_model_call(
     callback_context: CallbackContext, llm_response: LlmResponse
 ) -> Optional[LlmResponse]:
-    step = callback_context.state.get("current_attempt", 0)
+    step = int(callback_context.state.get(_ATTEMPT_KEY, 0))
 
     current_profile = callback_context.state.get("dynamic_profile", [])
 
@@ -121,17 +121,17 @@ def after_model_call(
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to decode JSON from Persona Agent response: {e} - Response text: {text_response}")
                 # If decoding fails, allow the LLM to retry (increase the step).
-                callback_context.state["current_attempt"] = step + 1
+                callback_context.state[_ATTEMPT_KEY] = step + 1
                 
         if llm_response.content.parts[0].function_call:
             # Increase step if there is a function call (though there shouldn't be in Persona Agent)
-            callback_context.state["current_attempt"] = step + 1
+            callback_context.state[_ATTEMPT_KEY] = step + 1
             
     return None
  
  
 def process_after_agent_call(callback_context: CallbackContext) -> Optional[types.Content]:
-    # Reset the step counter after the model call
+    callback_context.state[_ATTEMPT_KEY] = 0
     callback_context.state["current_attempt"] = 0
     return None
  
@@ -159,12 +159,8 @@ def init_session_state(callback_context: CallbackContext) -> None:
             return data if isinstance(data, list) else []
         return []
 
-    # Initialize the session state for the agent
-    if "current_attempt" not in callback_context.state:
-        # Initialize the step counter if not present
-        # This is necessary to ensure the agent can track attempts correctly
-        # across multiple calls
-        callback_context.state["current_attempt"] = 0
+    callback_context.state[_ATTEMPT_KEY] = 0
+    callback_context.state["current_attempt"] = 0
 
     invocation_context = getattr(callback_context, "_invocation_context", {})
     user_id = getattr(invocation_context, "user_id", "user")

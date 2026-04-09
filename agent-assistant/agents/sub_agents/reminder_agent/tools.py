@@ -25,7 +25,17 @@ _SESSION_USER_MISSING = (
 
 
 def _session_user_id(tool_context: ToolContext) -> Optional[str]:
-    """user_id từ phiên ADK — không lấy từ tham số model để tránh 404 Không tìm thấy user."""
+    """
+    ID user cho API nhắc việc / journal: ưu tiên user_id của Session ADK (khớp URL tạo phiên / JWT),
+    không tin state['user_id'] trước vì state có thể lệch sau sub-agent hoặc bị ghi đè.
+    """
+    inv = getattr(tool_context, '_invocation_context', None)
+    if inv is not None:
+        sid = getattr(inv, 'user_id', None)
+        if sid is not None:
+            s = str(sid).strip()
+            if s and s != 'user':
+                return s
     raw = tool_context.state.get('user_id')
     if raw is None:
         return None
@@ -55,6 +65,18 @@ async def set_reminder(reminder_iso: str, message: str, tool_context: ToolContex
         )
         if r.status_code == 201:
             return 'Đã lưu nhắc việc thành công.'
+        if r.status_code == 404:
+            try:
+                body = r.json()
+                err = str(body.get('error') or '')
+            except Exception:
+                err = ''
+            if 'Không tìm thấy' in err or 'not found' in err.lower():
+                return (
+                    'Lưu nhắc thất bại: máy chủ không tìm thấy user này trong CSDL '
+                    '(thường do BE_SERVER_BASE_URL của agent khác môi trường với app đăng nhập, '
+                    'hoặc tài khoản chưa tồn tại trên DB đó). Kiểm tra biến môi trường backend của stack agent.'
+                )
         return f'Lưu nhắc việc thất bại: {r.status_code} {r.text[:500]}'
     except requests.RequestException as e:
         logger.error('set_reminder: %s', e)
@@ -101,6 +123,18 @@ async def get_user_journal_status(tool_context: ToolContext) -> str:
             timeout=30,
         )
         if r.status_code != 200:
+            if r.status_code == 404:
+                try:
+                    body = r.json()
+                    err = str(body.get('error') or '')
+                except Exception:
+                    err = ''
+                if 'Không tìm thấy' in err or 'not found' in err.lower():
+                    return (
+                        'Không đọc được trạng thái nộp bài: máy chủ không tìm thấy user trong CSDL '
+                        '(thường do BE_SERVER_BASE_URL của agent trỏ khác môi trường với app đăng nhập, '
+                        'hoặc tài khoản không tồn tại trên DB đó). Kiểm tra biến môi trường backend của agent.'
+                    )
             return f'Không đọc được trạng thái journal: {r.status_code} {r.text[:300]}'
         statuses = r.json().get('journal_status') or []
         if not statuses:

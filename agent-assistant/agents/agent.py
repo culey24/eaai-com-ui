@@ -125,19 +125,24 @@ def init_session_state(callback_context: CallbackContext) -> None:
         # across multiple calls
         callback_context.state["current_attempt"] = 0
 
-    invocation_context = getattr(callback_context, "_invocation_context", {})
-    if invocation_context:
-        user_id = getattr(invocation_context, "user_id", "user")
-        callback_context.state["user_id"] = user_id
+    inv_ctx = getattr(callback_context, "_invocation_context", None)
+    if inv_ctx is not None:
+        uid = getattr(inv_ctx, "user_id", None)
+        if uid is not None and str(uid).strip():
+            callback_context.state["user_id"] = str(uid).strip()
+
+    session_uid = callback_context.state.get("user_id")
 
     # Initialize User's role
     if "user_role" not in callback_context.state:
-        callback_context.state["user_role"] = get_user_role(callback_context.state["user_id"])
+        callback_context.state["user_role"] = (
+            get_user_role(session_uid) if session_uid else "student"
+        )
 
     # Initialize static profile from user's learning history
     if "static_profile" not in callback_context.state:
-        callback_context.state["static_profile"] = get_learning_history(
-            callback_context.state["user_id"]
+        callback_context.state["static_profile"] = (
+            get_learning_history(session_uid) if session_uid else []
         )
         # logger.info(callback_context.state['static_profile'])
 

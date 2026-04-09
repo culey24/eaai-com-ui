@@ -13,6 +13,8 @@ from .sub_agents.persona_agent import create_agent as create_persona_agent
 from .sub_agents.provider_agent import create_agent as create_provider_agent
 from .sub_agents.reminder_agent import create_agent as create_reminder_agent
 from .sub_agents.supporter_agent import create_agent as create_supporter_agent
+from .sub_agents.journal_coach_agent import create_agent as create_journal_coach_agent
+from .sub_agents.rubric_agent import create_agent as create_rubric_agent
 
 _BE_SERVER = get_be_server_base_url()
 
@@ -152,6 +154,40 @@ async def call_supporter_agent(query: str, tool_context: ToolContext):
     except Exception as e:
         logger.error(f"Error calling supporter agent: {str(e)}")
         return f"Error calling supporter agent: {str(e)}"
+
+
+async def call_journal_coach_agent(query: str, tool_context: ToolContext):
+    """
+    Gọi Journal & Report Writing Coach: góp ý cấu trúc, mạch lạc, diễn đạt, giọng văn học thuật cho journal/báo cáo.
+    """
+    try:
+        coach = create_journal_coach_agent(query=query)
+        coach_tool = agent_tool.AgentTool(agent=coach)
+        await coach_tool.run_async(
+            args={"request": "Writing coaching based on the query and context."},
+            tool_context=tool_context,
+        )
+        return tool_context.state.get("journal_coach_infos", "")
+    except Exception as e:
+        logger.error(f"Error journal coach agent: {str(e)}")
+        return f"Error journal coach agent: {str(e)}"
+
+
+async def call_rubric_agent(query: str, tool_context: ToolContext):
+    """
+    So khớp nháp/bài journal với rubric hoặc yêu cầu đề bài (phải có trong query hoặc từ file đã đọc trước đó).
+    """
+    try:
+        rubric_agent = create_rubric_agent(query=query)
+        rubric_tool = agent_tool.AgentTool(agent=rubric_agent)
+        await rubric_tool.run_async(
+            args={"request": "Rubric alignment and requirements check."},
+            tool_context=tool_context,
+        )
+        return tool_context.state.get("rubric_infos", "")
+    except Exception as e:
+        logger.error(f"Error rubric agent: {str(e)}")
+        return f"Error rubric agent: {str(e)}"
 
 
 async def call_reminder_agent(query: str, tool_context: ToolContext):

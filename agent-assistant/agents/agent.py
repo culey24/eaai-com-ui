@@ -19,6 +19,8 @@ from .tools import (
     call_provider_agent,
     call_supporter_agent,
     call_reminder_agent,
+    call_journal_coach_agent,
+    call_rubric_agent,
     read_uploaded_data_file,
     read_user_journal_submissions,
 )
@@ -39,7 +41,7 @@ BE_SERVER = get_be_server_base_url()
 ADK_APP_NAME = (os.getenv("ADK_APP_NAME") or "agents").strip() or "agents"
 
 MAX_RETRIES = 4
-MAX_FUNCTION_CALLS = 3
+MAX_FUNCTION_CALLS = 5
 
  
 def setup_before_model_call(
@@ -176,6 +178,8 @@ def create_agent() -> Agent:
             call_provider_agent,
             call_supporter_agent,
             call_reminder_agent,
+            call_journal_coach_agent,
+            call_rubric_agent,
         ],
         generate_content_config=types.GenerateContentConfig(
             temperature=0.2,

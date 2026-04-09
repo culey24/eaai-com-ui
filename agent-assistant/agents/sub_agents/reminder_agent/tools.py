@@ -1,8 +1,9 @@
-import os
 from typing import Optional
 import logging
 from dotenv import load_dotenv
 import requests
+
+from google.adk.tools import ToolContext
 
 load_dotenv()
 logging.basicConfig(
@@ -17,11 +18,30 @@ from ...service_urls import get_be_server_base_url
 
 BE_SERVER = get_be_server_base_url()
 
+_SESSION_USER_MISSING = (
+    'Chưa xác định được tài khoản trong phiên chat (thiếu user_id hợp lệ). '
+    'Vui lòng đăng nhập lại hoặc gửi tin nhắn mới từ ứng dụng.'
+)
 
-async def set_reminder(user_id: str, reminder_iso: str, message: str) -> str:
+
+def _session_user_id(tool_context: ToolContext) -> Optional[str]:
+    """user_id từ phiên ADK — không lấy từ tham số model để tránh 404 Không tìm thấy user."""
+    raw = tool_context.state.get('user_id')
+    if raw is None:
+        return None
+    uid = str(raw).strip()
+    if not uid or uid == 'user':
+        return None
+    return uid
+
+
+async def set_reminder(reminder_iso: str, message: str, tool_context: ToolContext) -> str:
     """
-    Lưu nhắc việc lên backend. reminder_iso: ISO 8601 (vd. 2026-04-05T08:00:00+07:00).
+    Lưu nhắc việc lên backend cho đúng user đang chat. reminder_iso: ISO 8601 (vd. 2026-04-05T08:00:00+07:00).
     """
+    user_id = _session_user_id(tool_context)
+    if not user_id:
+        return _SESSION_USER_MISSING
     try:
         r = requests.post(
             f'{BE_SERVER}/users/{user_id}/reminders',
@@ -41,8 +61,11 @@ async def set_reminder(user_id: str, reminder_iso: str, message: str) -> str:
         return f'Lỗi kết nối: {e}'
 
 
-async def list_user_reminders(user_id: str) -> str:
-    """Liệt kê nhắc việc đã đăng ký (sắp xếp theo thời gian)."""
+async def list_user_reminders(tool_context: ToolContext) -> str:
+    """Liệt kê nhắc việc đã đăng ký (sắp xếp theo thời gian) cho user đang chat."""
+    user_id = _session_user_id(tool_context)
+    if not user_id:
+        return _SESSION_USER_MISSING
     try:
         r = requests.get(
             f'{BE_SERVER}/users/{user_id}/reminders',
@@ -63,11 +86,14 @@ async def list_user_reminders(user_id: str) -> str:
         return f'Lỗi kết nối: {e}'
 
 
-async def get_user_journal_status(user_id: str) -> str:
+async def get_user_journal_status(tool_context: ToolContext) -> str:
     """
     Kiểm tra trạng thái nộp journal của user cho từng đợt đang diễn ra hoặc sắp tới.
     Trả về danh sách đợt kèm thông tin đã nộp hay chưa, ngày nộp và tên file (nếu có).
     """
+    user_id = _session_user_id(tool_context)
+    if not user_id:
+        return _SESSION_USER_MISSING
     try:
         r = requests.get(
             f'{BE_SERVER}/users/{user_id}/journal-status',
@@ -130,10 +156,14 @@ async def get_active_journal_periods() -> str:
         return f'Lỗi kết nối khi lấy đợt nộp journal: {e}'
 
 
-async def get_current_schedule(user_id: str) -> Optional[list]:
+async def get_current_schedule(tool_context: ToolContext) -> Optional[list]:
     """
-    Retrieves the user's currently scheduled academic for the specified period.
+    Retrieves the current user's academic schedule (classes) from the backend.
     """
+    user_id = _session_user_id(tool_context)
+    if not user_id:
+        logger.warning('get_current_schedule: missing session user_id')
+        return []
     try:
         response = requests.get(
             f"{BE_SERVER}/users/{user_id}/schedule",
@@ -144,5 +174,5 @@ async def get_current_schedule(user_id: str) -> Optional[list]:
             return response.json().get("schedule", [])
         return []
     except requests.RequestException as e:
-        logger.error(f"Error retrieving current schedule for user {user_id}: {e}")
+        logger.error('Error retrieving current schedule for user %s: %s', user_id, e)
         return None

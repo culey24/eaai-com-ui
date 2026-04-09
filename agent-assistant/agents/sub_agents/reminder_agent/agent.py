@@ -113,20 +113,37 @@ def init_session_state(callback_context: CallbackContext) -> None:
     callback_context.state[_ATTEMPT_KEY] = 0
     callback_context.state["current_attempt"] = 0
 
-    invocation_context = getattr(callback_context, "_invocation_context", {})
-    if invocation_context:
-        callback_context.state["user_id"] = getattr(invocation_context, "user_id", "user")
+    invocation_context = getattr(callback_context, "_invocation_context", None)
+    inv_uid = (
+        getattr(invocation_context, "user_id", None) if invocation_context is not None else None
+    )
+    if inv_uid is not None and str(inv_uid).strip():
+        callback_context.state["user_id"] = str(inv_uid).strip()
+    elif callback_context.state.get("user_id"):
+        # Sub-agent gọi qua AgentTool: giữ user_id đã có trong state từ phiên cha
+        pass
+    else:
+        callback_context.state["user_id"] = getattr(
+            invocation_context, "user_id", "user"
+        ) if invocation_context is not None else "user"
+
+    session_uid = callback_context.state.get("user_id")
+    session_uid = session_uid.strip() if isinstance(session_uid, str) else session_uid
 
     # Initialize User's role
     if "user_role" not in callback_context.state:
         logger.warning(f"'user_role' not in callback_context.state")
-        callback_context.state["user_role"] = get_user_role(callback_context.state["user_id"])
+        callback_context.state["user_role"] = (
+            get_user_role(session_uid) if session_uid and session_uid != "user" else "student"
+        )
 
     # Initialize static profile from user's learning history
     if "static_profile" not in callback_context.state:
         logger.warning(f"'static_profile' not in callback_context.state")
-        callback_context.state["static_profile"] = get_learning_history(
-            callback_context.state["user_id"]
+        callback_context.state["static_profile"] = (
+            get_learning_history(session_uid)
+            if session_uid and session_uid != "user"
+            else []
         )
 
     # Initialize dynamic profile for user_id

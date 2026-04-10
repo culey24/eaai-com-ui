@@ -217,6 +217,7 @@
     "fullNamePlaceholder": "Full name (optional)",
     "class": "Class",
     "role": "Role",
+    "dbRoleRequiresJwt": "To persist role changes to the database (user_role column), sign in as admin with a server account (JWT). Demo/local login has no API token, so role changes are not written to PostgreSQL.",
     "actions": "Actions",
     "createAccountTitle": "Create new account",
     "create": "Create",

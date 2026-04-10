@@ -217,6 +217,7 @@
     "fullNamePlaceholder": "Họ và tên (tùy chọn)",
     "class": "Lớp",
     "role": "Vai trò",
+    "dbRoleRequiresJwt": "Để ghi vai trò vào database (cột user_role), hãy đăng nhập admin bằng tài khoản trên máy chủ (JWT). Đăng nhập demo/local không có token API nên thao tác đổi vai trò không cập nhật PostgreSQL.",
     "actions": "Thao tác",
     "createAccountTitle": "Tạo tài khoản mới",
     "create": "Tạo",

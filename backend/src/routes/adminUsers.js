@@ -1,8 +1,24 @@
 import { Router } from 'express'
+import { UserRole } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
-import { apiRoleToPrisma, prismaRoleToApi } from '../lib/roles.js'
+import { prismaRoleToApi } from '../lib/roles.js'
+
+/** Map UI role → enum Prisma (ghi đúng user_role trên DB). */
+function apiRoleStringToUserRole(roleRaw) {
+  const r = typeof roleRaw === 'string' ? roleRaw.trim() : ''
+  switch (r) {
+    case 'LEARNER':
+      return UserRole.student
+    case 'ASSISTANT':
+      return UserRole.support
+    case 'ADMIN':
+      return UserRole.admin
+    default:
+      return null
+  }
+}
 
 const router = Router()
 router.use(authMiddleware)
@@ -49,7 +65,7 @@ router.patch('/users/:userId/role', async (req, res) => {
     const userId =
       typeof req.params.userId === 'string' ? req.params.userId.trim().slice(0, 10) : ''
     const roleRaw = req.body?.role
-    const prismaRole = apiRoleToPrisma(typeof roleRaw === 'string' ? roleRaw.trim() : '')
+    const prismaRole = apiRoleStringToUserRole(roleRaw)
     if (!userId || !prismaRole) {
       return res.status(400).json({
         code: 'INVALID_ROLE',

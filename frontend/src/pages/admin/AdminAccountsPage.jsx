@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Search, Plus, Trash2 } from 'lucide-react'
 import { useAllUsers } from '../../hooks/useAllUsers'
+import { useAuth } from '../../context/AuthContext'
 import { useAdmin } from '../../context/AdminContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { ROLES, ROLE_LABELS, VALID_CLASS_CODES } from '../../constants/roles'
@@ -9,7 +10,16 @@ import { uiIdToBackendUserId } from '../../lib/userIds'
 
 export default function AdminAccountsPage() {
   const { t } = useLanguage()
-  const { allUsers, createUser, updateUserRole, deleteUser, roleOverrides } = useAllUsers()
+  const { apiToken, user: authUser } = useAuth()
+  const {
+    allUsers,
+    createUser,
+    updateUserRole,
+    deleteUser,
+    roleOverrides,
+    roleUpdateError,
+    clearRoleUpdateError,
+  } = useAllUsers()
   const {
     assignments,
     assignSupporter,
@@ -104,6 +114,14 @@ export default function AdminAccountsPage() {
       </div>
       <div className="flex-1 px-6 sm:px-10 lg:px-12 pb-10 min-h-0">
         <div className="w-full max-w-[min(100%,88rem)] mx-auto space-y-8">
+          {authUser?.role === ROLES.ADMIN && !apiToken && (
+            <div
+              className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-900 dark:text-amber-100"
+              role="status"
+            >
+              {t('admin.dbRoleRequiresJwt')}
+            </div>
+          )}
           {assignmentSyncError && (
             <div
               className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-200 flex items-center justify-between gap-3"
@@ -113,6 +131,21 @@ export default function AdminAccountsPage() {
               <button
                 type="button"
                 onClick={() => clearAssignmentSyncError()}
+                className="shrink-0 underline font-medium"
+              >
+                {t('common.cancel')}
+              </button>
+            </div>
+          )}
+          {roleUpdateError && (
+            <div
+              className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-200 flex items-center justify-between gap-3"
+              role="alert"
+            >
+              <span>{roleUpdateError}</span>
+              <button
+                type="button"
+                onClick={() => clearRoleUpdateError()}
                 className="shrink-0 underline font-medium"
               >
                 {t('common.cancel')}

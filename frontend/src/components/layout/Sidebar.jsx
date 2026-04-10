@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Bot,
@@ -48,6 +48,8 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const { assignments } = useAdmin()
   const { allUsers, supporterApiRows, supporterApiLearners } = useAllUsers()
   const supporterChat = useSupporterChat()
+  const selectedSupporterChatUser = supporterChat?.selectedUser
+  const setSupporterChatUser = supporterChat?.setSelectedUser
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
@@ -69,7 +71,7 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const isClassesPage = location.pathname === '/classes'
   const isJournalPage = location.pathname === '/journal'
   const isAssistant = user?.role === ROLES.ASSISTANT
-  /** Gộp API + gán local: trước đây khi GET /supporter/learners trả [] thì bỏ qua hoàn toàn assignments (mất danh sách). */
+  /** Gộp API + gán + placeholder từ assignments (học viên api-* chưa có trong allUsers khi GET lỗi / chưa đồng bộ). */
   const supporterChatUsers = useMemo(() => {
     if (!isAssistant || !user) return []
     const fromApi = Array.isArray(supporterApiRows) ? supporterApiLearners : []
@@ -78,8 +80,51 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
     for (const u of assignedUsers) {
       if (!byId.has(u.id)) byId.set(u.id, u)
     }
+    const assignmentLearnerKeys = Object.entries(assignments)
+      .filter(
+        ([, a]) =>
+          a &&
+          (a.supporterId === supporterKey ||
+            a.supporterId === user?.stableId ||
+            (user?.backendUserId &&
+              a.supporterId === String(user.backendUserId).trim()))
+      )
+      .map(([k]) => k)
+      .filter((k) => typeof k === 'string' && k.startsWith('api-'))
+    for (const key of assignmentLearnerKeys) {
+      if (byId.has(key)) continue
+      const bid = key.slice(4).trim().slice(0, 10)
+      if (!bid) continue
+      byId.set(key, {
+        id: key,
+        username: bid,
+        fullName: null,
+        role: ROLES.LEARNER,
+        classCode: 'IS-2',
+        managedClasses: null,
+        backendUserId: bid,
+        fromApi: true,
+        source: 'assignment',
+      })
+    }
     return Array.from(byId.values())
-  }, [isAssistant, user, supporterApiRows, supporterApiLearners, assignedUsers])
+  }, [
+    isAssistant,
+    user,
+    supporterKey,
+    assignments,
+    supporterApiRows,
+    supporterApiLearners,
+    assignedUsers,
+  ])
+
+  /** Chọn học viên đầu tiên khi có danh sách (trước đây main trống vì chưa click). */
+  useEffect(() => {
+    if (!isAssistant || supporterChatUsers.length === 0) return
+    if (selectedSupporterChatUser) return
+    setSupporterChatUser?.(supporterChatUsers[0])
+  }, [isAssistant, supporterChatUsers, selectedSupporterChatUser, setSupporterChatUser])
+
   const isAdmin = user?.role === ROLES.ADMIN
   const isLearner = user?.role === ROLES.LEARNER
   const isAdminArea = isAdminMode || location.pathname.startsWith('/admin')
@@ -323,9 +368,9 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
               )}
               <div className="space-y-1">
                 {supporterChatUsers.map((u) => {
-                  const isActive = location.pathname === '/' && supporterChat?.selectedUser?.id === u.id
+                  const isActive = location.pathname === '/' && selectedSupporterChatUser?.id === u.id
                   const handleUserClick = () => {
-                    supporterChat?.setSelectedUser?.(u)
+                    setSupporterChatUser?.(u)
                     if (location.pathname === '/reports' || location.pathname === '/classes') {
                       navigate('/')
                     }

@@ -81,6 +81,8 @@ export function useAllUsers() {
   const [adminUsersRefresh, setAdminUsersRefresh] = useState(0)
   const [supporterApiRows, setSupporterApiRows] = useState(null)
   const [supporterApiLoaded, setSupporterApiLoaded] = useState(false)
+  const [supporterLearnersRefresh, setSupporterLearnersRefresh] = useState(0)
+  const [roleUpdateError, setRoleUpdateError] = useState(null)
 
   useEffect(() => {
     const handler = () => {
@@ -128,6 +130,16 @@ export function useAllUsers() {
   }, [apiToken, user?.role, adminUsersRefresh])
 
   useEffect(() => {
+    const onFocus = () => {
+      if (apiToken && user?.role === ROLES.ASSISTANT) {
+        setSupporterLearnersRefresh((n) => n + 1)
+      }
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [apiToken, user?.role])
+
+  useEffect(() => {
     if (!apiToken || user?.role !== ROLES.ASSISTANT) {
       setSupporterApiRows(null)
       setSupporterApiLoaded(false)
@@ -160,7 +172,7 @@ export function useAllUsers() {
     return () => {
       cancelled = true
     }
-  }, [apiToken, user?.role])
+  }, [apiToken, user?.role, supporterLearnersRefresh])
 
   const adminApiUsers = useMemo(() => {
     if (!Array.isArray(adminApiRows)) return []
@@ -228,7 +240,9 @@ export function useAllUsers() {
       const rest = localBase.filter((u) => !adminApiUsers.some((a) => a.username === u.username))
       return [...adminApiUsers, ...rest]
     }
-    if (user?.role === ROLES.ASSISTANT && apiToken && supporterApiLoaded && Array.isArray(supporterApiRows)) {
+    /** Không yêu cầu Array.isArray(supporterApiRows): khi GET /supporter/learners lỗi, rows=null nhưng vẫn gộp
+     *  (supporterApiLearners=[]), tránh rơi về localBase-only → mất toàn bộ học viên api-* trong allUsers. */
+    if (user?.role === ROLES.ASSISTANT && apiToken && supporterApiLoaded) {
       const nonLearnerLocal = localBase.filter((u) => u.role !== 'LEARNER')
       const localLearners = localBase.filter(
         (u) =>
@@ -279,19 +293,26 @@ export function useAllUsers() {
     [adminUsers]
   )
 
+  const clearRoleUpdateError = useCallback(() => setRoleUpdateError(null), [])
+
   const updateUserRole = useCallback(
     async (userId, role) => {
-      const prevOverrides = { ...roleOverrides }
-      const next = { ...roleOverrides, [userId]: role }
-      setRoleOverrides(next)
-      try {
-        localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(next))
-      } catch {
-        /* ignore */
-      }
+      setRoleUpdateError(null)
 
-      if (userId.startsWith('api-') && apiToken && user?.role === ROLES.ADMIN) {
-        const backendId = userId.slice(4)
+      /** Tài khoản trên DB — bắt buộc PATCH; không được ghi roleOverrides trước (tránh UI đổi mà DB vẫn student). */
+      if (userId.startsWith('api-')) {
+        if (!apiToken || user?.role !== ROLES.ADMIN) {
+          const msg =
+            'Để lưu vai trò vào database, admin phải đăng nhập bằng tài khoản trên máy chủ (có JWT). Đăng nhập demo/local không gửi API — chỉ thay đổi hiển thị cục bộ, không ghi DB.'
+          setRoleUpdateError(msg)
+          return { ok: false, error: msg }
+        }
+        const backendId = userId.slice(4).trim().slice(0, 10)
+        if (!backendId) {
+          const msg = 'Không xác định được mã người dùng trên server.'
+          setRoleUpdateError(msg)
+          return { ok: false, error: msg }
+        }
         try {
           const res = await fetch(
             `${API_BASE}/api/admin/users/${encodeURIComponent(backendId)}/role`,
@@ -304,25 +325,40 @@ export function useAllUsers() {
               body: JSON.stringify({ role }),
             }
           )
-          if (res.ok) {
-            setAdminUsersRefresh((n) => n + 1)
-          } else {
-            setRoleOverrides(prevOverrides)
+          const data = await res.json().catch(() => ({}))
+          if (!res.ok) {
+            const msg =
+              data.error || data.message || (data.code ? String(data.code) : null) || `Lỗi HTTP ${res.status}`
+            setRoleUpdateError(msg)
+            return { ok: false, error: msg }
+          }
+          setRoleOverrides((prev) => {
+            const next = { ...prev }
+            delete next[userId]
             try {
-              localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(prevOverrides))
+              localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(next))
             } catch {
               /* ignore */
             }
-          }
-        } catch {
-          setRoleOverrides(prevOverrides)
-          try {
-            localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(prevOverrides))
-          } catch {
-            /* ignore */
-          }
+            return next
+          })
+          setAdminUsersRefresh((n) => n + 1)
+          return { ok: true }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : 'Lỗi mạng'
+          setRoleUpdateError(msg)
+          return { ok: false, error: msg }
         }
       }
+
+      const next = { ...roleOverrides, [userId]: role }
+      setRoleOverrides(next)
+      try {
+        localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(next))
+      } catch {
+        /* ignore */
+      }
+      return { ok: true }
     },
     [roleOverrides, apiToken, user?.role]
   )
@@ -358,6 +394,8 @@ export function useAllUsers() {
     createUser,
     updateUserRole,
     deleteUser,
+    roleUpdateError,
+    clearRoleUpdateError,
     /** Map userId → role UI khi admin đổi dropdown trước / song song khi GET users sync lại */
     roleOverrides,
     /** null = chưa có phản hồi / lỗi; mảng (có thể rỗng) = GET /api/supporter/learners đã trả về */

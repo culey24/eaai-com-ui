@@ -434,7 +434,7 @@ router.post('/upload', authMiddleware, journalUploadLimiter, upload.single('file
 
 /**
  * DELETE /api/journal/upload?periodId=default
- * Xóa bản nộp trên server (và file lưu đĩa nếu có).
+ * Xóa bản ghi submission trong DB; giữ lại file đã lưu.
  */
 router.delete('/upload', authMiddleware, async (req, res) => {
   try {
@@ -446,16 +446,9 @@ router.delete('/upload', authMiddleware, async (req, res) => {
     if (!periodId) {
       return res.status(400).json({ error: 'periodId không hợp lệ' })
     }
-    const prev = await prisma.$queryRaw`
-      SELECT storage_key FROM journal_uploads
-      WHERE user_id = ${userId} AND period_id = ${periodId}
-      LIMIT 1
-    `
     await prisma.$executeRaw`
       DELETE FROM journal_uploads WHERE user_id = ${userId} AND period_id = ${periodId}
     `
-    const key = Array.isArray(prev) && prev[0]?.storage_key
-    await removeJournalUpload(key)
     return res.status(200).json({ ok: true })
   } catch (err) {
     console.error('[journal delete]', err)

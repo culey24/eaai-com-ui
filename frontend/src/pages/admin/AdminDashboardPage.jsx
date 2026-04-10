@@ -25,6 +25,16 @@ function normUsername(s) {
     .toLowerCase()
 }
 
+function formatRemaining(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000))
+  const days = Math.floor(total / 86400)
+  const hours = Math.floor((total % 86400) / 3600)
+  const mins = Math.floor((total % 3600) / 60)
+  if (days > 0) return `${days}d ${hours}h`
+  if (hours > 0) return `${hours}h ${mins}m`
+  return `${mins}m`
+}
+
 export default function AdminDashboardPage() {
   const { t } = useLanguage()
   const { getActiveSubmission } = useJournal()
@@ -95,6 +105,8 @@ export default function AdminDashboardPage() {
     total: 0,
     error: null,
   })
+  const [reminderSummary, setReminderSummary] = useState({ loading: false, data: null, error: null })
+  const [tickNow, setTickNow] = useState(() => Date.now())
 
   useEffect(() => {
     if (!apiToken || user?.role !== ROLES.ADMIN || !activeSubmission?.id) {
@@ -137,9 +149,48 @@ export default function AdminDashboardPage() {
     }
   }, [apiToken, user?.role, activeSubmission?.id])
 
+  useEffect(() => {
+    if (!apiToken || user?.role !== ROLES.ADMIN) {
+      setReminderSummary({ loading: false, data: null, error: null })
+      return
+    }
+    let cancelled = false
+    setReminderSummary((s) => ({ ...s, loading: true, error: null }))
+    fetch(`${API_BASE}/api/admin/submission-reminder-summary`, {
+      headers: { Authorization: `Bearer ${apiToken}` },
+    })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+        return data
+      })
+      .then((data) => {
+        if (!cancelled) setReminderSummary({ loading: false, data, error: null })
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setReminderSummary({
+            loading: false,
+            data: null,
+            error: err instanceof Error ? err.message : String(err),
+          })
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [apiToken, user?.role])
+
+  useEffect(() => {
+    const tid = setInterval(() => setTickNow(Date.now()), 60000)
+    return () => clearInterval(tid)
+  }, [])
+
   const stats = { submitted: serverStats.submitted, total: serverStats.total }
   const rate =
     stats.total > 0 && !serverStats.error ? Math.round((stats.submitted / stats.total) * 100) : 0
+  const nearestPeriod = reminderSummary.data?.period || null
+  const countdownMs = nearestPeriod?.endsAt ? new Date(nearestPeriod.endsAt).getTime() - tickNow : null
 
   const navItems = [
     { to: '/admin/chats', icon: MessageSquare, labelKey: 'admin.chatChannels' },
@@ -191,6 +242,14 @@ export default function AdminDashboardPage() {
               <FileText className="w-5 h-5 text-primary" />
               {t('admin.journalRate')}
             </h2>
+            {nearestPeriod && countdownMs != null ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                {t('admin.nearestSubmissionCountdown', {
+                  title: nearestPeriod.title || nearestPeriod.periodId,
+                  time: formatRemaining(countdownMs),
+                })}
+              </p>
+            ) : null}
             {!activeSubmission ? (
               <p className="text-slate-500 dark:text-slate-400 text-sm">{t('admin.journalRateNoOpenPeriod')}</p>
             ) : serverStats.loading ? (

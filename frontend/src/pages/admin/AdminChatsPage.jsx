@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, MessageSquare, User, Search, FileText } from 'lucide-react'
+import { ArrowLeft, MessageSquare, User, Search, FileText, Bell, Send } from 'lucide-react'
 import { VALID_CLASS_CODES, CLASS_TO_CHANNEL, ADMIN_TEST_AGENT_CHANNEL } from '../../constants/roles'
 import { useMessages } from '../../hooks/useMessages'
 import { useAllUsers } from '../../hooks/useAllUsers'
@@ -10,6 +10,16 @@ import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import ChatWindow from '../../components/chat/ChatWindow'
 import JournalEntriesSidebarList from '../../components/journal/JournalEntriesSidebarList'
+
+function formatDuration(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000))
+  const days = Math.floor(total / 86400)
+  const hours = Math.floor((total % 86400) / 3600)
+  const mins = Math.floor((total % 3600) / 60)
+  if (days > 0) return `${days}d ${hours}h`
+  if (hours > 0) return `${hours}h ${mins}m`
+  return `${mins}m`
+}
 
 export default function AdminChatsPage() {
   const { t } = useLanguage()
@@ -21,6 +31,32 @@ export default function AdminChatsPage() {
   const [adminChatMode, setAdminChatMode] = useState('class')
   const [search, setSearch] = useState('')
   const [apiJournals, setApiJournals] = useState({ loaded: false, list: null })
+  const [reminderSummary, setReminderSummary] = useState({ loading: false, data: null, error: '' })
+  const [reminderText, setReminderText] = useState('')
+  const [sendingReminder, setSendingReminder] = useState(false)
+  const [reminderStatus, setReminderStatus] = useState('')
+
+  const loadReminderSummary = useCallback(async () => {
+    if (!apiToken) {
+      setReminderSummary({ loading: false, data: null, error: '' })
+      return
+    }
+    setReminderSummary((s) => ({ ...s, loading: true, error: '' }))
+    try {
+      const r = await fetch(`${API_BASE}/api/admin/submission-reminder-summary`, {
+        headers: { Authorization: `Bearer ${apiToken}` },
+      })
+      const data = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+      setReminderSummary({ loading: false, data, error: '' })
+    } catch (err) {
+      setReminderSummary({
+        loading: false,
+        data: null,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+  }, [apiToken])
 
   const channel = useMemo(() => {
     if (adminChatMode === 'test_agent') return ADMIN_TEST_AGENT_CHANNEL
@@ -45,6 +81,10 @@ export default function AdminChatsPage() {
   useEffect(() => {
     setAdminChatMode('class')
   }, [selectedUser?.id])
+
+  useEffect(() => {
+    void loadReminderSummary()
+  }, [loadReminderSummary])
 
   useEffect(() => {
     if (!apiToken || !selectedUser?.backendUserId) {
@@ -134,6 +174,41 @@ export default function AdminChatsPage() {
         ? journalsLocal
         : []
   const journals = Array.isArray(journalsRaw) ? journalsRaw.filter((j) => j && typeof j === 'object') : []
+  const reminderPeriod = reminderSummary.data?.period || null
+  const reminderDueMs = reminderPeriod?.endsAt ? new Date(reminderPeriod.endsAt).getTime() - Date.now() : null
+
+  const handleSendAutoReminder = async () => {
+    if (!apiToken || !reminderPeriod?.periodId || !reminderText.trim() || sendingReminder) return
+    setSendingReminder(true)
+    setReminderStatus('')
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/submission-reminder-send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiToken}`,
+        },
+        body: JSON.stringify({
+          periodId: reminderPeriod.periodId,
+          content: reminderText.trim(),
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`)
+      setReminderStatus(
+        t('admin.autoReminderSendSuccess', {
+          sent: Number(data.sent) || 0,
+          total: Number(data.targeted) || 0,
+        })
+      )
+      setReminderText('')
+      await loadReminderSummary()
+    } catch (err) {
+      setReminderStatus(err instanceof Error ? err.message : String(err))
+    } finally {
+      setSendingReminder(false)
+    }
+  }
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
@@ -181,6 +256,60 @@ export default function AdminChatsPage() {
           >
             {t('admin.chatModeTestAgent')}
           </button>
+        </div>
+      </div>
+
+      <div className="flex-shrink-0">
+        <div className="w-full border-b border-slate-100 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 px-6 py-4">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+              <Bell className="w-4 h-4 text-primary" />
+              {t('admin.autoReminderTitle')}
+            </h2>
+            {reminderSummary.loading ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{t('admin.journalRateLoading')}</p>
+            ) : reminderSummary.error ? (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-2">{reminderSummary.error}</p>
+            ) : !reminderPeriod ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{t('admin.autoReminderNoPeriod')}</p>
+            ) : (
+              <div className="mt-2 space-y-2">
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  {t('admin.autoReminderStats', {
+                    title: reminderPeriod.title || reminderPeriod.periodId,
+                    notSubmitted: Number(reminderSummary.data?.notSubmitted) || 0,
+                    total: Number(reminderSummary.data?.totalLearners) || 0,
+                  })}
+                </p>
+                {reminderDueMs != null ? (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {t('admin.autoReminderTimeLeft', { time: formatDuration(reminderDueMs) })}
+                  </p>
+                ) : null}
+                <textarea
+                  value={reminderText}
+                  onChange={(e) => setReminderText(e.target.value)}
+                  rows={2}
+                  placeholder={t('admin.autoReminderPlaceholder')}
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSendAutoReminder}
+                    disabled={sendingReminder || !reminderText.trim() || (Number(reminderSummary.data?.notSubmitted) || 0) <= 0}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-white text-sm disabled:opacity-60"
+                  >
+                    <Send className="w-4 h-4" />
+                    {sendingReminder ? t('admin.autoReminderSending') : t('admin.autoReminderSend')}
+                  </button>
+                  {reminderStatus ? (
+                    <p className="text-xs text-slate-600 dark:text-slate-300">{reminderStatus}</p>
+                  ) : null}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

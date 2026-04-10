@@ -32,7 +32,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from utils.llm_provider import get_adk_model
+from utils.llm_provider import get_adk_model, use_openrouter
 from utils.be_integration import be_integration_headers
 
 from .service_urls import get_be_server_base_url
@@ -43,7 +43,30 @@ ADK_APP_NAME = (os.getenv("ADK_APP_NAME") or "agents").strip() or "agents"
 MAX_RETRIES = 4
 MAX_FUNCTION_CALLS = 5
 
- 
+
+def _manager_planner() -> BuiltInPlanner:
+    """
+    OpenRouter / LiteLLM thường lỗi 500 nếu bật thinking_budget (Gemini thinking API).
+    Tắt: ADK_DISABLE_THINKING=1 hoặc khi dùng OPENROUTER_API_KEY.
+    """
+    disable = (os.getenv("ADK_DISABLE_THINKING") or "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    if disable or use_openrouter():
+        return BuiltInPlanner(
+            thinking_config=types.ThinkingConfig(include_thoughts=False)
+        )
+    return BuiltInPlanner(
+        thinking_config=types.ThinkingConfig(
+            include_thoughts=False,
+            thinking_budget=1000,
+        )
+    )
+
+
 def setup_before_model_call(
     callback_context: CallbackContext, llm_request: LlmRequest
 ) -> Optional[LlmResponse]:
@@ -180,10 +203,7 @@ def create_agent() -> Agent:
                 maximum_remote_calls=MAX_FUNCTION_CALLS
             )
         ),
-        planner=BuiltInPlanner(thinking_config=types.ThinkingConfig(
-            include_thoughts=False,
-            thinking_budget=1000  # Set a reasonable thinking budget for the agent
-        ))
+        planner=_manager_planner(),
     )
     return manager_agent
 

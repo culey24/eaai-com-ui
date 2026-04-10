@@ -874,4 +874,35 @@ router.get('/journal-periods', async (req, res) => {
   }
 })
 
+/**
+ * GET /faq — danh sách FAQ (FAQ Agent / embedding). Chỉ bản ghi is_active.
+ */
+router.get('/faq', async (req, res) => {
+  try {
+    const rows = await prisma.faqEntry.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+    })
+    return res.status(200).json(
+      jsonSafe({
+        faq: rows.map((r) => ({
+          id: String(r.id),
+          questionVi: r.questionVi,
+          answerVi: r.answerVi,
+          keywordsVi: Array.isArray(r.keywordsVi) ? r.keywordsVi : [],
+          questionEn: r.questionEn,
+          answerEn: r.answerEn,
+          keywordsEn: Array.isArray(r.keywordsEn) ? r.keywordsEn : [],
+        })),
+      })
+    )
+  } catch (err) {
+    console.error('[agentIntegration GET faq]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
 export default router

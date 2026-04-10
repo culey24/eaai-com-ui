@@ -27,6 +27,7 @@ import AdminSupportRequestsPage from './pages/admin/AdminSupportRequestsPage'
 import AdminStatsBlacklistPage from './pages/admin/AdminStatsBlacklistPage'
 import AdminSubmissionsPage from './pages/admin/AdminSubmissionsPage'
 import AdminSurveyResultsPage from './pages/admin/AdminSurveyResultsPage'
+import AdminFaqPage from './pages/admin/AdminFaqPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
 import PretestGate from './components/PretestGate'
 import SessionExpiredBridge from './components/SessionExpiredBridge'
@@ -158,6 +159,7 @@ function AppRoutes() {
         </Route>
         <Route path="submissions" element={<AdminSubmissionsPage />} />
         <Route path="surveys" element={<AdminSurveyResultsPage />} />
+        <Route path="faq" element={<AdminFaqPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

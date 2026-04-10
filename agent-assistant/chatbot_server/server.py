@@ -5,7 +5,7 @@ import time
 import asyncio
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, Tuple, List
 import uuid
 import logging
 from concurrent.futures import ThreadPoolExecutor
@@ -25,6 +25,7 @@ from utils.service_urls import get_agent_server_base_url, get_be_server_base_url
 from utils.llm_provider import chat_completion_text, use_openrouter
 from utils.be_integration import be_integration_headers
 from utils.upload_paths import uploaded_data_dir
+from utils.faq_agent import run_faq_agent
 
 load_dotenv()
 logging.basicConfig(
@@ -61,6 +62,80 @@ def _requests_post_retry_connect(url: str, **kwargs):
                 )
                 time.sleep(delay_s)
     raise last_err
+
+
+def _is_adk_session_not_found_response(response: requests.Response) -> bool:
+    """ADK mất session (restart / InMemorySessionService) trong khi UUID vẫn còn ở BE."""
+    if response.status_code != 404:
+        return False
+    text = (response.text or "").lower()
+    if "session not found" in text:
+        return True
+    try:
+        j = response.json()
+        d = j.get("detail")
+        if isinstance(d, str) and "session not found" in d.lower():
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def _register_session_on_adk_server(user_id: str, session_id: str, app_name: str) -> bool:
+    """Đồng bộ lại session lên ADK (cùng URL như create_session)."""
+    url = f"{AGENT_SERVER}/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+    r = _requests_post_retry_connect(url, timeout=60)
+    if r.status_code != 200:
+        logger.error(
+            "register ADK session failed: HTTP %s %s",
+            r.status_code,
+            (r.text or "")[:1500],
+        )
+    return r.status_code == 200
+
+
+def _normalize_adk_run_events(response_json: Any) -> List[Any]:
+    """POST /run có thể trả list trực tiếp hoặc { \"events\": [...] }."""
+    if isinstance(response_json, list):
+        return response_json
+    if isinstance(response_json, dict):
+        ev = response_json.get("events")
+        if isinstance(ev, list):
+            return ev
+        for key in ("data", "result", "output"):
+            v = response_json.get(key)
+            if isinstance(v, list):
+                return v
+    return []
+
+
+def _extract_text_from_adk_run_event(event_data: Any) -> Optional[str]:
+    if not isinstance(event_data, dict):
+        return None
+    content = event_data.get("content")
+    if not isinstance(content, dict):
+        return None
+    parts = content.get("parts")
+    if not isinstance(parts, list):
+        return None
+    for part in parts:
+        if not isinstance(part, dict):
+            continue
+        t = part.get("text")
+        if t is not None and str(t).strip():
+            return str(t)
+    return None
+
+
+def _extract_bot_text_from_adk_run(response_json: Any) -> Tuple[Optional[str], Optional[Any]]:
+    """Lấy nội dung assistant từ tin nhắn gần nhất (duyệt từ cuối event list)."""
+    events = _normalize_adk_run_events(response_json)
+    for event_data in reversed(events):
+        txt = _extract_text_from_adk_run_event(event_data)
+        if txt and txt.strip():
+            ts = event_data.get("timestamp") if isinstance(event_data, dict) else None
+            return txt.strip(), ts
+    return None, None
 
 
 CURRENT_DIR = Path(__file__).parent
@@ -395,6 +470,33 @@ async def run_agent(request: Request):
     }
 
     await db_save_message(session_id, "user", message)
+
+    # Agent 1 — FAQ Agent: embedding (OpenRouter hoặc local), đủ ngưỡng thì trả lời ngay; sau đó mới ADK.
+    try:
+        faq_text, faq_score = await asyncio.to_thread(
+            run_faq_agent, message if isinstance(message, str) else ""
+        )
+    except Exception as e:
+        logger.exception("chat-with-agent: run_faq_agent failed: %s", e)
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"faq_agent: {e!s}", "detail": "run_faq_agent raised"},
+        )
+
+    if faq_text:
+        await db_save_message(session_id, "model", faq_text)
+        return JSONResponse(
+            status_code=200,
+            content={
+                "user_id": user_id,
+                "session_id": session_id,
+                "text": faq_text,
+                "role": "model",
+                "source": "faq_agent",
+                "faq_score": round(faq_score, 4),
+            },
+        )
+
     try:
         response = await asyncio.to_thread(
             _requests_post_retry_connect,
@@ -403,34 +505,85 @@ async def run_agent(request: Request):
             timeout=300,
         )
 
+        if _is_adk_session_not_found_response(response):
+            logger.warning(
+                "chat-with-agent: ADK 404 Session not found — re-register session %s user %s then retry /run",
+                session_id,
+                user_id,
+            )
+            reg_ok = await asyncio.to_thread(
+                _register_session_on_adk_server, user_id, session_id, APP_NAME
+            )
+            if reg_ok:
+                # Tránh race: ADK vừa POST session xong, /run gọi quá sớm có thể 500.
+                await asyncio.sleep(0.35)
+                response = await asyncio.to_thread(
+                    _requests_post_retry_connect,
+                    f"{AGENT_SERVER}/run",
+                    json=payload,
+                    timeout=300,
+                )
+            else:
+                logger.error(
+                    "chat-with-agent: could not re-register session on ADK; returning first 404"
+                )
+
         if response.status_code == 200:
-            response_json = response.json()
+            try:
+                response_json = response.json()
+            except Exception as e:
+                logger.exception("chat-with-agent: ADK /run 200 nhưng không parse được JSON: %s", e)
+                return JSONResponse(
+                    status_code=502,
+                    content={"error": "ADK /run trả body không phải JSON", "detail": str(e)},
+                )
 
-            for event_data in reversed(response_json):
-                if event_data.get("content") and "text" in event_data["content"]["parts"][0]:
-                    bot_text = event_data["content"]["parts"][0]["text"]
-                    event_timestamp = event_data.get("timestamp")
+            bot_text, _ = _extract_bot_text_from_adk_run(response_json)
+            if bot_text:
+                await db_save_message(session_id, "model", bot_text)
+                return JSONResponse(
+                    status_code=200,
+                    content={
+                        "user_id": user_id,
+                        "session_id": session_id,
+                        "text": bot_text,
+                        "role": "model",
+                        "source": "adk",
+                    },
+                )
 
-                    await db_save_message(session_id, "model", bot_text)
-
-                    return JSONResponse(
-                        status_code=200,
-                        content={
-                            "user_id": user_id,
-                            "session_id": session_id,
-                            "text": bot_text,
-                            "role": "model"
-                        }
-                    )
+            logger.error(
+                "chat-with-agent: ADK /run 200 nhưng không có text trong events; "
+                "top_type=%s keys=%s sample=%s",
+                type(response_json).__name__,
+                list(response_json.keys()) if isinstance(response_json, dict) else None,
+                json.dumps(response_json, default=str)[:4000],
+            )
             return JSONResponse(
-                status_code=500, content={"error": "Agent returned empty content"}
+                status_code=500,
+                content={
+                    "error": "Agent returned empty content",
+                    "hint": "Xem log chatbot (sample ADK response đã ghi) hoặc /tmp/adk-boot.log",
+                },
             )
         else:
+            err_snip = (response.text or "")[:2000]
+            try:
+                ej = response.json()
+                if isinstance(ej, dict) and ej.get("detail"):
+                    err_snip = f"{ej.get('detail')!s} | raw={err_snip[:800]}"
+            except Exception:
+                pass
+            logger.error(
+                "chat-with-agent: ADK /run HTTP %s body=%s",
+                response.status_code,
+                err_snip,
+            )
             return JSONResponse(
                 status_code=response.status_code, content={"error": response.text}
             )
     except Exception as e:
-        logger.error(f"Error in chat-with-agent: {e}")
+        logger.exception("Error in chat-with-agent (ADK /run or parse): %s", e)
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 

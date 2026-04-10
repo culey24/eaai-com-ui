@@ -639,7 +639,6 @@ export function AuthProvider({ children }) {
         const raw = me.apiRole ?? me.userRole
         const appRole = mapApiRoleToApp(raw)
         setUser((prev) => {
-          if (prev && prev.role === appRole) return prev
           if (!prev && me.userId) {
             const built = createUserObject(me.username || 'user', appRole, {
               backendUserId: me.userId,
@@ -656,7 +655,17 @@ export function AuthProvider({ children }) {
             return built
           }
           if (!prev) return prev
+
           const merged = { ...prev, role: appRole }
+          if (me.userId != null && String(me.userId).trim() !== '') {
+            merged.backendUserId = String(me.userId).trim()
+          }
+          if (
+            merged.role === prev.role &&
+            merged.backendUserId === prev.backendUserId
+          ) {
+            return prev
+          }
           try {
             localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(merged))
           } catch {

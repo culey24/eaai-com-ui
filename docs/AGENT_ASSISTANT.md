@@ -34,6 +34,12 @@ Các endpoint chính (đặt sau **`AGENTIC_CHATBOT_BASE_URL`** khi backend Node
 - `POST /chat-with-agent`, `POST /chat-with-llm`, `POST /chat-with-ta`
 - **`POST /upload`** — `multipart`: `file`, `user_id`, `session_id`; lưu `data/uploaded_data/{session_id}_{stem}{ext}`; trả **`file_name`** cho tool agent.
 
+**`POST /chat-with-agent`** — **FAQ Agent** (chạy trước tiên): ưu tiên **pgvector** — embedding passage lưu cột **`embedding`** (`vector(1536)`) trên PostgreSQL, truy vấn `ORDER BY embedding <=> query` (cosine distance); cần **`DATABASE_URL`** + **`OPENROUTER_API_KEY`** trên chatbot. Đồng bộ: các dòng `embedding IS NULL` được embed qua OpenRouter khi có request. Khi tắt pgvector (`FAQ_USE_PGVECTOR=0`) hoặc thiếu DB/key: fallback đọc **`GET /faq`** + embed trong RAM (OpenRouter/fastembed) hoặc **`data/faq.json`**. Ngưỡng: **`FAQ_EMBEDDING_THRESHOLD`**. Phản hồi: `source: "faq_agent"`. Sau đó ADK (`source: "adk"`). Tắt hẳn: **`FAQ_AGENT_ENABLED=0`**.
+
+Quản trị FAQ (CRUD + CSV): **`/api/admin/faq`** — sửa nội dung sẽ **xóa embedding** (cột NULL) để chatbot embed lại.
+
+**Postgres dev/prod:** dùng image có sẵn extension, ví dụ **`pgvector/pgvector:pg16`** (đã đặt trong `backend/docker-compose.yml` và `docker-compose.prod.yml`).
+
 Tool **`read_uploaded_data_file`** (manager) nhận đúng `file_name` đó và trích text (PDF/DOCX/CSV/Excel).
 
 ## Route tích hợp trên backend Node

@@ -16,6 +16,9 @@ python-docx>=1.1.0
 openpyxl>=3.1.0
 psycopg2-binary>=2.9.9
 aiohttp>=3.9.0
+# FAQ embedding (tầng 1 trước ADK /chat-with-agent)
+fastembed==0.5.1
+numpy>=1.26.0
 # ingestor crawl (tùy chọn)
 selenium>=4.15.0
 webdriver-manager>=4.0.0

@@ -25,6 +25,8 @@ enum UserClass {
   IS_1 @map("IS-1")
   IS_2 @map("IS-2")
   IS_3 @map("IS-3")
+  /// Chỉ dùng cho kênh test-agent (admin thử AGENT), không gán cho học viên
+  ADMIN_TEST @map("ADMIN_TEST")
 
   @@map("user_class_enum")
 }
@@ -359,6 +361,24 @@ model AgentSessionMessage {
 
   @@index([sessionId, createdAt])
   @@map("agent_session_messages")
+}
+
+/// FAQ cho FAQ Agent (embedding + trả lời nhanh trước ADK) — song ngữ VI/EN.
+model FaqEntry {
+  id         BigInt   @id @default(autoincrement()) @map("faq_id")
+  questionVi String   @map("question_vi") @db.Text
+  answerVi   String   @map("answer_vi") @db.Text
+  keywordsVi Json     @default("[]") @map("keywords_vi")
+  questionEn String   @map("question_en") @db.Text
+  answerEn   String   @map("answer_en") @db.Text
+  keywordsEn Json     @default("[]") @map("keywords_en")
+  sortOrder  Int      @default(0) @map("sort_order")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder])
+  @@map("faq_entries")
 }
 
 /// Username (chữ thường) loại khỏi thống kê admin — journal, PRETEST/POSTTEST (quản lý qua UI Blacklist).

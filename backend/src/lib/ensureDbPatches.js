@@ -44,6 +44,25 @@ INSERT INTO chat_channels (channel_id, user_class, display_order) VALUES
 ON CONFLICT (channel_id) DO NOTHING
 `
 
+/** Admin «direct agent test» — enum ADMIN_TEST + hàng test-agent (DB cũ / migrate từng phần). */
+const TEST_AGENT_ENUM_ADMIN_TEST = `
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_enum e
+    JOIN pg_type t ON e.enumtypid = t.oid
+    WHERE t.typname = 'user_class_enum' AND e.enumlabel = 'ADMIN_TEST'
+  ) THEN
+    ALTER TYPE "user_class_enum" ADD VALUE 'ADMIN_TEST';
+  END IF;
+END $$
+`
+const TEST_AGENT_CHANNEL_ROW = `
+INSERT INTO chat_channels (channel_id, user_class, display_order)
+VALUES ('test-agent', 'ADMIN_TEST', 99)
+ON CONFLICT (channel_id) DO NOTHING
+`
+
 /** Mỗi chuỗi một lệnh — Prisma/Postgres không cho nhiều lệnh trong một prepared statement. */
 const PRETEST_RESPONSES_TABLE = `
 CREATE TABLE IF NOT EXISTS pretest_responses (
@@ -75,6 +94,22 @@ export async function applyLightweightSchemaPatches(prisma) {
   } catch (err) {
     console.warn(
       '[db-patches] chat_channels seed:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
+  try {
+    await prisma.$executeRawUnsafe(TEST_AGENT_ENUM_ADMIN_TEST)
+  } catch (err) {
+    console.warn(
+      '[db-patches] user_class_enum ADMIN_TEST:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
+  try {
+    await prisma.$executeRawUnsafe(TEST_AGENT_CHANNEL_ROW)
+  } catch (err) {
+    console.warn(
+      '[db-patches] chat_channels test-agent:',
       err instanceof Error ? err.message : String(err)
     )
   }

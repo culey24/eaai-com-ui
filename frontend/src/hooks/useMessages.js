@@ -55,11 +55,12 @@ function mapRemoteRows(messages) {
  * - Khác: localStorage + mock phản hồi.
  *
  * @param {string | null} pollChannelId — kênh đang mở (vd. activeChannel.id).
- * @param {{ assistantViewLearnerId?: string | null, adminViewLearnerId?: string | null }} [options] — backend user id của learner (assistant/admin).
+ * @param {{ assistantViewLearnerId?: string | null, adminViewLearnerId?: string | null, adminTestAgentDirect?: boolean }} [options] — backend user id của learner (assistant/admin). adminTestAgentDirect: admin trên kênh test-agent gửi vai trò user (chat trực tiếp với AGENT).
  */
 export function useMessages(pollChannelId = null, options = {}) {
   const assistantViewLearnerId = options.assistantViewLearnerId ?? null
   const adminViewLearnerId = options.adminViewLearnerId ?? null
+  const adminTestAgentDirect = options.adminTestAgentDirect === true
   const { user, apiToken } = useAuth()
   const [localMessages, setLocalMessages] = useState(loadMessages)
   const [remoteList, setRemoteList] = useState([])
@@ -368,13 +369,15 @@ export function useMessages(pollChannelId = null, options = {}) {
         role === 'user' &&
         adminViewLearnerId
       ) {
+        const postRole =
+          adminTestAgentDirect && pollChannelId === 'test-agent' ? 'user' : 'assistant'
         try {
           let res
           if (file) {
             const fd = new FormData()
             fd.append('channelId', channelId)
             fd.append('content', content || '')
-            fd.append('role', 'assistant')
+            fd.append('role', postRole)
             fd.append('file', file)
             if (conversationId) fd.append('conversationId', String(conversationId))
             else fd.append('learnerId', adminViewLearnerId)
@@ -389,13 +392,13 @@ export function useMessages(pollChannelId = null, options = {}) {
               ? {
                   channelId,
                   content: content || '',
-                  role: 'assistant',
+                  role: postRole,
                   conversationId,
                 }
               : {
                   channelId,
                   content: content || '',
-                  role: 'assistant',
+                  role: postRole,
                   learnerId: adminViewLearnerId,
                 }
             res = await fetch(`${API_BASE}/api/messages`, {
@@ -463,6 +466,7 @@ export function useMessages(pollChannelId = null, options = {}) {
       conversationId,
       assistantViewLearnerId,
       adminViewLearnerId,
+      adminTestAgentDirect,
     ]
   )
 

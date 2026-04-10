@@ -92,11 +92,12 @@ Giữ đúng tinh thần [recommended_table.sql](./recommended_table.sql): `Educ
 | `learner_supporter_assignments` | Gán supporter cho learner + `teaching_mode` (`AGENT` / `LLM` / `MANUAL`). |
 | `support_requests` | Yêu cầu hỗ trợ chờ admin duyệt. |
 | `app_settings` | Key–value JSON, ví dụ `auto_mode`, `deadlines`. |
+| `faq_entries` | FAQ cho **FAQ Agent** (Python): `question`, `answer`, `keywords` (JSON), `sort_order`, `is_active`, **`embedding`** (`vector(1536)` pgvector), `embedding_model`; đọc qua `GET /faq` (agent integration), CRUD admin `/api/admin/faq`. Cần extension **`vector`** (image Postgres `pgvector/pgvector`). |
 | `agent_sessions` | Phiên chatbot ADK (UUID); trạng thái `active` / `deactive`. |
 | `agent_session_messages` | Tin trong phiên agent (`chat_role` `user` / `model` / `TA`, `file_ids`, …). |
 | `agent_user_reminders` | Nhắc việc đăng ký qua tool Reminder + API integration (`reminder_at`, `message`, FK `user_id`). |
 
-Migration Prisma: **`20260331120000_agent_integration_sessions`**, **`20260403140000_agent_user_reminders`**.
+Migration Prisma: **`20260331120000_agent_integration_sessions`**, **`20260403140000_agent_user_reminders`**, **`20260410120000_faq_entries`**, **`20260410140000_faq_pgvector`**.
 
 Xem thêm: [AGENT_ASSISTANT.md](./AGENT_ASSISTANT.md).
 

@@ -27,6 +27,14 @@ export const CLASS_TO_CHANNEL = {
   'IS-3': { id: 'human-chat', code: 'IS-3', labelKey: 'chat.agent', icon: 'UserCircle' },
 }
 
+/** Admin /admin/chats — kênh thử AGENT trực tiếp (không qua học viên). DB: chat_channels.test-agent */
+export const ADMIN_TEST_AGENT_CHANNEL = {
+  id: 'test-agent',
+  code: 'ADMIN_TEST',
+  labelKey: 'admin.testAgentChannel',
+  icon: 'Bot',
+}
+
 
 /**
  * Kênh chat cho LEARNER: chỉ kênh của lớp họ đăng ký

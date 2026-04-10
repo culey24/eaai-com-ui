@@ -228,7 +228,13 @@ router.post(
       }
 
       let conversationId
+      /** Học viên của hội thoại (student = chính mình; admin/supporter = learnerId). */
+      let resolvedLearnerId = null
       const { userId, userRole } = req.auth
+
+      if (ch === 'test-agent' && userRole !== 'admin') {
+        return res.status(403).json({ error: 'Kênh test-agent chỉ dành cho quản trị viên' })
+      }
 
       let learnerUserClass = null
       if (userRole === 'student') {
@@ -269,6 +275,20 @@ router.post(
         if (access.conv.channelId !== ch) {
           return res.status(400).json({ error: 'channelId không khớp hội thoại' })
         }
+        resolvedLearnerId = access.conv.learnerId
+      } else if (userRole === 'admin' && ch === 'test-agent') {
+        const conv = await prisma.conversation.upsert({
+          where: {
+            channelId_learnerId: { channelId: ch, learnerId: userId },
+          },
+          create: {
+            channelId: ch,
+            learnerId: userId,
+          },
+          update: {},
+        })
+        conversationId = conv.id
+        resolvedLearnerId = userId
       } else if (userRole === 'student') {
         const conv = await prisma.conversation.upsert({
           where: {
@@ -281,6 +301,7 @@ router.post(
           update: {},
         })
         conversationId = conv.id
+        resolvedLearnerId = userId
       } else {
         const targetLearnerId =
           typeof bodyLearnerId === 'string' ? bodyLearnerId.trim().slice(0, 10) : ''
@@ -290,6 +311,7 @@ router.post(
               'Supporter/Admin: gửi conversationId (nếu đã có) hoặc learnerId để mở/tiếp tục hội thoại',
           })
         }
+        resolvedLearnerId = targetLearnerId
         const learner = await prisma.user.findUnique({
           where: { userId: targetLearnerId },
           select: { userId: true, userRole: true, userClass: true },
@@ -361,7 +383,12 @@ router.post(
           content: text,
           fileName: file,
           fileStorageKey,
-          metadata: {},
+          metadata:
+            userRole === 'admin' &&
+            senderRole === MessageSender.user &&
+            ch === 'test-agent'
+              ? { directAgentTest: true }
+              : {},
         },
       })
 
@@ -430,6 +457,39 @@ router.post(
             },
           })
         }
+      }
+
+      // Admin kênh test-agent: chat trực tiếp với AGENT (cùng generateIs1AgenticReply, userId = admin)
+      if (
+        userRole === 'admin' &&
+        senderRole === MessageSender.user &&
+        ch === 'test-agent' &&
+        resolvedLearnerId
+      ) {
+        let assistantContent
+        let metaSource = 'agentic_chatbot'
+        try {
+          const fromAgent = await generateIs1AgenticReply(userId, text)
+          if (fromAgent != null) {
+            assistantContent = fromAgent
+          } else {
+            metaSource = 'echo'
+            assistantContent = `Đã nhận tin nhắn của bạn. (Phản hồi từ ${ch} — chưa cấu hình AGENTIC_CHATBOT_BASE_URL)`
+          }
+        } catch (agentErr) {
+          console.error('[messages POST] test-agent admin', agentErr)
+          metaSource = 'agentic_chatbot_error'
+          assistantContent = `Trợ lý (test-agent) tạm thời lỗi: ${agentErr instanceof Error ? agentErr.message : String(agentErr)}`
+        }
+        await prisma.message.create({
+          data: {
+            conversationId,
+            senderRole: MessageSender.assistant,
+            senderUserId: null,
+            content: assistantContent,
+            metadata: { source: metaSource, directAgentTestReply: true },
+          },
+        })
       }
 
       await prisma.conversation.update({

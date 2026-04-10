@@ -1,0 +1,52 @@
+{
+  "items": [
+    {
+      "questionVi": "Khóa học EAAI là gì?",
+      "answerVi": "EAAI là học phần/hoạt động hỗ trợ sinh viên làm quen với trợ lý AI và cách sử dụng có trách nhiệm trong bối cảnh học tập. Chi tiết chương trình xem trong slide bài giảng và thông báo của giảng viên.",
+      "keywordsVi": ["eaai", "khóa học", "môn học", "giới thiệu"],
+      "questionEn": "What is the EAAI course?",
+      "answerEn": "EAAI is a course/activity that helps students get familiar with AI assistants and responsible use in learning. See lecture slides and instructor announcements for program details.",
+      "keywordsEn": ["eaai", "course", "introduction", "overview"]
+    },
+    {
+      "questionVi": "Các lớp IS-1, IS-2, IS-3 khác nhau thế nào?",
+      "answerVi": "IS-1: kênh chat với trợ lý AI (ai-chat). IS-2: kênh nội bộ với supporter (internal-chat). IS-3: kênh tư vấn với mô hình ngôn ngữ trên human-chat. Bạn chỉ thấy kênh tương ứng với lớp đã đăng ký.",
+      "keywordsVi": ["is-1", "is-2", "is-3", "lớp", "phân lớp", "kênh chat"],
+      "questionEn": "How do IS-1, IS-2, and IS-3 differ?",
+      "answerEn": "IS-1: AI assistant chat (ai-chat). IS-2: internal channel with a supporter (internal-chat). IS-3: advisory channel with an LLM on human-chat. You only see the channel for your enrolled class.",
+      "keywordsEn": ["is-1", "is-2", "is-3", "class", "channel", "chat"]
+    },
+    {
+      "questionVi": "Làm sao để nộp bài journal?",
+      "answerVi": "Vào mục Journal trên hệ thống, chọn đúng đợt (period) đang mở, tải file theo định dạng quy định và bấm nộp. Sau khi nộp, bạn có thể xem lại trạng thái trong danh sách bài đã gửi.",
+      "keywordsVi": ["journal", "nộp bài", "upload", "bài tập"],
+      "questionEn": "How do I submit a journal assignment?",
+      "answerEn": "Open Journal, pick the open period, upload your file in the required format, and submit. You can check status in your submitted list afterward.",
+      "keywordsEn": ["journal", "submit", "upload", "assignment"]
+    },
+    {
+      "questionVi": "Hạn nộp bài được tính như thế nào?",
+      "answerVi": "Hạn nộp do giảng viên cấu hình theo từng đợt (journal period). Thời điểm cụ thể hiển thị trên giao diện Journal; hãy nộp trước thời điểm đóng đợt.",
+      "keywordsVi": ["deadline", "hạn", "hết hạn", "đợt nộp"],
+      "questionEn": "How is the submission deadline determined?",
+      "answerEn": "Deadlines are set by the instructor per journal period. The exact time is shown on the Journal page; submit before the period closes.",
+      "keywordsEn": ["deadline", "due date", "period", "journal"]
+    },
+    {
+      "questionVi": "Tôi cần hỗ trợ từ người (supporter) thì làm gì?",
+      "answerVi": "Học viên lớp IS-2 dùng kênh internal-chat sau khi được quản trị gán supporter. Nếu chưa được gán, hệ thống sẽ báo — liên hệ giảng viên hoặc admin qua kênh chính thức của lớp.",
+      "keywordsVi": ["supporter", "hỗ trợ", "is-2", "nội bộ"],
+      "questionEn": "How do I get help from a human supporter?",
+      "answerEn": "IS-2 learners use internal-chat after an admin assigns a supporter. If none is assigned, the app will notify you — contact your instructor or admin through the official class channel.",
+      "keywordsEn": ["supporter", "help", "is-2", "internal"]
+    },
+    {
+      "questionVi": "Làm sao báo cáo nội dung không phù hợp trong chat?",
+      "answerVi": "Trong cửa sổ chat (kênh học viên), dùng nút báo cáo (Report) kèm mô tả ngắn. Quản trị sẽ xem xét theo quy trình nội bộ.",
+      "keywordsVi": ["báo cáo", "report", "vi phạm", "nội dung"],
+      "questionEn": "How do I report inappropriate chat content?",
+      "answerEn": "In the learner chat window, use Report with a short description. Staff will review according to internal procedures.",
+      "keywordsEn": ["report", "inappropriate", "moderation", "content"]
+    }
+  ]
+}

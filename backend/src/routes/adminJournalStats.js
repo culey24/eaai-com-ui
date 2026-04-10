@@ -7,6 +7,200 @@ import { getStatsExcludedUsernamesNormalized } from '../lib/statsExcludedUsernam
 
 const router = Router()
 
+function classToChannelId(classCode) {
+  if (classCode === 'IS-1') return 'ai-chat'
+  if (classCode === 'IS-2') return 'internal-chat'
+  if (classCode === 'IS-3') return 'human-chat'
+  return null
+}
+
+async function getNearestSubmissionPeriod() {
+  const rows = await prisma.$queryRaw`
+    SELECT period_id, title, starts_at, ends_at
+    FROM journal_periods
+    WHERE ends_at >= NOW()
+    ORDER BY
+      CASE WHEN starts_at <= NOW() THEN 0 ELSE 1 END ASC,
+      CASE WHEN starts_at <= NOW() THEN ends_at ELSE starts_at END ASC
+    LIMIT 1
+  `
+  return Array.isArray(rows) && rows[0] ? rows[0] : null
+}
+
+async function getPendingLearnersForPeriod(periodId, excludedNorm) {
+  const excludeUsernameSql =
+    excludedNorm.length === 0
+      ? Prisma.empty
+      : Prisma.sql`AND LOWER(u.username) NOT IN (${Prisma.join(excludedNorm)})`
+  const rows = await prisma.$queryRaw`
+    SELECT u.user_id, u.username, u.user_class::text AS user_class
+    FROM users u
+    WHERE u.user_role = 'student'
+    ${excludeUsernameSql}
+    AND NOT EXISTS (
+      SELECT 1
+      FROM journal_uploads ju
+      WHERE ju.user_id = u.user_id AND ju.period_id = ${periodId}
+    )
+    ORDER BY u.user_id ASC
+  `
+  return Array.isArray(rows) ? rows : []
+}
+
+/**
+ * GET /api/admin/submission-reminder-summary
+ * Admin: kỳ submission gần nhất (đang mở ưu tiên, nếu không có thì lấy kỳ sắp mở)
+ * + số user chưa nộp.
+ */
+router.get('/submission-reminder-summary', authMiddleware, async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'admin') {
+      return res.status(403).json({ error: 'Chỉ admin' })
+    }
+
+    const excluded = await getStatsExcludedUsernamesNormalized(prisma)
+    const period = await getNearestSubmissionPeriod()
+    if (!period?.period_id) {
+      return res.status(200).json(
+        jsonSafe({
+          period: null,
+          totalLearners: 0,
+          submitted: 0,
+          notSubmitted: 0,
+          isActive: false,
+          isUpcoming: false,
+          now: new Date().toISOString(),
+        })
+      )
+    }
+
+    const totalRows = await prisma.$queryRaw`
+      SELECT COUNT(*)::int AS c
+      FROM users u
+      WHERE u.user_role = 'student'
+      ${
+        excluded.length === 0
+          ? Prisma.empty
+          : Prisma.sql`AND LOWER(u.username) NOT IN (${Prisma.join(excluded)})`
+      }
+    `
+    const totalLearners = Array.isArray(totalRows) && totalRows[0]?.c != null ? Number(totalRows[0].c) : 0
+    const pending = await getPendingLearnersForPeriod(String(period.period_id), excluded)
+    const notSubmitted = pending.length
+    const submitted = Math.max(0, totalLearners - notSubmitted)
+    const nowMs = Date.now()
+    const startsAtMs = new Date(period.starts_at).getTime()
+    const endsAtMs = new Date(period.ends_at).getTime()
+    const isActive = startsAtMs <= nowMs && nowMs <= endsAtMs
+    const isUpcoming = nowMs < startsAtMs
+
+    return res.status(200).json(
+      jsonSafe({
+        period: {
+          periodId: String(period.period_id),
+          title: String(period.title || ''),
+          startsAt: new Date(period.starts_at).toISOString(),
+          endsAt: new Date(period.ends_at).toISOString(),
+        },
+        totalLearners,
+        submitted,
+        notSubmitted,
+        isActive,
+        isUpcoming,
+        now: new Date(nowMs).toISOString(),
+      })
+    )
+  } catch (err) {
+    console.error('[admin submission-reminder-summary]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * POST /api/admin/submission-reminder-send
+ * body: { periodId, content }
+ * Admin: gửi tin nhắn AGENT tới tất cả học viên chưa nộp kỳ periodId.
+ */
+router.post('/submission-reminder-send', authMiddleware, async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'admin') {
+      return res.status(403).json({ error: 'Chỉ admin' })
+    }
+    const periodId = String(req.body?.periodId ?? '')
+      .trim()
+      .slice(0, 64)
+    const content = String(req.body?.content ?? '')
+      .trim()
+      .slice(0, 4000)
+    if (!periodId) {
+      return res.status(400).json({ error: 'Thiếu periodId' })
+    }
+    if (!content) {
+      return res.status(400).json({ error: 'Thiếu nội dung tin nhắn' })
+    }
+
+    const period = await prisma.journalPeriod.findUnique({
+      where: { periodId },
+      select: { periodId: true },
+    })
+    if (!period) {
+      return res.status(404).json({ error: 'Không tìm thấy kỳ submission' })
+    }
+
+    const excluded = await getStatsExcludedUsernamesNormalized(prisma)
+    const pendingLearners = await getPendingLearnersForPeriod(periodId, excluded)
+    let sent = 0
+    let skippedNoChannel = 0
+    for (const learner of pendingLearners) {
+      const learnerId = learner?.user_id != null ? String(learner.user_id) : ''
+      const classCode = learner?.user_class != null ? String(learner.user_class) : ''
+      const channelId = classToChannelId(classCode)
+      if (!learnerId || !channelId) {
+        skippedNoChannel += 1
+        continue
+      }
+      const conv = await prisma.conversation.upsert({
+        where: { channelId_learnerId: { channelId, learnerId } },
+        create: { channelId, learnerId },
+        update: {},
+      })
+      await prisma.message.create({
+        data: {
+          conversationId: conv.id,
+          senderRole: 'assistant',
+          senderUserId: null,
+          content,
+          metadata: { source: 'admin_submission_reminder', periodId },
+        },
+      })
+      await prisma.conversation.update({
+        where: { id: conv.id },
+        data: { updatedAt: new Date() },
+      })
+      sent += 1
+    }
+
+    return res.status(200).json(
+      jsonSafe({
+        ok: true,
+        periodId,
+        targeted: pendingLearners.length,
+        sent,
+        skippedNoChannel,
+      })
+    )
+  } catch (err) {
+    console.error('[admin submission-reminder-send]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
 /**
  * GET /api/admin/journal-upload-stats?periodId=...
  * Admin: số học viên (role student) đã có bản nộp journal trên server cho period_id.

@@ -1,5 +1,5 @@
--- CreateTable
-CREATE TABLE "stats_analytics_exclusions" (
+-- CreateTable (idempotent: DB local có thể đã có bảng trước khi migration được ghi nhận)
+CREATE TABLE IF NOT EXISTS "stats_analytics_exclusions" (
     "exclusion_id" BIGSERIAL NOT NULL,
     "username_normalized" VARCHAR(50) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -9,4 +9,4 @@ CREATE TABLE "stats_analytics_exclusions" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "stats_analytics_exclusions_username_normalized_key" ON "stats_analytics_exclusions"("username_normalized");
+CREATE UNIQUE INDEX IF NOT EXISTS "stats_analytics_exclusions_username_normalized_key" ON "stats_analytics_exclusions"("username_normalized");

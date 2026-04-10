@@ -149,8 +149,12 @@ export function useAllUsers() {
 
   useEffect(() => {
     const onFocus = () => {
-      if (apiToken && user?.role === ROLES.ASSISTANT) {
+      if (!apiToken) return
+      if (user?.role === ROLES.ASSISTANT) {
         setSupporterLearnersRefresh((n) => n + 1)
+      }
+      if (user?.role === ROLES.ADMIN) {
+        setAdminUsersRefresh((n) => n + 1)
       }
     }
     window.addEventListener('focus', onFocus)
@@ -194,6 +198,7 @@ export function useAllUsers() {
 
   const adminApiUsers = useMemo(() => {
     if (!Array.isArray(adminApiRows)) return []
+    /** Luôn hiển thị role từ DB — không gộp roleOverrides (tránh lệch local). */
     return adminApiRows.map((u) =>
       toUser(
         {
@@ -208,10 +213,10 @@ export function useAllUsers() {
         },
         `api-${u.userId}`,
         'api',
-        roleOverrides[`api-${u.userId}`]
+        undefined
       )
     )
-  }, [adminApiRows, roleOverrides])
+  }, [adminApiRows])
 
   const supporterApiLearners = useMemo(() => {
     if (!Array.isArray(supporterApiRows)) return []
@@ -254,19 +259,11 @@ export function useAllUsers() {
   )
 
   const allUsers = useMemo(() => {
-    if (user?.role === ROLES.ADMIN && apiToken && adminApiLoaded && Array.isArray(adminApiRows)) {
-      const rest = localBase.filter((u) => {
-        /** Khi đã có user từ DB, không ghép thêm assistant1/2 demo (local) — tránh lệch sau deploy. */
-        if (
-          u.source === 'provisioned' &&
-          u.role === ROLES.ASSISTANT &&
-          adminApiRows.length > 0
-        ) {
-          return false
-        }
-        return !adminApiUsers.some((a) => a.username === u.username)
-      })
-      return [...adminApiUsers, ...rest]
+    /** Admin có JWT: chỉ danh sách từ GET /api/admin/users — không ghép provisioned/registered/admin-local. */
+    if (user?.role === ROLES.ADMIN && apiToken) {
+      if (!adminApiLoaded) return []
+      if (Array.isArray(adminApiRows)) return adminApiUsers
+      return []
     }
     /** Không yêu cầu Array.isArray(supporterApiRows): khi GET /supporter/learners lỗi, rows=null nhưng vẫn gộp
      *  (supporterApiLearners=[]), tránh rơi về localBase-only → mất toàn bộ học viên api-* trong allUsers. */
@@ -424,6 +421,9 @@ export function useAllUsers() {
     deleteUser,
     roleUpdateError,
     clearRoleUpdateError,
+    adminApiLoaded,
+    /** null = lỗi mạng / 403; [] = DB rỗng; chỉ có nghĩa khi adminApiLoaded */
+    adminApiRows,
     /** Map userId → role UI khi admin đổi dropdown trước / song song khi GET users sync lại */
     roleOverrides,
     /** null = chưa có phản hồi / lỗi; mảng (có thể rỗng) = GET /api/supporter/learners đã trả về */

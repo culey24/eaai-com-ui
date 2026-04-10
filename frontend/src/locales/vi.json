@@ -217,6 +217,8 @@
     "fullNamePlaceholder": "Họ và tên (tùy chọn)",
     "class": "Lớp",
     "role": "Vai trò",
+    "accountsServerOnly": "Bạn đang đăng nhập admin qua máy chủ: danh sách tài khoản chỉ lấy từ database (GET /api/admin/users). Tài khoản demo trong trình duyệt không hiển thị ở đây. Tạo user mới: dùng trang đăng ký công khai hoặc seed/DB.",
+    "usersFetchFailed": "Không tải được danh sách tài khoản từ máy chủ. Kiểm tra mạng, quyền admin (JWT), và thử làm mới trang.",
     "dbRoleRequiresJwt": "Để ghi vai trò vào database (cột user_role), hãy đăng nhập admin bằng tài khoản trên máy chủ (JWT). Đăng nhập demo/local không có token API nên thao tác đổi vai trò không cập nhật PostgreSQL.",
     "actions": "Thao tác",
     "createAccountTitle": "Tạo tài khoản mới",

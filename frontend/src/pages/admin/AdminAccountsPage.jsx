@@ -19,6 +19,8 @@ export default function AdminAccountsPage() {
     roleOverrides,
     roleUpdateError,
     clearRoleUpdateError,
+    adminApiLoaded,
+    adminApiRows,
   } = useAllUsers()
   const {
     assignments,
@@ -61,7 +63,7 @@ export default function AdminAccountsPage() {
   const supporters = allUsers.filter((u) => {
     if (u.role !== ROLES.ASSISTANT) return false
     if (uiIdToBackendUserId(u) == null) return false
-    if (!u.fromApi) return true
+    if (!u.fromApi) return false
     const db = u.dbUserRole != null ? String(u.dbUserRole).toLowerCase() : ''
     const dbIsSupporter = db === 'support' || db === 'assistant' || db === 'teacher'
     const pendingAssistantUi = roleOverrides[u.id] === ROLES.ASSISTANT
@@ -104,22 +106,40 @@ export default function AdminAccountsPage() {
   return (
     <div className="flex flex-col h-full min-h-0 overflow-y-auto">
       <div className="flex-shrink-0 px-6 sm:px-10 lg:px-12 py-5 flex items-center justify-end">
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:opacity-90 text-sm font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          {t('admin.createAccount')}
-        </button>
+        {!apiToken ? (
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:opacity-90 text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            {t('admin.createAccount')}
+          </button>
+        ) : null}
       </div>
       <div className="flex-1 px-6 sm:px-10 lg:px-12 pb-10 min-h-0">
         <div className="w-full max-w-[min(100%,88rem)] mx-auto space-y-8">
+          {authUser?.role === ROLES.ADMIN && apiToken && (
+            <div
+              className="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40 px-4 py-3 text-sm text-slate-700 dark:text-slate-200"
+              role="status"
+            >
+              {t('admin.accountsServerOnly')}
+            </div>
+          )}
           {authUser?.role === ROLES.ADMIN && !apiToken && (
             <div
               className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-900 dark:text-amber-100"
               role="status"
             >
               {t('admin.dbRoleRequiresJwt')}
+            </div>
+          )}
+          {authUser?.role === ROLES.ADMIN && apiToken && adminApiLoaded && adminApiRows === null && (
+            <div
+              className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-200"
+              role="alert"
+            >
+              {t('admin.usersFetchFailed')}
             </div>
           )}
           {assignmentSyncError && (

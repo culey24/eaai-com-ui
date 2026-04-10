@@ -217,6 +217,8 @@
     "fullNamePlaceholder": "Full name (optional)",
     "class": "Class",
     "role": "Role",
+    "accountsServerOnly": "You are signed in as server admin: this list only shows database users (GET /api/admin/users). Demo accounts stored in the browser are not listed here. To add users, use public registration or seed the database.",
+    "usersFetchFailed": "Could not load accounts from the server. Check your network, admin JWT, and try refreshing.",
     "dbRoleRequiresJwt": "To persist role changes to the database (user_role column), sign in as admin with a server account (JWT). Demo/local login has no API token, so role changes are not written to PostgreSQL.",
     "actions": "Actions",
     "createAccountTitle": "Create new account",

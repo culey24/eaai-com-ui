@@ -19,10 +19,15 @@ export function useSupporterStats() {
   const { getMessagesForChannel } = useMessages()
 
   return useMemo(() => {
-    const supporterId = user?.stableId || (user?.name ? `prov-${user.name}` : null)
-    if (!supporterId) return { totalLearners: 0, journalsPending: 0, messagesPending: 0 }
+    const supporterKey =
+      user?.backendUserId != null && String(user.backendUserId).trim() !== ''
+        ? `api-${String(user.backendUserId).trim()}`
+        : user?.stableId || (user?.name ? `prov-${user.name}` : null)
+    if (!supporterKey) return { totalLearners: 0, journalsPending: 0, messagesPending: 0 }
 
-    const myAssignments = Object.entries(assignments).filter(([, a]) => a.supporterId === supporterId)
+    const myAssignments = Object.entries(assignments).filter(
+      ([, a]) => a.supporterId === supporterKey || a.supporterId === user?.stableId
+    )
     const totalLearners = myAssignments.length
 
     let journalsPending = 0

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Bot,
@@ -53,9 +53,13 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const navigate = useNavigate()
 
   const channels = getChannelsByUser(user) || []
-  const supporterId = user?.stableId || (user?.name ? `prov-${user.name}` : null)
+  /** Khớp gán admin: ưu tiên api-{backendUserId} (JWT/DB), fallback stableId / prov- */
+  const supporterKey =
+    user?.backendUserId != null && String(user.backendUserId).trim() !== ''
+      ? `api-${String(user.backendUserId).trim()}`
+      : user?.stableId || (user?.name ? `prov-${user.name}` : null)
   const assignedUserIds = Object.entries(assignments)
-    .filter(([, a]) => a.supporterId === supporterId)
+    .filter(([, a]) => a.supporterId === supporterKey || a.supporterId === user?.stableId)
     .map(([uid]) => uid)
   const assignedUsers = allUsers.filter((u) => assignedUserIds.includes(u.id))
   const getUserDisplayName = (u) =>
@@ -65,10 +69,17 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const isClassesPage = location.pathname === '/classes'
   const isJournalPage = location.pathname === '/journal'
   const isAssistant = user?.role === ROLES.ASSISTANT
-  const supporterChatUsers =
-    isAssistant && user && apiToken && Array.isArray(supporterApiRows)
-      ? supporterApiLearners
-      : assignedUsers
+  /** Gộp API + gán local: trước đây khi GET /supporter/learners trả [] thì bỏ qua hoàn toàn assignments (mất danh sách). */
+  const supporterChatUsers = useMemo(() => {
+    if (!isAssistant || !user) return []
+    const fromApi = Array.isArray(supporterApiRows) ? supporterApiLearners : []
+    const byId = new Map()
+    for (const u of fromApi) byId.set(u.id, u)
+    for (const u of assignedUsers) {
+      if (!byId.has(u.id)) byId.set(u.id, u)
+    }
+    return Array.from(byId.values())
+  }, [isAssistant, user, supporterApiRows, supporterApiLearners, assignedUsers])
   const isAdmin = user?.role === ROLES.ADMIN
   const isLearner = user?.role === ROLES.LEARNER
   const isAdminArea = isAdminMode || location.pathname.startsWith('/admin')

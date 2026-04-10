@@ -1,5 +1,4 @@
 import { Router } from 'express'
-import { UserClass } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
@@ -33,10 +32,10 @@ router.get('/learners', async (req, res) => {
       return res.status(200).json({ learners: [] })
     }
 
+    /** Không lọc theo lớp: gán từ admin đã ràng buộc IS-2; tránh học viên hợp lệ bị ẩn nếu dữ liệu lớp lệch. */
     const learners = await prisma.user.findMany({
       where: {
         userRole: 'student',
-        userClass: UserClass.IS_2,
         userId: { in: assignedIds },
       },
       select: {

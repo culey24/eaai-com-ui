@@ -1,21 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, MessageSquare, User, Search, FileText, Loader2 } from 'lucide-react'
-import { VALID_CLASS_CODES } from '../../constants/roles'
+import { ArrowLeft, MessageSquare, User, Search, FileText } from 'lucide-react'
+import { VALID_CLASS_CODES, CLASS_TO_CHANNEL } from '../../constants/roles'
 import { useMessages } from '../../hooks/useMessages'
 import { useAllUsers } from '../../hooks/useAllUsers'
 import { useJournal } from '../../context/JournalContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
-import MessageItem from '../../components/chat/MessageItem'
+import ChatWindow from '../../components/chat/ChatWindow'
 import JournalEntriesSidebarList from '../../components/journal/JournalEntriesSidebarList'
-
-const CLASS_TO_CHANNEL = {
-  'IS-1': 'ai-chat',
-  'IS-2': 'internal-chat',
-  'IS-3': 'human-chat',
-}
 
 export default function AdminChatsPage() {
   const { t } = useLanguage()
@@ -26,10 +20,14 @@ export default function AdminChatsPage() {
   const [search, setSearch] = useState('')
   const [apiJournals, setApiJournals] = useState({ loaded: false, list: null })
 
-  const channelId = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
-  const { getMessagesForChannel, remoteConversationId, remoteThreadLoading } = useMessages(channelId, {
-    adminViewLearnerId: selectedUser?.backendUserId ?? null,
-  })
+  const channel = selectedUser?.classCode ? CLASS_TO_CHANNEL[selectedUser.classCode] : null
+  const channelId = channel?.id ?? null
+  const { getMessagesForChannel, addMessage, remoteConversationId, remoteThreadLoading } = useMessages(
+    channelId,
+    {
+      adminViewLearnerId: selectedUser?.backendUserId ?? null,
+    }
+  )
 
   useEffect(() => {
     if (!apiToken || !selectedUser?.backendUserId) {
@@ -95,6 +93,11 @@ export default function AdminChatsPage() {
         .filter((m) => m && typeof m === 'object')
         .map((m) => (m.role ? m : { ...m, role: 'user' }))
     : []
+
+  const handleSendMessage = (chId, content, file) => {
+    if (!selectedUser) return
+    addMessage(chId, content, file, 'user', selectedUser.id)
+  }
   const journalUserKey = selectedUser?.stableId ?? selectedUser?.id
   const journalsLocal =
     selectedUser && journalUserKey ? getJournalsForUser(journalUserKey) : []
@@ -148,7 +151,7 @@ export default function AdminChatsPage() {
                     </p>
                     <div className="space-y-1 mt-1">
                       {usersInClass.map((u) => {
-                        const chId = u.classCode ? CLASS_TO_CHANNEL[u.classCode] : null
+                        const chId = u.classCode ? CLASS_TO_CHANNEL[u.classCode]?.id : null
                         const msgCount = chId ? getMessagesForChannel(chId, u.id).length : 0
                         const isActive = selectedUser?.id === u.id
                         return (
@@ -182,7 +185,7 @@ export default function AdminChatsPage() {
                   </p>
                   <div className="space-y-1 mt-1">
                     {usersWithoutClass.map((u) => {
-                      const chId = u.classCode ? CLASS_TO_CHANNEL[u.classCode] : null
+                      const chId = u.classCode ? CLASS_TO_CHANNEL[u.classCode]?.id : null
                       const msgCount = chId ? getMessagesForChannel(chId, u.id).length : 0
                       const isActive = selectedUser?.id === u.id
                       return (
@@ -215,45 +218,18 @@ export default function AdminChatsPage() {
         {/* Chat (center) + Journal (right sidebar) */}
         {selectedUser ? (
           <div className="flex-1 flex min-h-0 flex-col md:flex-row overflow-hidden">
-            <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-slate-50/30 dark:bg-slate-800/30 relative">
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="max-w-3xl mx-auto space-y-6">
-                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                    <span className="font-medium">{selectedUser.username}</span>
-                    {selectedUser.classCode && (
-                      <span className="text-sm">— {t('admin.classLabel', { code: selectedUser.classCode })}</span>
-                    )}
-                  </div>
-
-                  <div className="space-y-6 relative min-h-[12rem]">
-                    <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                      {t('admin.chatSection')}
-                    </h3>
-                    {remoteThreadLoading ? (
-                      <div
-                        className="flex flex-col items-center justify-center py-16 gap-3 text-slate-600 dark:text-slate-400"
-                        role="status"
-                        aria-live="polite"
-                      >
-                        <Loader2 className="w-10 h-10 text-primary animate-spin" aria-hidden />
-                        <span className="text-sm">{t('common.loading')}</span>
-                      </div>
-                    ) : messages.length === 0 ? (
-                      <p className="text-slate-500 dark:text-slate-400 py-4">{t('admin.noMessages')}</p>
-                    ) : (
-                      messages.map((msg, idx) => (
-                        <MessageItem
-                          key={msg.id != null ? String(msg.id) : `m-${idx}`}
-                          message={msg}
-                          agentLabel={msg.role === 'assistant' ? 'AGENT' : null}
-                          conversationId={remoteConversationId}
-                          apiToken={apiToken}
-                        />
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+              <ChatWindow
+                channel={channel}
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                userId={selectedUser.id}
+                hideReport
+                messagePerspective="supporter"
+                customTitle={`${selectedUser.username}${selectedUser.classCode ? ` — ${t('admin.classLabel', { code: selectedUser.classCode })}` : ''}`}
+                remoteConversationId={remoteConversationId}
+                threadLoading={remoteThreadLoading}
+              />
             </div>
 
             <aside

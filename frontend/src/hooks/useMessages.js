@@ -360,6 +360,76 @@ export function useMessages(pollChannelId = null, options = {}) {
         return
       }
 
+      if (
+        isRemoteAdmin &&
+        apiToken &&
+        pollChannelId &&
+        channelId === pollChannelId &&
+        role === 'user' &&
+        adminViewLearnerId
+      ) {
+        try {
+          let res
+          if (file) {
+            const fd = new FormData()
+            fd.append('channelId', channelId)
+            fd.append('content', content || '')
+            fd.append('role', 'assistant')
+            fd.append('file', file)
+            if (conversationId) fd.append('conversationId', String(conversationId))
+            else fd.append('learnerId', adminViewLearnerId)
+            res = await fetch(`${API_BASE}/api/messages`, {
+              method: 'POST',
+              cache: 'no-store',
+              headers: { Authorization: `Bearer ${apiToken}` },
+              body: fd,
+            })
+          } else {
+            const body = conversationId
+              ? {
+                  channelId,
+                  content: content || '',
+                  role: 'assistant',
+                  conversationId,
+                }
+              : {
+                  channelId,
+                  content: content || '',
+                  role: 'assistant',
+                  learnerId: adminViewLearnerId,
+                }
+            res = await fetch(`${API_BASE}/api/messages`, {
+              method: 'POST',
+              cache: 'no-store',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${apiToken}`,
+              },
+              body: JSON.stringify(body),
+            })
+          }
+          const data = await res.json().catch(() => ({}))
+          const cid =
+            data.message?.conversationId != null
+              ? String(data.message.conversationId)
+              : conversationId
+          if (res.ok && cid) {
+            setConversationId(cid)
+            const r2 = await fetch(`${API_BASE}/api/messages/${cid}`, {
+              cache: 'no-store',
+              headers: { Authorization: `Bearer ${apiToken}` },
+            })
+            if (r2.ok) {
+              const d2 = await r2.json()
+              setRemoteList(mapRemoteRows(d2.messages))
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+        return
+      }
+
       const key = getStorageKey(channelId, userId)
       const newMsg = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -387,10 +457,12 @@ export function useMessages(pollChannelId = null, options = {}) {
     [
       isRemoteLearner,
       isRemoteAssistant,
+      isRemoteAdmin,
       apiToken,
       pollChannelId,
       conversationId,
       assistantViewLearnerId,
+      adminViewLearnerId,
     ]
   )
 

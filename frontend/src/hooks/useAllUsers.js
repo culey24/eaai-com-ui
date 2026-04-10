@@ -117,6 +117,24 @@ export function useAllUsers() {
         if (cancelled) return
         setAdminApiRows(Array.isArray(data.users) ? data.users : [])
         setAdminApiLoaded(true)
+        /** Sau deploy / đổi DB, localStorage có thể còn roleOverrides cho api-* (Supporter ảo) — xóa để UI khớp DB. */
+        setRoleOverrides((prev) => {
+          const next = { ...prev }
+          let changed = false
+          for (const k of Object.keys(next)) {
+            if (k.startsWith('api-')) {
+              delete next[k]
+              changed = true
+            }
+          }
+          if (!changed) return prev
+          try {
+            localStorage.setItem(ROLE_OVERRIDES_KEY, JSON.stringify(next))
+          } catch {
+            /* ignore */
+          }
+          return next
+        })
       } catch {
         if (!cancelled) {
           setAdminApiRows(null)
@@ -237,7 +255,17 @@ export function useAllUsers() {
 
   const allUsers = useMemo(() => {
     if (user?.role === ROLES.ADMIN && apiToken && adminApiLoaded && Array.isArray(adminApiRows)) {
-      const rest = localBase.filter((u) => !adminApiUsers.some((a) => a.username === u.username))
+      const rest = localBase.filter((u) => {
+        /** Khi đã có user từ DB, không ghép thêm assistant1/2 demo (local) — tránh lệch sau deploy. */
+        if (
+          u.source === 'provisioned' &&
+          u.role === ROLES.ASSISTANT &&
+          adminApiRows.length > 0
+        ) {
+          return false
+        }
+        return !adminApiUsers.some((a) => a.username === u.username)
+      })
       return [...adminApiUsers, ...rest]
     }
     /** Không yêu cầu Array.isArray(supporterApiRows): khi GET /supporter/learners lỗi, rows=null nhưng vẫn gộp

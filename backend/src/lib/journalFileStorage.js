@@ -118,6 +118,41 @@ export async function readJournalUpload(storageKey) {
   return { buffer, contentType: 'application/octet-stream' }
 }
 
+/**
+ * Đọc file journal; nếu path trong DB là bản cũ (thiếu thư mục period do path.join bỏ segment rỗng),
+ * thử thêm `userId/periodId/basename` dưới JOURNAL_UPLOAD_DIR.
+ * @param {string} storageKey
+ * @param {{ userId?: string, periodId?: string }} [opts]
+ */
+export async function readJournalUploadWithFallback(storageKey, opts = {}) {
+  const { userId, periodId } = opts
+  try {
+    return await readJournalUpload(storageKey)
+  } catch (err) {
+    if (
+      err?.code !== 'ENOENT' ||
+      !userId ||
+      periodId == null ||
+      String(periodId).trim() === '' ||
+      (typeof storageKey === 'string' && storageKey.startsWith(GCS_KEY_PREFIX))
+    ) {
+      throw err
+    }
+    const base = path.basename(String(storageKey).replace(/\\/g, '/'))
+    if (!base || base === '.' || base === '..') {
+      throw err
+    }
+    const root = uploadRootDir()
+    const { safeUser, safePeriod } = safeJournalPathParts(userId, periodId)
+    const altFull = path.join(root, safeUser, safePeriod, base)
+    const altKey = path.relative(process.cwd(), altFull).split(path.sep).join('/')
+    if (altKey === String(storageKey).replace(/\\/g, '/')) {
+      throw err
+    }
+    return await readJournalUpload(altKey)
+  }
+}
+
 export async function removeJournalUpload(storageKey) {
   if (!storageKey || typeof storageKey !== 'string') return
 

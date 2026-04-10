@@ -29,6 +29,7 @@ import AdminSubmissionsPage from './pages/admin/AdminSubmissionsPage'
 import AdminSurveyResultsPage from './pages/admin/AdminSurveyResultsPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
 import PretestGate from './components/PretestGate'
+import SessionExpiredBridge from './components/SessionExpiredBridge'
 import ClassesWithWidget from './components/supporter/ClassesWithWidget'
 import Sidebar from './components/layout/Sidebar'
 import { ROLES } from './constants/roles'
@@ -167,6 +168,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <SessionExpiredBridge />
         <AdminProvider>
           <ReportsProvider>
             <JournalProvider>

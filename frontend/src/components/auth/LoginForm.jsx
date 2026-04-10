@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -7,8 +7,10 @@ import { formatAuthResultError } from '../../lib/authErrorUi'
 
 export default function LoginForm() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
   const { t } = useLanguage()
+  const sessionExpired = location.state?.sessionExpired === true
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
@@ -45,6 +47,12 @@ export default function LoginForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {sessionExpired && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 text-amber-800 text-sm border border-amber-100">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            {t('auth.sessionExpired')}
+          </div>
+        )}
         {loginError && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 text-red-600 text-sm">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />

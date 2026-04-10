@@ -31,6 +31,7 @@
     "registerPrompt": "Create an account",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
+    "sessionExpired": "Your session has expired. Please sign in again.",
     "invalidCredentials": "Invalid username or password",
     "passwordMinLength": "Password must be at least 4 characters",
     "passwordMismatch": "Passwords do not match",

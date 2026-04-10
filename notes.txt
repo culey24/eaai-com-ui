@@ -1,0 +1,8 @@
+- CÓ thêm thinking => Mất thinking lúc đang trả lời.
+- Hết hạn token => Logout yêu cầu đăng nhập lại.
+- Tạo FAQ + enrich FAQ làm middle layer giữa backend với agent.
+
+Nhiệm vụ
+- Tạo chunks document chi tiết về các slide (bám sát slide).
+    - Lúc tạo chunk document nhớ ghi lại heading
+- Tạo 20 FAQ liên quan tới 1 slide.

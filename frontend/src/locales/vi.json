@@ -31,6 +31,7 @@
     "registerPrompt": "Tạo tài khoản",
     "noAccount": "Chưa có tài khoản?",
     "hasAccount": "Đã có tài khoản?",
+    "sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
     "invalidCredentials": "Tài khoản hoặc mật khẩu không đúng",
     "passwordMinLength": "Mật khẩu phải có ít nhất 4 ký tự",
     "passwordMismatch": "Mật khẩu xác nhận không khớp",

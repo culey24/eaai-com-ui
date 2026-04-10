@@ -1,7 +1,11 @@
 import { Router } from 'express'
 import multer from 'multer'
 import { prisma } from '../lib/prisma.js'
-import { removeJournalUpload, saveJournalUpload, readJournalUpload } from '../lib/journalFileStorage.js'
+import {
+  removeJournalUpload,
+  saveJournalUpload,
+  readJournalUploadWithFallback,
+} from '../lib/journalFileStorage.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { extractDocumentText } from '../lib/extractDocumentText.js'
 import { jsonSafe } from '../lib/json.js'
@@ -194,7 +198,7 @@ router.get('/learner/:learnerId/file/:uploadId', authMiddleware, async (req, res
     await assertCanDownloadJournalFile(req.auth, learnerId)
 
     const rows = await prisma.$queryRaw`
-      SELECT ju.storage_key, ju.original_file_name
+      SELECT ju.storage_key, ju.original_file_name, ju.period_id
       FROM journal_uploads ju
       WHERE ju.user_id = ${learnerId} AND ju.upload_id = ${uploadIdBig}
       LIMIT 1
@@ -204,7 +208,23 @@ router.get('/learner/:learnerId/file/:uploadId', authMiddleware, async (req, res
       return res.status(404).json({ error: 'Không tìm thấy file journal' })
     }
 
-    const { buffer, contentType } = await readJournalUpload(String(row.storage_key))
+    let buffer
+    let contentType
+    try {
+      ;({ buffer, contentType } = await readJournalUploadWithFallback(String(row.storage_key), {
+        userId: learnerId,
+        periodId: row.period_id != null ? String(row.period_id) : '',
+      }))
+    } catch (readErr) {
+      if (readErr?.code === 'ENOENT') {
+        return res.status(404).json({
+          error:
+            'File journal không còn trên máy chủ (mất volume / đổi instance / chưa mount uploads). ' +
+            'Cấu hình volume bền cho thư mục upload hoặc GCS_BUCKET_NAME.',
+        })
+      }
+      throw readErr
+    }
     const name =
       (row.original_file_name && String(row.original_file_name).slice(0, 512)) || 'journal'
 

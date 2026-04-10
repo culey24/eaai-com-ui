@@ -226,6 +226,19 @@ export default function ChatWindow({
           </div>
         </div>
       )}
+      {messagePerspective === 'learner' ? (
+        <div className="flex-shrink-0 px-6 pt-3">
+          <div className="max-w-3xl mx-auto rounded-xl border border-sky-200 dark:border-sky-800/60 bg-sky-50/90 dark:bg-sky-900/25 px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
+            {t('chat.technicalSupportNotice')}{' '}
+            <a
+              href="mailto:avatara.edu.hcmut@gmail.com"
+              className="font-medium text-primary hover:underline"
+            >
+              avatara.edu.hcmut@gmail.com
+            </a>
+          </div>
+        </div>
+      ) : null}
 
       {/* Input */}
       <ChatInput

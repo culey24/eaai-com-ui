@@ -88,6 +88,7 @@
     "attachedFileOnly": "Attached file",
     "downloadAttachment": "Download",
     "downloadAttachmentFailed": "Could not download the attachment.",
+    "technicalSupportNotice": "If there is any technical problem, please email us immediately at",
     "thinking": "Thinking…"
   },
   "report": {

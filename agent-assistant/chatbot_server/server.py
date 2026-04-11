@@ -314,18 +314,35 @@ async def health_check():
 async def create_session(user_id: str, app_name: str = APP_NAME):
     session_id = await db_save_session(user_id)
 
-    if session_id:
-        url = f"{AGENT_SERVER}/apps/{app_name}/users/{user_id}/sessions/{session_id}"
-        response = await asyncio.to_thread(_requests_post_retry_connect, url, timeout=60)
+    if not session_id:
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Failed to create session in backend (BE).", "user_id": user_id},
+        )
 
-        if response.status_code == 200:
-            return JSONResponse(
-                status_code=200,
-                content={"message": "Successfully created session on AGENT SERVER."}
-            )
+    url = f"{AGENT_SERVER}/apps/{app_name}/users/{user_id}/sessions/{session_id}"
+    response = await asyncio.to_thread(_requests_post_retry_connect, url, timeout=60)
+
+    if response.status_code == 200:
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Successfully created session on AGENT SERVER.",
+                "user_id": user_id,
+                "session_id": session_id,
+                "adk_registered": True,
+            },
+        )
 
     return JSONResponse(
-        status_code=500, content={"error": "Failed to create session on AGENT SERVER."}
+        status_code=502,
+        content={
+            "error": "Backend session created but ADK registration failed.",
+            "user_id": user_id,
+            "session_id": session_id,
+            "adk_registered": False,
+            "adk_status": response.status_code,
+        },
     )
 
 

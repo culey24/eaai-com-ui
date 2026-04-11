@@ -1,3 +1,7 @@
+"""
+Reminder sub-agent (standalone / thử nghiệm). Luồng sản phẩm: Manager gọi trực tiếp
+`reminder_agent.tools` trên root agent — không còn `AgentTool` → sub-session.
+"""
 import os
 import logging
 from typing import Optional
@@ -25,6 +29,7 @@ from .tools import (
     read_journal_submissions_content,
     set_reminder,
 )
+from ...invocation_user import merge_invocation_user_id_into_state
 from ...service_urls import get_be_server_base_url
 
 load_dotenv()  # Load environment variables from .env file
@@ -41,7 +46,7 @@ MAX_RETRIES = 8
 # Đủ chỗ cho get_user_journal_status + get_active_journal_periods + nhiều set_reminder (nhiều đợt chưa nộp).
 MAX_FUNCTION_CALLS = 16
 
-# Không dùng chung `current_attempt` với Manager: sau call_persona + call_reminder, state của Manager
+# Không dùng chung `current_attempt` với Manager: sau call_persona + nhiều tool journal, state của Manager
 # làm bộ đếm của Reminder tăng sớm → before_model trả "không tìm thấy thông tin" sau 3–4 tool calls.
 _ATTEMPT_KEY = "_reminder_fc_round"
 
@@ -139,19 +144,8 @@ def init_session_state(callback_context: CallbackContext) -> None:
     callback_context.state[_ATTEMPT_KEY] = 0
     callback_context.state["current_attempt"] = 0
 
-    invocation_context = getattr(callback_context, "_invocation_context", None)
-    inv_uid = (
-        getattr(invocation_context, "user_id", None) if invocation_context is not None else None
-    )
-    if inv_uid is not None and str(inv_uid).strip():
-        callback_context.state["user_id"] = str(inv_uid).strip()
-    elif callback_context.state.get("user_id"):
-        # Sub-agent gọi qua AgentTool: giữ user_id đã có trong state từ phiên cha
-        pass
-    else:
-        callback_context.state["user_id"] = getattr(
-            invocation_context, "user_id", "user"
-        ) if invocation_context is not None else "user"
+    # Không ghi đè user_id thật từ Manager bằng placeholder "user" của invocation ADK (AgentTool).
+    merge_invocation_user_id_into_state(callback_context)
 
     session_uid = callback_context.state.get("user_id")
     session_uid = session_uid.strip() if isinstance(session_uid, str) else session_uid

@@ -424,7 +424,7 @@ router.post(
           let assistantContent
           let metaSource = 'agentic_chatbot'
           try {
-            const fromAgent = await generateIs1AgenticReply(userId, text)
+            const fromAgent = await generateIs1AgenticReply(resolvedLearnerId, text)
             if (fromAgent != null) {
               assistantContent = fromAgent
             } else {
@@ -459,7 +459,7 @@ router.post(
         }
       }
 
-      // Admin kênh test-agent: chat trực tiếp với AGENT (cùng generateIs1AgenticReply, userId = admin)
+      // Admin kênh test-agent: agent nhận learnerId của hội thoại (không dùng JWT admin làm user_id BE).
       if (
         userRole === 'admin' &&
         senderRole === MessageSender.user &&
@@ -469,7 +469,7 @@ router.post(
         let assistantContent
         let metaSource = 'agentic_chatbot'
         try {
-          const fromAgent = await generateIs1AgenticReply(userId, text)
+          const fromAgent = await generateIs1AgenticReply(resolvedLearnerId, text)
           if (fromAgent != null) {
             assistantContent = fromAgent
           } else {

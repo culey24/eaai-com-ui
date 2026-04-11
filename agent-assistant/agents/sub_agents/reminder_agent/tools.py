@@ -1,4 +1,5 @@
 from typing import Optional
+import json
 import logging
 from dotenv import load_dotenv
 import requests
@@ -12,8 +13,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from utils.be_integration import be_integration_headers
+from utils.be_integration import be_integration_headers, log_agent_integration_http
 
+from ...invocation_user import merge_invocation_user_id_into_state
 from ...service_urls import get_be_server_base_url
 
 BE_SERVER = get_be_server_base_url()
@@ -24,25 +26,28 @@ _SESSION_USER_MISSING = (
 )
 
 
-def _session_user_id(tool_context: ToolContext) -> Optional[str]:
-    """
-    ID user cho API nhắc việc / journal: ưu tiên user_id của Session ADK (khớp URL tạo phiên / JWT),
-    không tin state['user_id'] trước vì state có thể lệch sau sub-agent hoặc bị ghi đè.
-    """
-    inv = getattr(tool_context, '_invocation_context', None)
-    if inv is not None:
-        sid = getattr(inv, 'user_id', None)
-        if sid is not None:
-            s = str(sid).strip()
-            if s and s != 'user':
-                return s
-    raw = tool_context.state.get('user_id')
+def _valid_session_uid(raw: object) -> Optional[str]:
     if raw is None:
         return None
-    uid = str(raw).strip()
-    if not uid or uid == 'user':
+    s = str(raw).strip()
+    if not s or s == 'user':
         return None
-    return uid
+    return s
+
+
+def _session_user_id(tool_context: ToolContext) -> Optional[str]:
+    """
+    ID user cho API nhắc việc / journal: ưu tiên state['user_id'] từ phiên manager (JWT / tạo phiên),
+    sau đó mới tới invocation ADK — tránh gọi BE với placeholder 'user' khi sub-agent có context khác.
+    """
+    merge_invocation_user_id_into_state(tool_context)
+    st = _valid_session_uid(tool_context.state.get('user_id'))
+    if st:
+        return st
+    inv = getattr(tool_context, '_invocation_context', None)
+    if inv is not None:
+        return _valid_session_uid(getattr(inv, 'user_id', None))
+    return None
 
 
 async def set_reminder(reminder_iso: str, message: str, tool_context: ToolContext) -> str:
@@ -53,8 +58,9 @@ async def set_reminder(reminder_iso: str, message: str, tool_context: ToolContex
     if not user_id:
         return _SESSION_USER_MISSING
     try:
+        path = f'/users/{user_id}/reminders'
         r = requests.post(
-            f'{BE_SERVER}/users/{user_id}/reminders',
+            f'{BE_SERVER}{path}',
             json={
                 'user_id': user_id,
                 'reminder_at': reminder_iso,
@@ -63,8 +69,21 @@ async def set_reminder(reminder_iso: str, message: str, tool_context: ToolContex
             headers={**be_integration_headers(), 'Content-Type': 'application/json'},
             timeout=30,
         )
+        log_agent_integration_http(
+            'set_reminder', method='POST', path=path, user_id=user_id, status_code=r.status_code
+        )
         if r.status_code == 201:
             return 'Đã lưu nhắc việc thành công.'
+        if r.status_code == 400:
+            try:
+                body = r.json()
+                err = str(body.get('error') or body.get('message') or '')
+            except Exception:
+                err = (r.text or '')[:400]
+            return (
+                'Lưu nhắc thất bại: máy chủ từ chối yêu cầu (400). '
+                f'Chi tiết: {err or r.text[:300]}'
+            )
         if r.status_code == 404:
             try:
                 body = r.json()
@@ -89,10 +108,14 @@ async def list_user_reminders(tool_context: ToolContext) -> str:
     if not user_id:
         return _SESSION_USER_MISSING
     try:
+        path = f'/users/{user_id}/reminders'
         r = requests.get(
-            f'{BE_SERVER}/users/{user_id}/reminders',
+            f'{BE_SERVER}{path}',
             headers=be_integration_headers(),
             timeout=30,
+        )
+        log_agent_integration_http(
+            'list_reminders', method='GET', path=path, user_id=user_id, status_code=r.status_code
         )
         if r.status_code != 200:
             return f'Không đọc được danh sách: {r.status_code} {r.text[:300]}'
@@ -117,10 +140,14 @@ async def get_user_journal_status(tool_context: ToolContext) -> str:
     if not user_id:
         return _SESSION_USER_MISSING
     try:
+        path = f'/users/{user_id}/journal-status'
         r = requests.get(
-            f'{BE_SERVER}/users/{user_id}/journal-status',
+            f'{BE_SERVER}{path}',
             headers=be_integration_headers(),
             timeout=30,
+        )
+        log_agent_integration_http(
+            'journal_status', method='GET', path=path, user_id=user_id, status_code=r.status_code
         )
         if r.status_code != 200:
             if r.status_code == 404:
@@ -173,10 +200,14 @@ async def read_journal_submissions_content(tool_context: ToolContext) -> str:
     if not user_id:
         return _SESSION_USER_MISSING
     try:
+        path = f'/users/{user_id}/journal-context'
         r = requests.get(
-            f'{BE_SERVER}/users/{user_id}/journal-context',
+            f'{BE_SERVER}{path}',
             headers=be_integration_headers(),
             timeout=45,
+        )
+        log_agent_integration_http(
+            'journal_context', method='GET', path=path, user_id=user_id, status_code=r.status_code
         )
         if r.status_code != 200:
             return f'Không đọc được nội dung journal đã nộp: {r.status_code} {r.text[:400]}'
@@ -201,10 +232,14 @@ async def get_active_journal_periods() -> str:
     Dùng để thông báo cho người dùng về hạn nộp submission.
     """
     try:
+        path = '/journal-periods'
         r = requests.get(
-            f'{BE_SERVER}/journal-periods',
+            f'{BE_SERVER}{path}',
             headers=be_integration_headers(),
             timeout=30,
+        )
+        log_agent_integration_http(
+            'journal_periods', method='GET', path=path, user_id=None, status_code=r.status_code
         )
         if r.status_code != 200:
             return (
@@ -230,23 +265,28 @@ async def get_active_journal_periods() -> str:
         )
 
 
-async def get_current_schedule(tool_context: ToolContext) -> Optional[list]:
+async def get_current_schedule(tool_context: ToolContext) -> str:
     """
-    Retrieves the current user's academic schedule (classes) from the backend.
+    Lấy lịch học (schedule) của user đang chat từ backend; trả JSON dạng chuỗi cho LLM.
     """
     user_id = _session_user_id(tool_context)
     if not user_id:
         logger.warning('get_current_schedule: missing session user_id')
-        return []
+        return _SESSION_USER_MISSING
     try:
+        path = f'/users/{user_id}/schedule'
         response = requests.get(
-            f"{BE_SERVER}/users/{user_id}/schedule",
+            f'{BE_SERVER}{path}',
             headers=be_integration_headers(),
             timeout=30,
         )
+        log_agent_integration_http(
+            'schedule', method='GET', path=path, user_id=user_id, status_code=response.status_code
+        )
         if response.status_code == 200:
-            return response.json().get("schedule", [])
-        return []
+            data = response.json().get('schedule', [])
+            return json.dumps(data, ensure_ascii=False)
+        return f'[]  # HTTP {response.status_code}'
     except requests.RequestException as e:
         logger.error('Error retrieving current schedule for user %s: %s', user_id, e)
-        return None
+        return f'Lỗi kết nối khi lấy lịch học: {e}'

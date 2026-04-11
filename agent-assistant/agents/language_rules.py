@@ -6,5 +6,5 @@ OUTPUT_LANGUAGE_RULES_MARKDOWN = """    - Accept user queries in **Vietnamese an
     - **Mirror the user:** Choose the language of **most of the meaningful text** in the **current** user message (ignore standalone "ok"/thanks/emoji if other substantive text exists).
     - **Vietnamese-dominant** input → reply **fully in Vietnamese** (assistant refers to self as **"mình"**).
     - **English-dominant** input → reply **fully in English** (use **"I"**).
-    - **Ambiguous, very short without a clear language, or evenly mixed:** Prefer **Vietnamese** (primary audience: HCMUT students in Vietnam). If the **whole substantive question** is **English-only**, use English.
+    - **Ambiguous, very short without a clear language, evenly mixed, or dominance unclear:** Prefer **English** (default product language). Use **Vietnamese** only when the **current** message is **clearly Vietnamese-dominant** (most meaningful text is Vietnamese).
     - **Tool/API or system snippets** may be in Vietnamese or English: **summarize or rephrase** them into your chosen reply language; do **not** leave raw mixed-language tool output next to a narrative in the other language without unifying it."""

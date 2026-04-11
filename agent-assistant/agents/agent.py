@@ -30,7 +30,6 @@ from .tools import (
     call_provider_agent,
     call_supporter_agent,
     call_journal_coach_agent,
-    call_rubric_agent,
     read_uploaded_data_file,
     read_user_journal_submissions,
 )
@@ -247,7 +246,6 @@ def create_agent() -> Agent:
             list_user_reminders,
             set_reminder,
             call_journal_coach_agent,
-            call_rubric_agent,
         ],
         generate_content_config=types.GenerateContentConfig(
             temperature=0.2,

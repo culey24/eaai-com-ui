@@ -1,6 +1,6 @@
-import { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useLayoutEffect, useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageSquare, Flag, Loader2 } from 'lucide-react'
+import { MessageSquare, Flag, Loader2, ChevronDown } from 'lucide-react'
 import MessageItem from './MessageItem'
 import ChatInput from './ChatInput'
 import ReportModal from './ReportModal'
@@ -11,6 +11,15 @@ import { API_BASE } from '../../config/api'
 
 /** Supporter/internal-chat: sau khoảng này chưa có phản hồi → gợi ý hệ thống bận (học viên IS-2). */
 const IS3_BUSY_AFTER_MS = 45_000
+
+/** Khoảng cách tới đáy (px): gần hơn mức này thì coi là đang theo dõi tin mới → vẫn dính đáy khi poll. */
+const SCROLL_BOTTOM_THRESHOLD_PX = 80
+
+function messagesEndSignature(msgs) {
+  if (!msgs?.length) return '0'
+  const last = msgs[msgs.length - 1]
+  return `${msgs.length}:${last.id}`
+}
 
 export default function ChatWindow({
   channel,
@@ -32,7 +41,11 @@ export default function ChatWindow({
   const canSendChat = isProfileComplete()
   const channelLabel = customTitle ?? (channel?.labelKey ? t(channel.labelKey, { code: channel.code }) : channel?.label)
   const scrollRef = useRef(null)
+  const prevChannelIdRef = useRef(null)
+  const prevThreadLoadingRef = useRef(threadLoading)
+  const lastEndSigRef = useRef('')
   const [reportOpen, setReportOpen] = useState(false)
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false)
   const [busyClock, setBusyClock] = useState(0)
   /** null = không áp dụng; false = chưa gán supporter (internal-chat / IS-2) */
   const [hasSupporterAssignment, setHasSupporterAssignment] = useState(null)
@@ -99,15 +112,83 @@ export default function ChatWindow({
     internalMask && hasSupporterAssignment === false
   const blockChatNoSupporter = showUnassignedSupporterBg
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: 'smooth',
-    })
-  }, [messages])
+  const distanceFromBottom = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return 0
+    return el.scrollHeight - el.scrollTop - el.clientHeight
+  }, [])
+
+  const scrollMessagesToBottom = useCallback((behavior = 'smooth') => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior })
+  }, [])
+
+  const handleMessagesScroll = useCallback(() => {
+    if (distanceFromBottom() < SCROLL_BOTTOM_THRESHOLD_PX) {
+      setShowJumpToLatest(false)
+    }
+  }, [distanceFromBottom])
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    const cid = channel?.id
+    if (!cid) {
+      prevChannelIdRef.current = null
+      return
+    }
+    if (!el) return
+
+    if (prevChannelIdRef.current !== cid) {
+      prevChannelIdRef.current = cid
+      prevThreadLoadingRef.current = threadLoading
+      lastEndSigRef.current = messagesEndSignature(messages)
+      el.scrollTop = el.scrollHeight
+      setShowJumpToLatest(false)
+      return
+    }
+
+    if (threadLoading) {
+      prevThreadLoadingRef.current = true
+      return
+    }
+
+    if (prevThreadLoadingRef.current && !threadLoading) {
+      prevThreadLoadingRef.current = false
+      lastEndSigRef.current = messagesEndSignature(messages)
+      el.scrollTop = el.scrollHeight
+      setShowJumpToLatest(false)
+      return
+    }
+    prevThreadLoadingRef.current = threadLoading
+
+    const sig = messagesEndSignature(messages)
+    if (sig === lastEndSigRef.current) {
+      return
+    }
+    lastEndSigRef.current = sig
+
+    if (distanceFromBottom() < SCROLL_BOTTOM_THRESHOLD_PX) {
+      el.scrollTop = el.scrollHeight
+      setShowJumpToLatest(false)
+    } else {
+      setShowJumpToLatest(true)
+    }
+  }, [messages, channel?.id, threadLoading, distanceFromBottom])
 
   const handleSend = (content, file) => {
     onSendMessage(channel?.id, content, file)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        scrollMessagesToBottom('smooth')
+        setShowJumpToLatest(false)
+      })
+    })
+  }
+
+  const handleJumpToLatest = () => {
+    scrollMessagesToBottom('smooth')
+    setShowJumpToLatest(false)
   }
 
   const handleReportSubmit = (report) => {
@@ -141,11 +222,13 @@ export default function ChatWindow({
         onSubmit={handleReportSubmit}
       />
 
-      {/* Messages area */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-8 pb-4 space-y-6 bg-slate-50/30 dark:bg-slate-800/30 scrollbar-thin relative"
-      >
+      {/* Messages: không kéo đáy mỗi poll nếu user đã kéo lên; nút mũi tên xuống khi có tin mới */}
+      <div className="flex-1 min-h-0 flex flex-col relative">
+        <div
+          ref={scrollRef}
+          onScroll={handleMessagesScroll}
+          className="flex-1 min-h-0 overflow-y-auto p-8 pb-4 space-y-6 bg-slate-50/30 dark:bg-slate-800/30 scrollbar-thin relative"
+        >
         {threadLoading && channel ? (
           <div
             className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-white/75 dark:bg-slate-900/75 backdrop-blur-[2px]"
@@ -211,6 +294,20 @@ export default function ChatWindow({
             </div>
           )}
         </div>
+        </div>
+        {channel && messages.length > 0 && !threadLoading && showJumpToLatest ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center z-20">
+            <button
+              type="button"
+              onClick={handleJumpToLatest}
+              className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-primary shadow-md transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700"
+              title={t('chat.scrollToLatest')}
+              aria-label={t('chat.scrollToLatest')}
+            >
+              <ChevronDown className="h-5 w-5" aria-hidden />
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {channel && !canSendChat && !blockChatNoSupporter && (

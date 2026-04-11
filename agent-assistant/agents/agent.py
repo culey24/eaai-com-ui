@@ -15,6 +15,7 @@ from google.adk.models import LlmResponse, LlmRequest
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
+from .language_rules import OUTPUT_LANGUAGE_RULES_MARKDOWN
 from .prompt import MANAGER_AGENT_INSTRUCTION_PROMPT
 from .sub_agents.reminder_agent.tools import (
     get_active_journal_periods,
@@ -227,6 +228,7 @@ def create_agent() -> Agent:
             current_attempt="{current_attempt}",
             static_profile="{static_profile}",
             dynamic_profile="{dynamic_profile}",
+            language_rules=OUTPUT_LANGUAGE_RULES_MARKDOWN,
         ),
         before_model_callback=setup_before_model_call,
         before_agent_callback=init_session_state,

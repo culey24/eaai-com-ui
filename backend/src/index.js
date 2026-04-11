@@ -3,6 +3,7 @@ import { createApp } from './app.js'
 import { prisma } from './lib/prisma.js'
 import { applyLightweightSchemaPatches } from './lib/ensureDbPatches.js'
 import { ensureBootstrapAdmin } from './lib/ensureBootstrapAdmin.js'
+import { dispatchAgentReminders } from './lib/dispatchAgentReminders.js'
 
 console.log('[eaai] boot — NODE_ENV=%s PORT=%s', process.env.NODE_ENV || '', process.env.PORT || '(default 3000)')
 
@@ -50,6 +51,23 @@ async function main() {
   } catch (err) {
     /* Không exit — tránh crash loop → Railway 502. / và /health vẫn phản hồi để debug. */
     console.error('[prisma] connect failed — kiểm tra DATABASE_URL / Postgres plugin trên Railway', err)
+  }
+
+  const cronOff = ['0', 'false', 'off'].includes(
+    String(process.env.AGENT_REMINDER_CRON_ENABLED ?? '1').trim().toLowerCase()
+  )
+  if (!cronOff) {
+    const tickMs = Math.min(
+      Math.max(Number(process.env.AGENT_REMINDER_CRON_MS) || 60_000, 15_000),
+      3_600_000
+    )
+    setInterval(() => {
+      dispatchAgentReminders().catch((e) => console.error('[agent-reminder-cron]', e))
+    }, tickMs)
+    console.log(
+      '[agent-reminder-cron] enabled interval_ms=%s (set AGENT_REMINDER_CRON_ENABLED=0 to disable)',
+      tickMs
+    )
   }
 
   const shutdown = async () => {

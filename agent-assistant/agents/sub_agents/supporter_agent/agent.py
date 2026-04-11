@@ -17,6 +17,7 @@ from utils.llm_provider import get_adk_model
 from utils.be_integration import be_integration_headers
 
 from .prompt import SUPPORTER_AGENT_INSTRUCTION_PROMPT
+from ...language_rules import OUTPUT_LANGUAGE_RULES_MARKDOWN
 from ...invocation_user import merge_invocation_user_id_into_state
 from ...service_urls import get_be_server_base_url
 
@@ -141,7 +142,8 @@ def create_agent(query: Optional[str] = None) -> Agent:
             max_retries=MAX_RETRIES,
             current_attempt="{current_attempt}",
             static_profile="{static_profile}",
-            dynamic_profile="{dynamic_profile}"
+            dynamic_profile="{dynamic_profile}",
+            language_rules=OUTPUT_LANGUAGE_RULES_MARKDOWN,
         ),
         before_model_callback=setup_before_model_call,
         before_agent_callback=init_session_state,

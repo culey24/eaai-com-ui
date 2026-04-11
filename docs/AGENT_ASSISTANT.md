@@ -73,6 +73,8 @@ Ngoài session/conversation/role/learning_history/schedule, đã bổ sung:
 
 Nhắc việc và trạng thái journal được gọi từ **tool trực tiếp trên Manager** (`set_reminder`, `list_user_reminders`, `get_user_journal_status`, …) — không còn lớp Reminder sub-agent (`AgentTool`) để tránh lệch `user_id` giữa phiên cha/con.
 
+**Gửi nhắc đúng giờ:** backend (`dispatchAgentReminders`) định kỳ tìm bản ghi `agent_user_reminders` có `reminder_at <= now` và `notified_at` rỗng, tạo **tin assistant** trong hội thoại kênh theo lớp (`ai-chat` / `internal-chat` / `human-chat`), rồi ghi `notified_at`. Cron nội bộ: `AGENT_REMINDER_CRON_MS` (mặc định 60s), tắt bằng `AGENT_REMINDER_CRON_ENABLED=0`. Hoặc gọi `POST /api/internal/cron/agent-reminders` với header `x-internal-cron-secret: INTERNAL_CRON_SECRET` (Cloud Scheduler).
+
 ### Kiểm tra nhanh integration (curl)
 
 Thay `BE`, `USER`, `SECRET` bằng giá trị môi trường thật (`BE_SERVER_BASE_URL`, `user_id` từ JWT, `AGENT_INTEGRATION_SECRET` nếu backend bật secret).

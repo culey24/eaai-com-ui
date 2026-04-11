@@ -162,6 +162,29 @@ export async function applyLightweightSchemaPatches(prisma) {
       console.warn('[db-patches] users profile cols:', err instanceof Error ? err.message : String(err))
     }
   }
+  const AGENT_REMINDER_NOTIFIED_AT = `
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'agent_user_reminders'
+  ) THEN
+    ALTER TABLE agent_user_reminders ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ NULL;
+    CREATE INDEX IF NOT EXISTS idx_agent_user_reminders_reminder_notified
+      ON agent_user_reminders (reminder_at, notified_at);
+  END IF;
+END $$;
+`
+
+  try {
+    await prisma.$executeRawUnsafe(AGENT_REMINDER_NOTIFIED_AT)
+  } catch (err) {
+    console.warn(
+      '[db-patches] agent_user_reminders.notified_at:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
+
   const STATS_ANALYTICS_EXCLUSIONS_TABLE = `
 CREATE TABLE IF NOT EXISTS stats_analytics_exclusions (
     exclusion_id BIGSERIAL PRIMARY KEY,

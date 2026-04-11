@@ -47,6 +47,73 @@ function mapRemoteRows(messages) {
   }))
 }
 
+/** Tách phần đuôi optimistic (opt-*, thinking-*) khỏi danh sách trước đó. */
+function splitOptimisticTail(prev) {
+  if (!prev?.length) return [[], []]
+  let i = prev.length - 1
+  const tail = []
+  while (i >= 0) {
+    const id = String(prev[i].id)
+    if (id.startsWith('thinking-') || id.startsWith('opt-')) {
+      tail.unshift(prev[i])
+      i -= 1
+    } else {
+      break
+    }
+  }
+  return [prev.slice(0, prev.length - tail.length), tail]
+}
+
+function sameUserMessage(a, b) {
+  if (!a || !b || a.role !== 'user' || b.role !== 'user') return false
+  return (
+    (a.content || '') === (b.content || '') &&
+    (a.fileName || null) === (b.fileName || null)
+  )
+}
+
+/**
+ * Gộp tin từ server với optimistic đang chờ — tránh poll / GET sau POST ghi đè
+ * và làm mất tin user + "Đang suy nghĩ" khi server chưa kịp có đủ bản ghi.
+ */
+function mergeServerWithPending(serverRows, prev) {
+  const [base, tail] = splitOptimisticTail(prev)
+  if (tail.length === 0) return serverRows
+
+  const pendingOpts = tail.filter((m) => String(m.id).startsWith('opt-'))
+  const pendingThink = tail.filter((m) => String(m.id).startsWith('thinking-')).at(-1)
+  const pendingOpt = pendingOpts.at(-1)
+  /** Tin user gắn với thinking: opt-* hoặc bản ghi thật ngay trước thinking (sau merge lần trước). */
+  const anchorUser =
+    pendingOpt ||
+    (pendingThink && base.length && base[base.length - 1]?.role === 'user'
+      ? base[base.length - 1]
+      : null)
+
+  if (!anchorUser || anchorUser.role !== 'user') return serverRows
+
+  let merged = [...serverRows]
+  const userOnServer = merged.some((m) => sameUserMessage(m, anchorUser))
+
+  if (!userOnServer) {
+    if (pendingOpt) {
+      merged.push(pendingOpt)
+      if (pendingThink) merged.push(pendingThink)
+    }
+    return merged
+  }
+
+  const last = merged[merged.length - 1]
+  if (
+    pendingThink &&
+    last?.role === 'user' &&
+    sameUserMessage(last, anchorUser)
+  ) {
+    merged.push(pendingThink)
+  }
+  return merged
+}
+
 /**
  * Tin nhắn kênh chat.
  * - Learner có JWT: poll API theo conversation của kênh.
@@ -173,7 +240,9 @@ export function useMessages(pollChannelId = null, options = {}) {
         }
         const data = await res.json()
         if (cancelled) return
-        setRemoteList(mapRemoteRows(data.messages))
+        setRemoteList((prev) =>
+          mergeServerWithPending(mapRemoteRows(data.messages), prev)
+        )
         if (initialPull) {
           setRemoteReady(true)
           initialPull = false
@@ -278,7 +347,9 @@ export function useMessages(pollChannelId = null, options = {}) {
             })
             if (r2.ok) {
               const d2 = await r2.json()
-              setRemoteList(mapRemoteRows(d2.messages))
+              setRemoteList((prev) =>
+                mergeServerWithPending(mapRemoteRows(d2.messages), prev)
+              )
             } else {
               rollbackOptimistic()
             }

@@ -7,6 +7,7 @@ import syncRoutes from './routes/sync.js'
 import reportsRoutes from './routes/reports.js'
 import journalRoutes from './routes/journal.js'
 import adminUsersRoutes from './routes/adminUsers.js'
+import adminSetUserPasswordRoutes from './routes/adminSetUserPassword.js'
 import adminSurveySubmissionsRoutes from './routes/adminSurveySubmissions.js'
 import adminSupporterAssignmentsRoutes from './routes/adminSupporterAssignments.js'
 import adminJournalStatsRoutes from './routes/adminJournalStats.js'
@@ -66,6 +67,7 @@ export function createApp() {
   app.use('/api/reports', reportsRoutes)
   app.use('/api/journal', journalRoutes)
   app.use('/api/admin', adminUsersRoutes)
+  app.use('/api/admin', adminSetUserPasswordRoutes)
   app.use('/api/admin', adminSurveySubmissionsRoutes)
   app.use('/api/admin', adminSupporterAssignmentsRoutes)
   app.use('/api/admin', adminJournalStatsRoutes)

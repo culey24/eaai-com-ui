@@ -28,6 +28,7 @@ import AdminStatsBlacklistPage from './pages/admin/AdminStatsBlacklistPage'
 import AdminSubmissionsPage from './pages/admin/AdminSubmissionsPage'
 import AdminSurveyResultsPage from './pages/admin/AdminSurveyResultsPage'
 import AdminFaqPage from './pages/admin/AdminFaqPage'
+import AdminChangeUserPasswordPage from './pages/admin/AdminChangeUserPasswordPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
 import PretestGate from './components/PretestGate'
 import SessionExpiredBridge from './components/SessionExpiredBridge'
@@ -160,6 +161,8 @@ function AppRoutes() {
         <Route path="submissions" element={<AdminSubmissionsPage />} />
         <Route path="surveys" element={<AdminSurveyResultsPage />} />
         <Route path="faq" element={<AdminFaqPage />} />
+        <Route path="doi-mat-khau-user" element={<AdminChangeUserPasswordPage />} />
+        <Route path="xem-mk" element={<Navigate to="/admin/doi-mat-khau-user" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -144,15 +144,18 @@ model User {
 
 /// Nhắc việc đăng ký qua chatbot agent (POST agent integration).
 model AgentUserReminder {
-  id         BigInt   @id @default(autoincrement()) @map("reminder_id")
-  userId     String   @map("user_id") @db.VarChar(10)
-  reminderAt DateTime @map("reminder_at")
-  message    String   @db.Text
-  createdAt  DateTime @default(now()) @map("created_at")
+  id         BigInt    @id @default(autoincrement()) @map("reminder_id")
+  userId     String    @map("user_id") @db.VarChar(10)
+  reminderAt DateTime  @map("reminder_at")
+  message    String    @db.Text
+  createdAt  DateTime  @default(now()) @map("created_at")
+  /// Đã đẩy tin nhắn nhắc vào hội thoại chat (cron); null = chưa gửi
+  notifiedAt DateTime? @map("notified_at")
 
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@index([userId, reminderAt])
+  @@index([reminderAt, notifiedAt])
   @@map("agent_user_reminders")
 }
 

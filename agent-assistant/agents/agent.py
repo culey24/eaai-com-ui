@@ -1,4 +1,6 @@
 import os
+import json
+import time
 from typing import Optional
 from datetime import datetime
 from dotenv import load_dotenv
@@ -13,12 +15,20 @@ from google.adk.models import LlmResponse, LlmRequest
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
+from .language_rules import OUTPUT_LANGUAGE_RULES_MARKDOWN
 from .prompt import MANAGER_AGENT_INSTRUCTION_PROMPT
+from .sub_agents.reminder_agent.tools import (
+    get_active_journal_periods,
+    get_current_schedule,
+    get_user_journal_status,
+    list_user_reminders,
+    read_journal_submissions_content,
+    set_reminder,
+)
 from .tools import (
     call_persona_agent,
     call_provider_agent,
     call_supporter_agent,
-    call_reminder_agent,
     call_journal_coach_agent,
     call_rubric_agent,
     read_uploaded_data_file,
@@ -35,13 +45,52 @@ logger = logging.getLogger(__name__)
 from utils.llm_provider import get_adk_model, use_openrouter
 from utils.be_integration import be_integration_headers
 
+from .invocation_user import merge_invocation_user_id_into_state
 from .service_urls import get_be_server_base_url
 
 BE_SERVER = get_be_server_base_url()
 ADK_APP_NAME = (os.getenv("ADK_APP_NAME") or "agents").strip() or "agents"
 
 MAX_RETRIES = 4
-MAX_FUNCTION_CALLS = 5
+MAX_FUNCTION_CALLS = 16
+# TTL làm mới static_profile từ BE (giây) — tránh gọi agent-profile mỗi bước tool.
+STATIC_PROFILE_TTL_SEC = 900
+
+
+def _should_refresh_static_profile(callback_context: CallbackContext) -> bool:
+    if not callback_context.state.get("user_id"):
+        return False
+    if "_static_profile_fetched_at" not in callback_context.state:
+        return True
+    return (
+        time.time() - float(callback_context.state["_static_profile_fetched_at"])
+        >= STATIC_PROFILE_TTL_SEC
+    )
+
+
+def _fetch_agent_static_profile(user_id: str) -> str:
+    """JSON hồ sơ user từ GET /users/{id}/agent-profile (không có password)."""
+    try:
+        response = requests.get(
+            f"{BE_SERVER}/users/{user_id}/agent-profile",
+            headers=be_integration_headers(),
+            timeout=15,
+        )
+        if response.status_code != 200:
+            logger.warning(
+                "agent-profile HTTP %s for user %s",
+                response.status_code,
+                user_id,
+            )
+            return "{}"
+        data = response.json()
+        profile = data.get("profile")
+        if not isinstance(profile, dict):
+            return "{}"
+        return json.dumps(profile, ensure_ascii=False)
+    except Exception as e:
+        logger.warning("agent-profile fetch failed: %s", e)
+        return "{}"
 
 
 def _manager_planner() -> BuiltInPlanner:
@@ -137,11 +186,7 @@ def init_session_state(callback_context: CallbackContext) -> None:
         # across multiple calls
         callback_context.state["current_attempt"] = 0
 
-    inv_ctx = getattr(callback_context, "_invocation_context", None)
-    if inv_ctx is not None:
-        uid = getattr(inv_ctx, "user_id", None)
-        if uid is not None and str(uid).strip():
-            callback_context.state["user_id"] = str(uid).strip()
+    merge_invocation_user_id_into_state(callback_context)
 
     session_uid = callback_context.state.get("user_id")
 
@@ -151,10 +196,12 @@ def init_session_state(callback_context: CallbackContext) -> None:
             get_user_role(session_uid) if session_uid else "student"
         )
 
-    # Không gọi GET /learning_history (raw SQL class_students — có thể không tồn tại trên DB).
-    # Cá nhân hoá học phần: để trống; Reminder/Journal dùng API journal-status / journal-context.
-    if "static_profile" not in callback_context.state:
-        callback_context.state["static_profile"] = []
+    # static_profile: JSON từ GET /users/{id}/agent-profile (BE, không gồm password); làm mới theo TTL.
+    if session_uid and _should_refresh_static_profile(callback_context):
+        callback_context.state["static_profile"] = _fetch_agent_static_profile(session_uid)
+        callback_context.state["_static_profile_fetched_at"] = time.time()
+    elif "static_profile" not in callback_context.state:
+        callback_context.state["static_profile"] = "{}"
 
     # Initialize dynamic profile for user_id
     if "dynamic_profile" not in callback_context.state:
@@ -180,7 +227,8 @@ def create_agent() -> Agent:
             max_retries=MAX_RETRIES,
             current_attempt="{current_attempt}",
             static_profile="{static_profile}",
-            dynamic_profile="{dynamic_profile}"
+            dynamic_profile="{dynamic_profile}",
+            language_rules=OUTPUT_LANGUAGE_RULES_MARKDOWN,
         ),
         before_model_callback=setup_before_model_call,
         before_agent_callback=init_session_state,
@@ -192,7 +240,12 @@ def create_agent() -> Agent:
             read_user_journal_submissions,
             call_provider_agent,
             call_supporter_agent,
-            call_reminder_agent,
+            get_active_journal_periods,
+            get_user_journal_status,
+            read_journal_submissions_content,
+            get_current_schedule,
+            list_user_reminders,
+            set_reminder,
             call_journal_coach_agent,
             call_rubric_agent,
         ],

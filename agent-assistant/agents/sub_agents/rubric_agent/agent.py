@@ -14,6 +14,8 @@ from utils.llm_provider import get_adk_model
 from utils.be_integration import be_integration_headers
 
 from .prompt import RUBRIC_AGENT_INSTRUCTION_PROMPT
+from ...language_rules import OUTPUT_LANGUAGE_RULES_MARKDOWN
+from ...invocation_user import merge_invocation_user_id_into_state
 from ...service_urls import get_be_server_base_url
 
 load_dotenv()
@@ -87,12 +89,14 @@ def init_session_state(callback_context: CallbackContext) -> None:
     callback_context.state[_ATTEMPT_KEY] = 0
     callback_context.state["current_attempt"] = 0
 
-    invocation_context = getattr(callback_context, "_invocation_context", {})
-    if invocation_context:
-        callback_context.state["user_id"] = getattr(invocation_context, "user_id", "user")
+    merge_invocation_user_id_into_state(callback_context)
 
     if "user_role" not in callback_context.state:
-        callback_context.state["user_role"] = get_user_role(callback_context.state["user_id"])
+        uid = callback_context.state.get("user_id")
+        u = str(uid).strip() if uid is not None else ""
+        callback_context.state["user_role"] = (
+            get_user_role(u) if u and u != "user" else "student"
+        )
 
     if "static_profile" not in callback_context.state:
         callback_context.state["static_profile"] = []
@@ -119,6 +123,7 @@ def create_agent(query: Optional[str] = None) -> Agent:
             current_attempt="{current_attempt}",
             static_profile="{static_profile}",
             dynamic_profile="{dynamic_profile}",
+            language_rules=OUTPUT_LANGUAGE_RULES_MARKDOWN,
         ),
         before_model_callback=setup_before_model_call,
         before_agent_callback=init_session_state,

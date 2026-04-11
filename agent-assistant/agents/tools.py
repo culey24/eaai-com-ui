@@ -6,12 +6,12 @@ from google.adk.tools import ToolContext, agent_tool
 from utils.file_reader import FileReader
 from utils.upload_paths import uploaded_data_dir
 
-from utils.be_integration import be_integration_headers
+from utils.be_integration import be_integration_headers, log_agent_integration_http
+from .invocation_user import merge_invocation_user_id_into_state
 from .service_urls import get_be_server_base_url
 
 from .sub_agents.persona_agent import create_agent as create_persona_agent
 from .sub_agents.provider_agent import create_agent as create_provider_agent
-from .sub_agents.reminder_agent import create_agent as create_reminder_agent
 from .sub_agents.supporter_agent import create_agent as create_supporter_agent
 from .sub_agents.journal_coach_agent import create_agent as create_journal_coach_agent
 from .sub_agents.rubric_agent import create_agent as create_rubric_agent
@@ -67,14 +67,23 @@ async def read_user_journal_submissions(tool_context: ToolContext) -> str:
     đặt câu hỏi dựa trên ngữ cảnh bài journal đã nộp.
     """
     import requests as _requests
-    user_id = tool_context.state.get("user_id", "")
-    if not user_id:
+    raw_uid = tool_context.state.get("user_id", "")
+    user_id = str(raw_uid).strip() if raw_uid is not None else ""
+    if not user_id or user_id == "user":
         return "Không xác định được user_id trong phiên hiện tại."
     try:
+        path = f"/users/{user_id}/journal-context"
         r = _requests.get(
-            f"{_BE_SERVER}/users/{user_id}/journal-context",
+            f"{_BE_SERVER}{path}",
             headers=be_integration_headers(),
             timeout=30,
+        )
+        log_agent_integration_http(
+            "journal_context_manager",
+            method="GET",
+            path=path,
+            user_id=user_id,
+            status_code=r.status_code,
         )
         if r.status_code != 200:
             return f"Không đọc được journal submissions: {r.status_code} {r.text[:300]}"
@@ -96,6 +105,7 @@ async def call_persona_agent(query: str, tool_context: ToolContext):
         A string containing the response from the persona agent.
     """
     try:
+        merge_invocation_user_id_into_state(tool_context)
         persona_agent = create_persona_agent(query=query)
         persona_tool = agent_tool.AgentTool(agent=persona_agent)
         response = await persona_tool.run_async(
@@ -120,6 +130,7 @@ async def call_provider_agent(query: str, tool_context: ToolContext):
         A string containing the response from the provider agent.
     """
     try:
+        merge_invocation_user_id_into_state(tool_context)
         provider_agent = create_provider_agent(query=query)
         provider_tool = agent_tool.AgentTool(agent=provider_agent)
         response = await provider_tool.run_async(
@@ -144,6 +155,7 @@ async def call_supporter_agent(query: str, tool_context: ToolContext):
         A string containing the response from the supporter agent.
     """
     try:
+        merge_invocation_user_id_into_state(tool_context)
         supporter_agent = create_supporter_agent(query=query)
         supporter_tool = agent_tool.AgentTool(agent=supporter_agent)
         response = await supporter_tool.run_async(
@@ -161,6 +173,7 @@ async def call_journal_coach_agent(query: str, tool_context: ToolContext):
     Gọi Journal & Report Writing Coach: góp ý cấu trúc, mạch lạc, diễn đạt, giọng văn học thuật cho journal/báo cáo.
     """
     try:
+        merge_invocation_user_id_into_state(tool_context)
         coach = create_journal_coach_agent(query=query)
         coach_tool = agent_tool.AgentTool(agent=coach)
         await coach_tool.run_async(
@@ -178,6 +191,7 @@ async def call_rubric_agent(query: str, tool_context: ToolContext):
     So khớp nháp/bài journal với rubric hoặc yêu cầu đề bài (phải có trong query hoặc từ file đã đọc trước đó).
     """
     try:
+        merge_invocation_user_id_into_state(tool_context)
         rubric_agent = create_rubric_agent(query=query)
         rubric_tool = agent_tool.AgentTool(agent=rubric_agent)
         await rubric_tool.run_async(
@@ -190,25 +204,3 @@ async def call_rubric_agent(query: str, tool_context: ToolContext):
         return f"Error rubric agent: {str(e)}"
 
 
-async def call_reminder_agent(query: str, tool_context: ToolContext):
-    """
-    Calls the reminder agent with the provided query and returns the response.
- 
-    Args:
-        query: A query to be processed by the reminder agent.
-        tool_context: The context object provided by the ADK framework for
-                        performing tasks like calling agents.
-    Returns:
-        A string containing the response from the reminder agent.
-    """
-    try:
-        reminder_agent = create_reminder_agent(query=query)
-        reminder_tool = agent_tool.AgentTool(agent=reminder_agent)
-        response = await reminder_tool.run_async(
-            args={"request": "Provide reminders based on the query."},
-            tool_context=tool_context
-        )
-        return tool_context.state["reminded_infos"]
-    except Exception as e:
-        logger.error(f"Error calling reminder agent: {str(e)}")
-        return f"Error calling reminder agent: {str(e)}"

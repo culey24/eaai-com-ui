@@ -17,6 +17,7 @@ import adminFaqRoutes from './routes/adminFaq.js'
 import supporterRoutes from './routes/supporter.js'
 import meRoutes from './routes/me.js'
 import agentIntegrationRoutes from './routes/agentIntegration.js'
+import internalCronRoutes from './routes/internalCron.js'
 import { apiGeneralLimiter } from './lib/rateLimits.js'
 
 function corsOptions() {
@@ -50,6 +51,8 @@ export function createApp() {
   app.use(agentIntegrationRoutes)
 
   app.use('/api', apiGeneralLimiter)
+
+  app.use('/api/internal', internalCronRoutes)
 
   app.get('/', (req, res) => {
     res.json({

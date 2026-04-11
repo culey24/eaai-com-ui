@@ -5,6 +5,7 @@ import {
   AgentSessionStatus,
   UserRole,
   UserClass,
+  Gender,
 } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { agentIntegrationAuth } from '../middleware/agentIntegrationAuth.js'
@@ -117,6 +118,58 @@ function mapUserClassToApi(uc) {
   return String(uc)
 }
 
+/** Tối đa một phiên active: deactivate các phiên active khác (tuỳ chọn giữ `keepSessionId`). */
+async function deactivateOtherActiveAgentSessions(userId, keepSessionId = null) {
+  await prisma.agentSession.updateMany({
+    where: {
+      userId,
+      status: AgentSessionStatus.active,
+      ...(keepSessionId ? { sessionId: { not: keepSessionId } } : {}),
+    },
+    data: { status: AgentSessionStatus.deactive },
+  })
+}
+
+function agentProfileGenderToApi(g) {
+  if (g === Gender.Male) return 'male'
+  if (g === Gender.Female) return 'female'
+  return 'other'
+}
+
+function formatAgentProfileDob(d) {
+  if (!d) return ''
+  try {
+    const x = d instanceof Date ? d : new Date(d)
+    if (Number.isNaN(x.getTime())) return ''
+    return x.toISOString().slice(0, 10)
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * Khớp user_id từ URL/body với PK trong DB (Prisma so sánh phân biệt hoa thường).
+ * Agent / client đôi khi gửi lệch casing so với bảng users.
+ */
+async function resolveCanonicalUserId(raw) {
+  const t = String(raw || '').trim()
+  if (!t) return null
+  const exact = await prisma.user.findUnique({
+    where: { userId: t },
+    select: { userId: true },
+  })
+  if (exact) return exact.userId
+  try {
+    const row = await prisma.user.findFirst({
+      where: { userId: { equals: t, mode: 'insensitive' } },
+      select: { userId: true },
+    })
+    return row?.userId ?? null
+  } catch {
+    return null
+  }
+}
+
 function normalizeOutline(outline) {
   if (outline == null) return null
   const s = String(outline).trim()
@@ -214,15 +267,24 @@ function handlePrismaFk(res, err, logLabel) {
  */
 router.post('/users/:userId/sessions', async (req, res) => {
   try {
-    const userId = String(req.params.userId || '').trim()
+    const pathRaw = String(req.params.userId || '').trim()
     const body = integrationBody(req)
     const bodyUserId = pickStr(body, 'user_id', 'userId')
     const sessionIdRaw = pickSessionIdStr(body)
 
-    if (!userId || !bodyUserId || bodyUserId !== userId) {
-      warnBadRequest(req, 'user_id path/body không khớp')
-      return res.status(400).json({ error: 'user_id path và body phải nhất quán' })
+    if (!pathRaw || !bodyUserId) {
+      warnBadRequest(req, 'thiếu user_id path hoặc body')
+      return res.status(400).json({ error: 'Thiếu user_id' })
     }
+    const pathCanon = await resolveCanonicalUserId(pathRaw)
+    const bodyCanon = await resolveCanonicalUserId(bodyUserId)
+    if (!pathCanon || !bodyCanon || pathCanon !== bodyCanon) {
+      warnBadRequest(req, 'user_id path/body không khớp hoặc không tồn tại')
+      return res.status(400).json({
+        error: 'user_id path và body phải nhất quán và trùng một tài khoản trong CSDL',
+      })
+    }
+    const userId = pathCanon
     if (!isUuid(sessionIdRaw)) {
       warnBadRequest(req, 'session_id không phải UUID')
       return res.status(400).json({ error: 'session_id không hợp lệ (UUID)' })
@@ -245,8 +307,11 @@ router.post('/users/:userId/sessions', async (req, res) => {
         warnBadRequest(req, 'session_id đã thuộc user khác')
         return res.status(409).json({ error: 'session_id đã gắn user khác' })
       }
+      await deactivateOtherActiveAgentSessions(userId, sessionIdRaw)
       return res.status(201).json(sessionCreatedJson(userId, sessionIdRaw, existing.status))
     }
+
+    await deactivateOtherActiveAgentSessions(userId)
 
     try {
       await prisma.agentSession.create({
@@ -339,10 +404,14 @@ router.post('/sessions/:sessionId/update', async (req, res) => {
  */
 router.get('/users/:userId/role', async (req, res) => {
   try {
-    const userId = String(req.params.userId || '').trim()
-    if (!userId) {
+    const raw = String(req.params.userId || '').trim()
+    if (!raw) {
       warnBadRequest(req, 'thiếu user_id path')
       return res.status(400).json({ error: 'Thiếu user_id' })
+    }
+    const userId = await resolveCanonicalUserId(raw)
+    if (!userId) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
     }
 
     const user = await prisma.user.findUnique({
@@ -365,6 +434,91 @@ router.get('/users/:userId/role', async (req, res) => {
     )
   } catch (err) {
     console.error('[agentIntegration GET role]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /users/:userId/agent-profile
+ * Hồ sơ cho agent (integration secret). Không bao gồm password / pwd.
+ */
+router.get('/users/:userId/agent-profile', async (req, res) => {
+  try {
+    const raw = String(req.params.userId || '').trim()
+    if (!raw) {
+      warnBadRequest(req, 'thiếu user_id path (agent-profile)')
+      return res.status(400).json({ error: 'Thiếu user_id' })
+    }
+    const userId = await resolveCanonicalUserId(raw)
+    if (!userId) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
+    }
+
+    const row = await prisma.user.findUnique({
+      where: { userId },
+      select: {
+        userId: true,
+        username: true,
+        fullname: true,
+        userRole: true,
+        userClass: true,
+        email: true,
+        dateOfBirth: true,
+        gender: true,
+        trainingProgramType: true,
+        studentSchoolId: true,
+        faculty: true,
+        majorDisplay: true,
+        subjectNote: true,
+        phoneNumber: true,
+        permanentAddress: true,
+        contactAddress: true,
+        citizenIdentification: true,
+        dateOfIssue: true,
+        placeOfIssue: true,
+        ethnicity: true,
+        religion: true,
+        majorCode: true,
+        major: { select: { majorName: true } },
+      },
+    })
+
+    if (!row) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
+    }
+
+    const profile = jsonSafe({
+      user_id: row.userId,
+      username: row.username,
+      fullname: row.fullname,
+      user_role: mapUserRoleToAgentApi(row.userRole),
+      user_class: mapUserClassToApi(row.userClass),
+      email: row.email ?? '',
+      date_of_birth: formatAgentProfileDob(row.dateOfBirth),
+      gender: agentProfileGenderToApi(row.gender),
+      training_program_type: row.trainingProgramType ?? '',
+      student_school_id: row.studentSchoolId ?? '',
+      faculty: row.faculty ?? '',
+      major_display: row.majorDisplay ?? '',
+      major_code: row.majorCode,
+      major_name: row.major?.majorName ?? null,
+      subject_note: row.subjectNote ?? '',
+      phone_number: row.phoneNumber ?? '',
+      permanent_address: row.permanentAddress ?? '',
+      contact_address: row.contactAddress ?? '',
+      citizen_identification: row.citizenIdentification ?? '',
+      date_of_issue: row.dateOfIssue ? formatAgentProfileDob(row.dateOfIssue) : '',
+      place_of_issue: row.placeOfIssue ?? '',
+      ethnicity: row.ethnicity ?? '',
+      religion: row.religion ?? '',
+    })
+
+    return res.status(200).json(jsonSafe({ user_id: userId, profile }))
+  } catch (err) {
+    console.error('[agentIntegration GET agent-profile]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),
@@ -515,11 +669,15 @@ router.get('/sessions/:sessionId/conversations', async (req, res) => {
  * GET /users/:userId/learning_history
  */
 router.get('/users/:userId/learning_history', async (req, res) => {
-  const userId = String(req.params.userId || '').trim()
+  const raw = String(req.params.userId || '').trim()
   try {
-    if (!userId) {
+    if (!raw) {
       warnBadRequest(req, 'thiếu user_id path')
       return res.status(400).json({ error: 'Thiếu user_id' })
+    }
+    const userId = await resolveCanonicalUserId(raw)
+    if (!userId) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
     }
 
     const user = await prisma.user.findUnique({
@@ -573,11 +731,15 @@ router.get('/users/:userId/learning_history', async (req, res) => {
  * GET /users/:userId/schedule
  */
 router.get('/users/:userId/schedule', async (req, res) => {
-  const userId = String(req.params.userId || '').trim()
+  const raw = String(req.params.userId || '').trim()
   try {
-    if (!userId) {
+    if (!raw) {
       warnBadRequest(req, 'thiếu user_id path')
       return res.status(400).json({ error: 'Thiếu user_id' })
+    }
+    const userId = await resolveCanonicalUserId(raw)
+    if (!userId) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
     }
 
     const user = await prisma.user.findUnique({
@@ -646,7 +808,7 @@ router.get('/users/:userId/schedule', async (req, res) => {
  */
 router.post('/users/:userId/reminders', async (req, res) => {
   try {
-    const userId = String(req.params.userId || '').trim()
+    const pathRaw = String(req.params.userId || '').trim()
     const body = integrationBody(req)
     const bodyUserId = pickStr(body, 'user_id', 'userId')
     const messageRaw =
@@ -654,10 +816,19 @@ router.post('/users/:userId/reminders', async (req, res) => {
     const message = messageRaw.trim()
     const reminderRaw = body.reminder_at ?? body.reminderAt
 
-    if (!userId || !bodyUserId || bodyUserId !== userId) {
-      warnBadRequest(req, 'user_id path/body không khớp (reminders)')
-      return res.status(400).json({ error: 'user_id path và body phải nhất quán' })
+    if (!pathRaw || !bodyUserId) {
+      warnBadRequest(req, 'thiếu user_id path hoặc body (reminders)')
+      return res.status(400).json({ error: 'Thiếu user_id' })
     }
+    const pathCanon = await resolveCanonicalUserId(pathRaw)
+    const bodyCanon = await resolveCanonicalUserId(bodyUserId)
+    if (!pathCanon || !bodyCanon || pathCanon !== bodyCanon) {
+      warnBadRequest(req, 'user_id path/body không khớp (reminders)')
+      return res.status(400).json({
+        error: 'user_id path và body phải nhất quán và trùng một tài khoản trong CSDL',
+      })
+    }
+    const userId = pathCanon
     if (!message) {
       warnBadRequest(req, 'thiếu message reminder')
       return res.status(400).json({ error: 'message không được để trống' })
@@ -712,10 +883,14 @@ router.post('/users/:userId/reminders', async (req, res) => {
  */
 router.get('/users/:userId/reminders', async (req, res) => {
   try {
-    const userId = String(req.params.userId || '').trim()
-    if (!userId) {
+    const raw = String(req.params.userId || '').trim()
+    if (!raw) {
       warnBadRequest(req, 'thiếu user_id path (reminders GET)')
       return res.status(400).json({ error: 'Thiếu user_id' })
+    }
+    const userId = await resolveCanonicalUserId(raw)
+    if (!userId) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
     }
 
     const user = await prisma.user.findUnique({
@@ -766,10 +941,14 @@ router.get('/users/:userId/reminders', async (req, res) => {
  */
 router.get('/users/:userId/journal-status', async (req, res) => {
   try {
-    const userId = String(req.params.userId || '').trim()
-    if (!userId) {
+    const raw = String(req.params.userId || '').trim()
+    if (!raw) {
       warnBadRequest(req, 'thiếu user_id path (journal-status)')
       return res.status(400).json({ error: 'Thiếu user_id' })
+    }
+    const userId = await resolveCanonicalUserId(raw)
+    if (!userId) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
     }
 
     const user = await prisma.user.findUnique({
@@ -827,10 +1006,14 @@ router.get('/users/:userId/journal-status', async (req, res) => {
  */
 router.get('/users/:userId/journal-context', async (req, res) => {
   try {
-    const userId = String(req.params.userId || '').trim()
-    if (!userId) {
+    const raw = String(req.params.userId || '').trim()
+    if (!raw) {
       warnBadRequest(req, 'thiếu user_id path (journal-context)')
       return res.status(400).json({ error: 'Thiếu user_id' })
+    }
+    const userId = await resolveCanonicalUserId(raw)
+    if (!userId) {
+      return res.status(404).json({ error: 'Không tìm thấy user' })
     }
     const context = await getJournalContextSummary(userId)
     return res.status(200).json({ user_id: userId, journal_context: context })

@@ -65,6 +65,16 @@ function summarizeChatbotFailure(status, data, hadAuth) {
   return msg
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function pickSessionIdFromChatbotResponse(data) {
+  const raw = data?.session_id ?? data?.sessionId
+  if (raw == null || raw === '') return null
+  const s = String(raw).trim()
+  return UUID_RE.test(s) ? s : null
+}
+
 /** ADK /run hoặc proxy trả {"detail":"Session not found"} khi RAM agent mất session nhưng DB eaai vẫn giữ UUID. */
 function isAdkSessionNotFound(data) {
   const d = data?.detail
@@ -129,6 +139,20 @@ async function ensureAgenticChatSession(userId) {
     body: '{}',
     timeoutMs: 120_000,
   })
+
+  const sidFromBody = created.ok
+    ? pickSessionIdFromChatbotResponse(created.data)
+    : null
+  if (sidFromBody) {
+    const verify = await prisma.agentSession.findFirst({
+      where: { userId, sessionId: sidFromBody },
+      select: { sessionId: true },
+    })
+    if (verify?.sessionId) {
+      return verify.sessionId
+    }
+  }
+
   if (!created.ok) {
     const err = summarizeChatbotFailure(created.status, created.data, created.hadAuth)
     throw new Error(`Không tạo được phiên agent: ${err}`)
@@ -168,7 +192,10 @@ export async function generateIs1AgenticReply(userId, userMessageText) {
   })
 
   if (!reply.ok && isAdkSessionNotFound(reply.data)) {
-    await prisma.agentSession.deleteMany({ where: { userId } })
+    await prisma.agentSession.updateMany({
+      where: { userId, sessionId },
+      data: { status: AgentSessionStatus.deactive },
+    })
     sessionId = await ensureAgenticChatSession(userId)
     reply = await fetchChatbot('/chat-with-agent', {
       method: 'POST',

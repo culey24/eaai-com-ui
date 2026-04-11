@@ -89,7 +89,8 @@
     "downloadAttachment": "Download",
     "downloadAttachmentFailed": "Could not download the attachment.",
     "technicalSupportNotice": "If there is any technical problem, please email us immediately at",
-    "thinking": "Thinking…"
+    "thinking": "Thinking…",
+    "scrollToLatest": "Scroll to latest message"
   },
   "report": {
     "title": "Report",

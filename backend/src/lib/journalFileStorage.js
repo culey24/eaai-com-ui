@@ -124,6 +124,49 @@ export async function readJournalUpload(storageKey) {
  * @param {string} storageKey
  * @param {{ userId?: string, periodId?: string }} [opts]
  */
+/** Tên file cuối path (object GCS hoặc đĩa). */
+function storageKeyBasename(storageKey) {
+  const k = String(storageKey || '')
+  const pathPart = k.startsWith(GCS_KEY_PREFIX) ? k.slice(GCS_KEY_PREFIX.length) : k
+  const seg = pathPart.split('/').filter(Boolean)
+  return seg[seg.length - 1] || pathPart
+}
+
+/**
+ * Sắp key mới nhất trước: ưu tiên prefix số `timestamp_` trên basename (upload journal), fallback localeCompare.
+ * @param {string[]} keys
+ */
+export function sortJournalStorageKeysNewestFirst(keys) {
+  if (!Array.isArray(keys) || keys.length === 0) return []
+  return [...keys].sort((a, b) => {
+    const ba = storageKeyBasename(a)
+    const bb = storageKeyBasename(b)
+    const na = Number((/^(\d+)_/.exec(ba) || [])[1])
+    const nb = Number((/^(\d+)_/.exec(bb) || [])[1])
+    if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) return nb - na
+    if (Number.isFinite(nb) && !Number.isFinite(na)) return 1
+    if (Number.isFinite(na) && !Number.isFinite(nb)) return -1
+    return String(b).localeCompare(String(a))
+  })
+}
+
+/**
+ * Xóa mọi object journal trong prefix user+period **trừ** keepStorageKey (dọn file mismatch).
+ * @returns {Promise<{ deleted: number }>}
+ */
+export async function deleteJournalUploadsExcept(userId, periodId, keepStorageKey) {
+  const keep = String(keepStorageKey || '').trim()
+  if (!keep) return { deleted: 0 }
+  const keys = await listJournalStorageKeysInPeriod(userId, periodId)
+  let deleted = 0
+  for (const k of keys) {
+    if (k === keep) continue
+    await removeJournalUpload(k)
+    deleted++
+  }
+  return { deleted }
+}
+
 export async function readJournalUploadWithFallback(storageKey, opts = {}) {
   const { userId, periodId } = opts
   try {
@@ -154,7 +197,7 @@ export async function readJournalUploadWithFallback(storageKey, opts = {}) {
 }
 
 /**
- * Liệt kê các storage_key tương ứng mọi file journal dưới prefix user+period (tên object giảm dần — thường mới nhất trước).
+ * Liệt kê các storage_key tương ứng mọi file journal dưới prefix user+period (mới nhất trước — theo timestamp trên tên file).
  */
 export async function listJournalStorageKeysInPeriod(userId, periodId) {
   const { safeUser, safePeriod } = safeJournalPathParts(userId, periodId)
@@ -165,9 +208,8 @@ export async function listJournalStorageKeysInPeriod(userId, periodId) {
     try {
       const bucket = getStorage().bucket(getBucketName())
       const [files] = await bucket.getFiles({ prefix })
-      return files
-        .map((f) => `${GCS_KEY_PREFIX}${f.name}`)
-        .sort((a, b) => (a < b ? 1 : a > b ? -1 : 0))
+      const keys = files.map((f) => `${GCS_KEY_PREFIX}${f.name}`)
+      return sortJournalStorageKeysNewestFirst(keys)
     } catch (err) {
       console.error('[journalFileStorage] listJournalStorageKeysInPeriod (GCS)', err)
       return []
@@ -189,7 +231,7 @@ export async function listJournalStorageKeysInPeriod(userId, periodId) {
       }
       keys.push(path.relative(process.cwd(), abs).split(path.sep).join('/'))
     }
-    return keys.sort((a, b) => (a < b ? 1 : a > b ? -1 : 0))
+    return sortJournalStorageKeysNewestFirst(keys)
   } catch {
     return []
   }

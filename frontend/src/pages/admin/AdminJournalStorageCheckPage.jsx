@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, AlertTriangle, CheckCircle2, FolderSearch, Loader2 } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
@@ -8,16 +8,30 @@ import { API_BASE } from '../../config/api'
 import { ROLES } from '../../constants/roles'
 import { uiIdToBackendUserId } from '../../lib/userIds'
 
+const BULK_CONCURRENCY = 8
+
+async function fetchStorageCheck(apiToken, learnerId, periodId) {
+  const q = new URLSearchParams({ periodId, learnerId })
+  const res = await fetch(`${API_BASE}/api/journal/storage-check?${q}`, {
+    headers: { Authorization: `Bearer ${apiToken}` },
+  })
+  const data = await res.json().catch(() => ({}))
+  return { res, data }
+}
+
 export default function AdminJournalStorageCheckPage() {
   const { t } = useLanguage()
   const { apiToken, user } = useAuth()
   const { allUsers, adminApiLoaded } = useAllUsers()
   const [learnerId, setLearnerId] = useState('')
-  const [periodId, setPeriodId] = useState('default')
+  const [periodId, setPeriodId] = useState('')
   const [periods, setPeriods] = useState([])
   const [loading, setLoading] = useState(false)
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 })
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
+  const [bulkRows, setBulkRows] = useState([])
 
   const learners = useMemo(
     () =>
@@ -44,22 +58,36 @@ export default function AdminJournalStorageCheckPage() {
     }
   }, [apiToken])
 
+  useEffect(() => {
+    if (periods.length === 0) return
+    setPeriodId((prev) => {
+      if (prev && periods.some((p) => p.periodId === prev)) return prev
+      return periods[0].periodId
+    })
+  }, [periods])
+
+  const periodTitle = useMemo(() => {
+    const p = periods.find((x) => x.periodId === periodId)
+    return p?.title || periodId
+  }, [periods, periodId])
+
   const runCheck = async () => {
     setError('')
     setResult(null)
+    setBulkRows([])
     const lid = learnerId.trim()
-    const pid = String(periodId || 'default').trim().slice(0, 64) || 'default'
-    if (!apiToken || !lid) {
+    const pid = String(periodId || '').trim().slice(0, 64)
+    if (!apiToken || !pid) {
+      setError(t('admin.journalStorageCheck.needPeriod'))
+      return
+    }
+    if (!lid) {
       setError(t('admin.journalStorageCheck.needLearner'))
       return
     }
     setLoading(true)
     try {
-      const q = new URLSearchParams({ periodId: pid, learnerId: lid })
-      const res = await fetch(`${API_BASE}/api/journal/storage-check?${q}`, {
-        headers: { Authorization: `Bearer ${apiToken}` },
-      })
-      const data = await res.json().catch(() => ({}))
+      const { res, data } = await fetchStorageCheck(apiToken, lid, pid)
       if (!res.ok) {
         setError(data?.error || data?.message || `HTTP ${res.status}`)
         return
@@ -72,7 +100,89 @@ export default function AdminJournalStorageCheckPage() {
     }
   }
 
+  const runCheckAll = useCallback(async () => {
+    setError('')
+    setResult(null)
+    setBulkRows([])
+    const pid = String(periodId || '').trim().slice(0, 64)
+    if (!apiToken || !pid) {
+      setError(t('admin.journalStorageCheck.needPeriod'))
+      return
+    }
+    if (learners.length === 0) {
+      setError(t('admin.journalStorageCheck.noLearners'))
+      return
+    }
+
+    setBulkLoading(true)
+    const list = learners.map((u) => ({
+      u,
+      bid: uiIdToBackendUserId(u),
+    }))
+    setBulkProgress({ current: 0, total: list.length })
+
+    const out = []
+    for (let i = 0; i < list.length; i += BULK_CONCURRENCY) {
+      const chunk = list.slice(i, i + BULK_CONCURRENCY)
+      const chunkResults = await Promise.all(
+        chunk.map(async ({ u, bid }) => {
+          try {
+            const { res, data } = await fetchStorageCheck(apiToken, bid, pid)
+            if (!res.ok) {
+              return {
+                learnerId: bid,
+                username: u.username || '',
+                fullName: u.fullName || '',
+                error: data?.error || data?.message || `HTTP ${res.status}`,
+                payload: null,
+              }
+            }
+            const mismatch =
+              Boolean(data.bucketFilesWithoutDbRow) ||
+              (Array.isArray(data.extraBucketKeysVersusLatestDb) &&
+                data.extraBucketKeysVersusLatestDb.length > 0)
+            return {
+              learnerId: bid,
+              username: u.username || '',
+              fullName: u.fullName || '',
+              error: null,
+              mismatch,
+              bucketFileCount: data.bucketFileCount ?? 0,
+              dbRowCount: data.dbRowCount ?? 0,
+              payload: data,
+            }
+          } catch (e) {
+            return {
+              learnerId: bid,
+              username: u.username || '',
+              fullName: u.fullName || '',
+              error: e instanceof Error ? e.message : String(e),
+              payload: null,
+            }
+          }
+        })
+      )
+      out.push(...chunkResults)
+      setBulkRows([...out])
+      setBulkProgress({ current: Math.min(i + chunk.length, list.length), total: list.length })
+    }
+    setBulkLoading(false)
+  }, [apiToken, learners, periodId, t])
+
+  const bulkStats = useMemo(() => {
+    let mismatch = 0
+    let errors = 0
+    let ok = 0
+    for (const r of bulkRows) {
+      if (r.error) errors++
+      else if (r.mismatch) mismatch++
+      else ok++
+    }
+    return { mismatch, errors, ok }
+  }, [bulkRows])
+
   const needJwt = !apiToken || user?.role !== ROLES.ADMIN
+  const periodSelectDisabled = periods.length === 0 || needJwt
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
@@ -94,7 +204,7 @@ export default function AdminJournalStorageCheckPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-8">
-        <div className="max-w-3xl space-y-6">
+        <div className="max-w-5xl space-y-6">
           {needJwt && (
             <p className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-xl px-4 py-3">
               {t('admin.journalStorageCheck.needJwt')}
@@ -104,13 +214,37 @@ export default function AdminJournalStorageCheckPage() {
           <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-4 bg-slate-50/50 dark:bg-slate-800/30">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t('admin.journalStorageCheck.periodLabel')}
+              </label>
+              {periods.length === 0 ? (
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('admin.journalStorageCheck.periodEmpty')}</p>
+              ) : (
+                <select
+                  value={periodId}
+                  onChange={(e) => setPeriodId(e.target.value)}
+                  disabled={periodSelectDisabled}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white disabled:opacity-60"
+                >
+                  {periods.map((p) => (
+                    <option key={p.periodId} value={p.periodId}>
+                      {(p.title || p.periodId) + ` (${p.periodId})`}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('admin.journalStorageCheck.periodHint')}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t('admin.journalStorageCheck.learnerLabel')}
               </label>
               {adminApiLoaded && learners.length > 0 ? (
                 <select
                   value={learnerId}
                   onChange={(e) => setLearnerId(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white"
+                  disabled={needJwt}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white disabled:opacity-60"
                 >
                   <option value="">{t('admin.journalStorageCheck.pickLearner')}</option>
                   {learners.map((u) => {
@@ -128,37 +262,42 @@ export default function AdminJournalStorageCheckPage() {
                   value={learnerId}
                   onChange={(e) => setLearnerId(e.target.value)}
                   placeholder={t('admin.journalStorageCheck.learnerPlaceholder')}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white font-mono"
+                  disabled={needJwt}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white font-mono disabled:opacity-60"
                 />
               )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                {t('admin.journalStorageCheck.periodLabel')}
-              </label>
-              <input
-                type="text"
-                value={periodId}
-                onChange={(e) => setPeriodId(e.target.value)}
-                list="journal-storage-period-ids"
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white font-mono"
-              />
-              <datalist id="journal-storage-period-ids">
-                {periods.map((p) => (
-                  <option key={p.periodId} value={p.periodId} label={p.title || p.periodId} />
-                ))}
-              </datalist>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('admin.journalStorageCheck.periodHint')}</p>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={runCheck}
+                disabled={loading || bulkLoading || needJwt || !periodId}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-medium disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {t('admin.journalStorageCheck.run')}
+              </button>
+              <button
+                type="button"
+                onClick={runCheckAll}
+                disabled={loading || bulkLoading || needJwt || !periodId || periods.length === 0}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm font-medium disabled:opacity-50"
+              >
+                {bulkLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {t('admin.journalStorageCheck.checkAll')}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={runCheck}
-              disabled={loading || needJwt}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-medium disabled:opacity-50"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {t('admin.journalStorageCheck.run')}
-            </button>
+            {bulkLoading && (
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {t('admin.journalStorageCheck.checkingProgress', {
+                  current: String(bulkProgress.current),
+                  total: String(bulkProgress.total),
+                })}
+                {' — '}
+                {periodTitle}
+              </p>
+            )}
           </div>
 
           {error && (
@@ -167,8 +306,89 @@ export default function AdminJournalStorageCheckPage() {
             </p>
           )}
 
+          {bulkRows.length > 0 && !bulkLoading && (
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+              <h2 className="text-sm font-semibold text-slate-800 dark:text-white">
+                {t('admin.journalStorageCheck.bulkTableTitle')}
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {t('admin.journalStorageCheck.bulkSummary', {
+                  mismatch: String(bulkStats.mismatch),
+                  errors: String(bulkStats.errors),
+                  ok: String(bulkStats.ok),
+                })}
+              </p>
+              <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-600">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <tr>
+                      <th className="px-3 py-2 font-medium">{t('admin.journalStorageCheck.colLearner')}</th>
+                      <th className="px-3 py-2 font-medium">{t('admin.journalStorageCheck.colStatus')}</th>
+                      <th className="px-3 py-2 font-medium">{t('admin.journalStorageCheck.colBucket')}</th>
+                      <th className="px-3 py-2 font-medium">{t('admin.journalStorageCheck.colDb')}</th>
+                      <th className="px-3 py-2 font-medium w-28" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                    {bulkRows.map((row) => (
+                      <tr key={row.learnerId} className="text-slate-800 dark:text-slate-200">
+                        <td className="px-3 py-2">
+                          <div className="font-mono text-xs">{row.learnerId}</div>
+                          <div className="text-slate-600 dark:text-slate-400 truncate max-w-[14rem]">
+                            {row.username}
+                            {row.fullName ? ` — ${row.fullName}` : ''}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2">
+                          {row.error ? (
+                            <span className="text-red-600 dark:text-red-400">{t('admin.journalStorageCheck.statusError')}</span>
+                          ) : row.mismatch ? (
+                            <span className="text-amber-700 dark:text-amber-300">{t('admin.journalStorageCheck.statusMismatch')}</span>
+                          ) : (
+                            <span className="text-green-700 dark:text-green-300">{t('admin.journalStorageCheck.statusOk')}</span>
+                          )}
+                          {row.error && (
+                            <div className="text-xs text-red-600 dark:text-red-400 mt-1 max-w-xs">{row.error}</div>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 font-mono text-xs">{row.error ? '—' : String(row.bucketFileCount)}</td>
+                        <td className="px-3 py-2 font-mono text-xs">{row.error ? '—' : String(row.dbRowCount)}</td>
+                        <td className="px-3 py-2">
+                          {row.payload ? (
+                            <button
+                              type="button"
+                              onClick={() => setResult(row.payload)}
+                              className="text-primary text-xs font-medium hover:underline"
+                            >
+                              {t('admin.journalStorageCheck.viewRowDetail')}
+                            </button>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {result && (
             <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold text-slate-800 dark:text-white">
+                  {t('admin.journalStorageCheck.detailPanelTitle')}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setResult(null)}
+                  className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white"
+                >
+                  {t('admin.journalStorageCheck.closeDetail')}
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                {result.learnerId} · {result.periodId}
+              </p>
               <div className="flex flex-wrap gap-3">
                 {result.bucketFilesWithoutDbRow ? (
                   <span className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/40 px-3 py-1.5 rounded-lg">

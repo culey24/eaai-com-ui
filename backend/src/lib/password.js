@@ -21,7 +21,8 @@ export async function verifyPassword(plain, hash, userId) {
     const rows = await prisma.$queryRaw`
       SELECT EXISTS (
         SELECT 1 FROM users u
-        WHERE u.user_id = ${userId} AND u.pwd = crypt(${plain}, u.pwd)
+        WHERE u.user_id = ${userId}
+          AND u.pwd = crypt(${plain}::text, u.pwd::text)
       ) AS ok
     `
     return rows[0]?.ok === true

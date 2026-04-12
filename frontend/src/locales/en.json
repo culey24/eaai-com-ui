@@ -313,6 +313,27 @@
       "searchNoResults": "No FAQ entries match your search.",
       "searchClear": "Clear search"
     },
+    "journalStorageCheck": {
+      "nav": "Journal bucket vs DB",
+      "title": "Journal: bucket vs database",
+      "intro": "Compare objects in storage (GCS/disk) with journal_uploads for one learner and one submission period. Useful when files exist on the bucket but INSERT failed (no DB row). API: GET /api/journal/storage-check.",
+      "learnerLabel": "Learner (database user_id)",
+      "pickLearner": "— Select learner —",
+      "learnerPlaceholder": "e.g. S025e12b62",
+      "periodLabel": "periodId (submission)",
+      "periodHint": "Must match the Journal UI submission id (max 64 chars). Suggestions come from server periods.",
+      "run": "Run check",
+      "needLearner": "Select or enter the learner user_id.",
+      "needJwt": "Sign in as server admin (JWT) to call the API.",
+      "flagBucketOnly": "Files on bucket but no DB row for this period",
+      "flagHasDbOrEmpty": "Not in “bucket-only” state (DB exists or bucket is empty)",
+      "counts": "Bucket: {bucket} file(s) — DB: {db} row(s) for this period",
+      "extraKeysTitle": "Bucket objects that do not match the latest DB storage_key",
+      "latestDbKey": "Latest storage_key in DB",
+      "bucketListTitle": "All keys on bucket (period prefix)",
+      "dbRowsTitle": "journal_uploads rows (raw)",
+      "emptyList": "(empty)"
+    },
     "changeUserPassword": {
       "nav": "Change user password",
       "title": "Change user password",

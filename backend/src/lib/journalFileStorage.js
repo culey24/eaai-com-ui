@@ -1,5 +1,5 @@
 import path from 'path'
-import { mkdir, writeFile, unlink, readFile } from 'fs/promises'
+import { mkdir, writeFile, unlink, readFile, readdir, stat } from 'fs/promises'
 import { Storage } from '@google-cloud/storage'
 
 const GCS_KEY_PREFIX = 'gcs:'
@@ -150,6 +150,91 @@ export async function readJournalUploadWithFallback(storageKey, opts = {}) {
       throw err
     }
     return await readJournalUpload(altKey)
+  }
+}
+
+/**
+ * Liệt kê các storage_key tương ứng mọi file journal dưới prefix user+period (tên object giảm dần — thường mới nhất trước).
+ */
+export async function listJournalStorageKeysInPeriod(userId, periodId) {
+  const { safeUser, safePeriod } = safeJournalPathParts(userId, periodId)
+  const rootResolved = path.resolve(uploadRootDir())
+
+  if (journalUsesGcs()) {
+    const prefix = `journals/${safeUser}/${safePeriod}/`
+    try {
+      const bucket = getStorage().bucket(getBucketName())
+      const [files] = await bucket.getFiles({ prefix })
+      return files
+        .map((f) => `${GCS_KEY_PREFIX}${f.name}`)
+        .sort((a, b) => (a < b ? 1 : a > b ? -1 : 0))
+    } catch (err) {
+      console.error('[journalFileStorage] listJournalStorageKeysInPeriod (GCS)', err)
+      return []
+    }
+  }
+
+  const dir = path.join(uploadRootDir(), safeUser, safePeriod)
+  try {
+    const names = await readdir(dir)
+    const keys = []
+    for (const name of names) {
+      const abs = path.resolve(dir, name)
+      if (!abs.startsWith(rootResolved)) continue
+      try {
+        const st = await stat(abs)
+        if (!st.isFile()) continue
+      } catch {
+        continue
+      }
+      keys.push(path.relative(process.cwd(), abs).split(path.sep).join('/'))
+    }
+    return keys.sort((a, b) => (a < b ? 1 : a > b ? -1 : 0))
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Xóa toàn bộ object journal trong prefix journals/{user}/{period}/ (GCS hoặc thư mục đĩa).
+ * Dùng trước khi nộp lại / sau khi học viên xóa bài, để gom về 0 file trước khi ghi bản mới.
+ */
+export async function removeAllJournalObjectsInPeriod(userId, periodId) {
+  const { safeUser, safePeriod } = safeJournalPathParts(userId, periodId)
+  const rootResolved = path.resolve(uploadRootDir())
+
+  if (journalUsesGcs()) {
+    const prefix = `journals/${safeUser}/${safePeriod}/`
+    try {
+      const bucket = getStorage().bucket(getBucketName())
+      const [files] = await bucket.getFiles({ prefix })
+      for (const f of files) {
+        try {
+          await f.delete({ ignoreNotFound: true })
+        } catch {
+          /* ignore */
+        }
+      }
+    } catch (err) {
+      console.error('[journalFileStorage] removeAllJournalObjectsInPeriod (GCS)', err)
+    }
+    return
+  }
+
+  const dir = path.join(uploadRootDir(), safeUser, safePeriod)
+  try {
+    const names = await readdir(dir)
+    for (const name of names) {
+      const abs = path.resolve(dir, name)
+      if (!abs.startsWith(rootResolved)) continue
+      try {
+        await unlink(abs)
+      } catch {
+        /* ignore */
+      }
+    }
+  } catch {
+    /* thư mục chưa có */
   }
 }
 

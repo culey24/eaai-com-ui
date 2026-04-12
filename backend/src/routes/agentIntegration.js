@@ -970,10 +970,14 @@ router.get('/users/:userId/journal-status', async (req, res) => {
         userId,
         periodId: { in: periods.map((p) => p.periodId) },
       },
+      orderBy: [{ submittedAt: 'desc' }, { id: 'desc' }],
       select: { periodId: true, submittedAt: true, originalFileName: true, status: true },
     })
 
-    const uploadMap = new Map(uploads.map((u) => [u.periodId, u]))
+    const uploadMap = new Map()
+    for (const u of uploads) {
+      if (!uploadMap.has(u.periodId)) uploadMap.set(u.periodId, u)
+    }
 
     const statuses = periods.map((p) => {
       const upload = uploadMap.get(p.periodId)

@@ -313,6 +313,27 @@
       "searchNoResults": "Không có mục FAQ khớp từ khóa.",
       "searchClear": "Xóa ô tìm"
     },
+    "journalStorageCheck": {
+      "nav": "Journal bucket vs DB",
+      "title": "Journal: bucket và database",
+      "intro": "So sánh file trên storage (GCS/đĩa) với bảng journal_uploads cho một học viên và một đợt nộp. Hữu ích khi có file trên bucket nhưng INSERT lỗi (không có dòng DB). API: GET /api/journal/storage-check.",
+      "learnerLabel": "Học viên (user_id trên DB)",
+      "pickLearner": "— Chọn học viên —",
+      "learnerPlaceholder": "Ví dụ: S025e12b62",
+      "periodLabel": "periodId (submission)",
+      "periodHint": "Trùng submission.id trên UI Journal (tối đa 64 ký tự). Gợi ý từ danh sách đợt trên server.",
+      "run": "Kiểm tra",
+      "needLearner": "Chọn hoặc nhập user_id học viên.",
+      "needJwt": "Cần đăng nhập admin qua máy chủ (JWT) để gọi API.",
+      "flagBucketOnly": "Có file trên bucket, chưa có dòng DB cho đợt này",
+      "flagHasDbOrEmpty": "Không ở trạng thái “chỉ bucket” (đã có DB hoặc bucket trống)",
+      "counts": "Bucket: {bucket} file — DB: {db} dòng (mọi bản ghi đợt này)",
+      "extraKeysTitle": "Object trên bucket không khớp bản DB mới nhất",
+      "latestDbKey": "storage_key mới nhất trong DB",
+      "bucketListTitle": "Toàn bộ key trên bucket (prefix đợt)",
+      "dbRowsTitle": "Các dòng journal_uploads (raw)",
+      "emptyList": "(trống)"
+    },
     "changeUserPassword": {
       "nav": "Đổi mật khẩu user",
       "title": "Đổi mật khẩu user",

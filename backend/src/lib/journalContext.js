@@ -26,9 +26,18 @@ export async function getJournalContextSummary(userId) {
              ju.submitted_at AS submitted_at,
              ju.status AS status,
              ju.extracted_text AS extracted_text
-      FROM journal_uploads ju
+      FROM (
+        SELECT DISTINCT ON (j.period_id)
+          j.period_id,
+          j.original_file_name,
+          j.submitted_at,
+          j.status,
+          j.extracted_text
+        FROM journal_uploads j
+        WHERE j.user_id = ${userId}
+        ORDER BY j.period_id, j.submitted_at DESC, j.upload_id DESC
+      ) AS ju
       INNER JOIN journal_periods jp ON jp.period_id = ju.period_id
-      WHERE ju.user_id = ${userId}
       ORDER BY ju.submitted_at DESC
       LIMIT 12
     `

@@ -7,6 +7,11 @@ import { useAllUsers } from '../../hooks/useAllUsers'
 import { API_BASE } from '../../config/api'
 import { ROLES } from '../../constants/roles'
 import { uiIdToBackendUserId } from '../../lib/userIds'
+import {
+  loadJournalAuditHistory,
+  saveJournalAuditHistoryEntry,
+  deleteJournalAuditHistoryEntry,
+} from '../../lib/adminJournalStorageHistory'
 
 const BULK_CONCURRENCY = 8
 
@@ -19,8 +24,143 @@ async function fetchStorageCheck(apiToken, learnerId, periodId) {
   return { res, data }
 }
 
+function rowStatusRank(r) {
+  if (r.error) return 0
+  if (r.mismatch) return 1
+  return 2
+}
+
+function compareAuditRows(a, b, sortKey) {
+  switch (sortKey) {
+    case 'learnerId_desc':
+      return (b.learnerId || '').localeCompare(a.learnerId || '', undefined, { sensitivity: 'base' })
+    case 'learnerId_asc':
+      return (a.learnerId || '').localeCompare(b.learnerId || '', undefined, { sensitivity: 'base' })
+    case 'username_asc':
+      return (a.username || '').localeCompare(b.username || '', undefined, { sensitivity: 'base' })
+    case 'bucket_desc':
+      return (b.bucketFileCount ?? 0) - (a.bucketFileCount ?? 0)
+    case 'bucket_asc':
+      return (a.bucketFileCount ?? 0) - (b.bucketFileCount ?? 0)
+    case 'db_desc':
+      return (b.dbRowCount ?? 0) - (a.dbRowCount ?? 0)
+    case 'db_asc':
+      return (a.dbRowCount ?? 0) - (b.dbRowCount ?? 0)
+    case 'badFirst':
+    default: {
+      const d = rowStatusRank(a) - rowStatusRank(b)
+      if (d !== 0) return d
+      return (a.learnerId || '').localeCompare(b.learnerId || '', undefined, { sensitivity: 'base' })
+    }
+  }
+}
+
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function csvEscape(s) {
+  return `"${String(s ?? '').replace(/"/g, '""')}"`
+}
+
+function exportAuditCsv(rows, periodId) {
+  const header = ['learner_id', 'username', 'full_name', 'status', 'bucket_files', 'db_rows', 'error']
+  const lines = [header.join(',')]
+  for (const r of rows) {
+    const st = r.error ? 'error' : r.mismatch ? 'mismatch' : 'ok'
+    lines.push(
+      [
+        csvEscape(r.learnerId),
+        csvEscape(r.username),
+        csvEscape(r.fullName),
+        st,
+        r.error ? '' : String(r.bucketFileCount ?? 0),
+        r.error ? '' : String(r.dbRowCount ?? 0),
+        csvEscape(r.error || ''),
+      ].join(',')
+    )
+  }
+  const bom = '\uFEFF'
+  const blob = new Blob([bom + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `journal-storage-audit-${periodId}-${Date.now()}.csv`
+  a.click()
+  URL.revokeObjectURL(a.href)
+}
+
+function openAuditPrintWindow({ periodId, periodTitle, createdAt, rows, labels }) {
+  const w = window.open('', '_blank')
+  if (!w) return
+  const dateStr = new Date(createdAt).toLocaleString()
+  const bodyRows = rows
+    .map((r) => {
+      const st = r.error ? labels.stError : r.mismatch ? labels.stMismatch : labels.stOk
+      const b = r.error ? '—' : String(r.bucketFileCount ?? 0)
+      const d = r.error ? '—' : String(r.dbRowCount ?? 0)
+      return `<tr>
+        <td>${escapeHtml(r.learnerId)}</td>
+        <td>${escapeHtml(r.username)}</td>
+        <td>${escapeHtml(r.fullName)}</td>
+        <td>${escapeHtml(st)}</td>
+        <td style="text-align:right">${escapeHtml(b)}</td>
+        <td style="text-align:right">${escapeHtml(d)}</td>
+        <td>${escapeHtml(r.error || '')}</td>
+      </tr>`
+    })
+    .join('')
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${escapeHtml(labels.docTitle)}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 16px; color: #111; }
+    h1 { font-size: 18px; margin: 0 0 8px; }
+    .meta { font-size: 12px; color: #444; margin-bottom: 16px; }
+    table { border-collapse: collapse; width: 100%; font-size: 10px; }
+    th, td { border: 1px solid #999; padding: 4px 6px; vertical-align: top; }
+    th { background: #eee; text-align: left; }
+    @media print { body { margin: 8px; } }
+  </style></head><body>
+  <h1>${escapeHtml(labels.docTitle)}</h1>
+  <div class="meta">${escapeHtml(periodTitle)} · period_id: ${escapeHtml(periodId)} · ${escapeHtml(dateStr)}</div>
+  <table><thead><tr>
+    <th>${escapeHtml(labels.colLearner)}</th>
+    <th>${escapeHtml(labels.colUser)}</th>
+    <th>${escapeHtml(labels.colName)}</th>
+    <th>${escapeHtml(labels.colStatus)}</th>
+    <th>${escapeHtml(labels.colBucket)}</th>
+    <th>${escapeHtml(labels.colDb)}</th>
+    <th>${escapeHtml(labels.colErr)}</th>
+  </tr></thead><tbody>${bodyRows}</tbody></table>
+  <p style="font-size:10px;color:#666;margin-top:12px">${escapeHtml(labels.printFooter)}</p>
+  </body></html>`)
+  w.document.close()
+  w.focus()
+  requestAnimationFrame(() => {
+    try {
+      w.print()
+    } catch {
+      /* ignore */
+    }
+  })
+}
+
+function slimHistoryRow(r) {
+  return {
+    learnerId: r.learnerId,
+    username: r.username || '',
+    fullName: r.fullName || '',
+    error: r.error ?? null,
+    mismatch: Boolean(r.mismatch),
+    bucketFileCount: r.bucketFileCount ?? 0,
+    dbRowCount: r.dbRowCount ?? 0,
+  }
+}
+
 export default function AdminJournalStorageCheckPage() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const { apiToken, user } = useAuth()
   const { allUsers, adminApiLoaded } = useAllUsers()
   const [learnerId, setLearnerId] = useState('')
@@ -32,6 +172,11 @@ export default function AdminJournalStorageCheckPage() {
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
   const [bulkRows, setBulkRows] = useState([])
+  const [historyList, setHistoryList] = useState(() => loadJournalAuditHistory())
+  const [selectedHistoryId, setSelectedHistoryId] = useState('')
+  const [rowSearch, setRowSearch] = useState('')
+  const [sortKey, setSortKey] = useState('badFirst')
+  const [lastBulkCompletedAt, setLastBulkCompletedAt] = useState(null)
 
   const learners = useMemo(
     () =>
@@ -40,6 +185,10 @@ export default function AdminJournalStorageCheckPage() {
         .sort((a, b) => (a.username || '').localeCompare(b.username || '', undefined, { sensitivity: 'base' })),
     [allUsers]
   )
+
+  const refreshHistory = useCallback(() => {
+    setHistoryList(loadJournalAuditHistory())
+  }, [])
 
   useEffect(() => {
     if (!apiToken) return
@@ -71,10 +220,52 @@ export default function AdminJournalStorageCheckPage() {
     return p?.title || periodId
   }, [periods, periodId])
 
+  const baseRows = useMemo(() => {
+    if (selectedHistoryId) {
+      const h = historyList.find((e) => e.id === selectedHistoryId)
+      return h?.rows?.length ? h.rows.map((r) => ({ ...r, payload: null })) : []
+    }
+    return bulkRows
+  }, [selectedHistoryId, historyList, bulkRows])
+
+  const sessionMeta = useMemo(() => {
+    if (selectedHistoryId) {
+      const h = historyList.find((e) => e.id === selectedHistoryId)
+      if (!h) return { periodId, periodTitle, createdAt: lastBulkCompletedAt || Date.now() }
+      return { periodId: h.periodId, periodTitle: h.periodTitle, createdAt: h.createdAt }
+    }
+    return { periodId, periodTitle, createdAt: lastBulkCompletedAt || Date.now() }
+  }, [selectedHistoryId, historyList, periodId, periodTitle, lastBulkCompletedAt])
+
+  const filteredSortedRows = useMemo(() => {
+    const q = rowSearch.trim().toLowerCase()
+    let list = baseRows
+    if (q) {
+      list = list.filter((r) => {
+        const hay = [r.learnerId, r.username, r.fullName, r.error].filter(Boolean).join(' ').toLowerCase()
+        return hay.includes(q)
+      })
+    }
+    return [...list].sort((a, b) => compareAuditRows(a, b, sortKey))
+  }, [baseRows, rowSearch, sortKey])
+
+  const bulkStats = useMemo(() => {
+    let mismatch = 0
+    let errors = 0
+    let ok = 0
+    for (const r of baseRows) {
+      if (r.error) errors++
+      else if (r.mismatch) mismatch++
+      else ok++
+    }
+    return { mismatch, errors, ok }
+  }, [baseRows])
+
   const runCheck = async () => {
     setError('')
     setResult(null)
     setBulkRows([])
+    setSelectedHistoryId('')
     const lid = learnerId.trim()
     const pid = String(periodId || '').trim().slice(0, 64)
     if (!apiToken || !pid) {
@@ -104,7 +295,9 @@ export default function AdminJournalStorageCheckPage() {
     setError('')
     setResult(null)
     setBulkRows([])
+    setSelectedHistoryId('')
     const pid = String(periodId || '').trim().slice(0, 64)
+    const ptitle = periods.find((p) => p.periodId === pid)?.title || pid
     if (!apiToken || !pid) {
       setError(t('admin.journalStorageCheck.needPeriod'))
       return
@@ -166,23 +359,67 @@ export default function AdminJournalStorageCheckPage() {
       setBulkRows([...out])
       setBulkProgress({ current: Math.min(i + chunk.length, list.length), total: list.length })
     }
-    setBulkLoading(false)
-  }, [apiToken, learners, periodId, t])
 
-  const bulkStats = useMemo(() => {
     let mismatch = 0
     let errors = 0
     let ok = 0
-    for (const r of bulkRows) {
+    for (const r of out) {
       if (r.error) errors++
       else if (r.mismatch) mismatch++
       else ok++
     }
-    return { mismatch, errors, ok }
-  }, [bulkRows])
+    const ts = Date.now()
+    saveJournalAuditHistoryEntry({
+      createdAt: ts,
+      periodId: pid,
+      periodTitle: ptitle,
+      stats: { mismatch, errors, ok },
+      rows: out.map(slimHistoryRow),
+    })
+    setLastBulkCompletedAt(ts)
+    refreshHistory()
+    setBulkLoading(false)
+  }, [apiToken, learners, periodId, periods, refreshHistory])
+
+  const handleExportCsv = () => {
+    exportAuditCsv(filteredSortedRows, sessionMeta.periodId)
+  }
+
+  const handleExportPrint = () => {
+    const labels = {
+      docTitle: t('admin.journalStorageCheck.title'),
+      colLearner: 'user_id',
+      colUser: lang === 'vi' ? 'Username' : 'Username',
+      colName: lang === 'vi' ? 'Họ tên' : 'Full name',
+      colStatus: t('admin.journalStorageCheck.colStatus'),
+      colBucket: t('admin.journalStorageCheck.colBucket'),
+      colDb: t('admin.journalStorageCheck.colDb'),
+      colErr: 'Error',
+      stError: t('admin.journalStorageCheck.statusError'),
+      stMismatch: t('admin.journalStorageCheck.statusMismatch'),
+      stOk: t('admin.journalStorageCheck.statusOk'),
+      printFooter: t('admin.journalStorageCheck.exportPrintHint'),
+    }
+    openAuditPrintWindow({
+      periodId: sessionMeta.periodId,
+      periodTitle: sessionMeta.periodTitle,
+      createdAt: sessionMeta.createdAt,
+      rows: filteredSortedRows,
+      labels,
+    })
+  }
+
+  const handleDeleteHistoryEntry = () => {
+    if (!selectedHistoryId) return
+    deleteJournalAuditHistoryEntry(selectedHistoryId)
+    refreshHistory()
+    setSelectedHistoryId('')
+  }
 
   const needJwt = !apiToken || user?.role !== ROLES.ADMIN
   const periodSelectDisabled = periods.length === 0 || needJwt
+  const hasBulkTable = baseRows.length > 0 && !bulkLoading
+  const viewingHistory = Boolean(selectedHistoryId)
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
@@ -201,6 +438,7 @@ export default function AdminJournalStorageCheckPage() {
           </h1>
         </div>
         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-3xl">{t('admin.journalStorageCheck.intro')}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{t('admin.journalStorageCheck.historySavedNote')}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-8">
@@ -300,24 +538,128 @@ export default function AdminJournalStorageCheckPage() {
             )}
           </div>
 
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-3 bg-white dark:bg-slate-900/40">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              {t('admin.journalStorageCheck.historyLabel')}
+            </label>
+            <select
+              value={selectedHistoryId}
+              onChange={(e) => {
+                setSelectedHistoryId(e.target.value)
+                setResult(null)
+              }}
+              className="w-full max-w-xl rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white"
+            >
+              <option value="">{bulkRows.length > 0 ? t('admin.journalStorageCheck.historyCurrent') : t('admin.journalStorageCheck.historyPick')}</option>
+              {historyList.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {new Date(h.createdAt).toLocaleString()} — {h.periodTitle || h.periodId} (
+                  {t('admin.journalStorageCheck.bulkSummary', {
+                    mismatch: String(h.stats?.mismatch ?? 0),
+                    errors: String(h.stats?.errors ?? 0),
+                    ok: String(h.stats?.ok ?? 0),
+                  })}
+                  )
+                </option>
+              ))}
+            </select>
+            {historyList.length === 0 && <p className="text-xs text-slate-500">{t('admin.journalStorageCheck.historyEmpty')}</p>}
+            {viewingHistory && (
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs font-medium text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/40 px-2 py-1 rounded-lg">
+                  {t('admin.journalStorageCheck.historyViewingBadge')}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleDeleteHistoryEntry}
+                  className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                >
+                  {t('admin.journalStorageCheck.historyDelete')}
+                </button>
+              </div>
+            )}
+          </div>
+
           {error && (
             <p className="text-sm text-red-600 dark:text-red-400" role="alert">
               {error}
             </p>
           )}
 
-          {bulkRows.length > 0 && !bulkLoading && (
+          {hasBulkTable && (
             <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
-              <h2 className="text-sm font-semibold text-slate-800 dark:text-white">
-                {t('admin.journalStorageCheck.bulkTableTitle')}
-              </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {t('admin.journalStorageCheck.bulkSummary', {
-                  mismatch: String(bulkStats.mismatch),
-                  errors: String(bulkStats.errors),
-                  ok: String(bulkStats.ok),
-                })}
-              </p>
+              <div className="flex flex-wrap items-end gap-3 justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-slate-800 dark:text-white">
+                    {t('admin.journalStorageCheck.bulkTableTitle')}
+                  </h2>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {t('admin.journalStorageCheck.bulkSummary', {
+                      mismatch: String(bulkStats.mismatch),
+                      errors: String(bulkStats.errors),
+                      ok: String(bulkStats.ok),
+                    })}
+                  </p>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {t('admin.journalStorageCheck.filteredCount', {
+                    shown: String(filteredSortedRows.length),
+                    total: String(baseRows.length),
+                  })}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="flex-1 min-w-[12rem]">
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                    {t('admin.journalStorageCheck.searchPlaceholder')}
+                  </label>
+                  <input
+                    type="search"
+                    value={rowSearch}
+                    onChange={(e) => setRowSearch(e.target.value)}
+                    placeholder={t('admin.journalStorageCheck.searchPlaceholder')}
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                    {t('admin.journalStorageCheck.sortLabel')}
+                  </label>
+                  <select
+                    value={sortKey}
+                    onChange={(e) => setSortKey(e.target.value)}
+                    className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white min-w-[12rem]"
+                  >
+                    <option value="badFirst">{t('admin.journalStorageCheck.sortBadFirst')}</option>
+                    <option value="learnerId_asc">{t('admin.journalStorageCheck.sortLearnerIdAsc')}</option>
+                    <option value="learnerId_desc">{t('admin.journalStorageCheck.sortLearnerIdDesc')}</option>
+                    <option value="username_asc">{t('admin.journalStorageCheck.sortUsernameAsc')}</option>
+                    <option value="bucket_desc">{t('admin.journalStorageCheck.sortBucketDesc')}</option>
+                    <option value="bucket_asc">{t('admin.journalStorageCheck.sortBucketAsc')}</option>
+                    <option value="db_desc">{t('admin.journalStorageCheck.sortDbDesc')}</option>
+                    <option value="db_asc">{t('admin.journalStorageCheck.sortDbAsc')}</option>
+                  </select>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleExportCsv}
+                    className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
+                  >
+                    {t('admin.journalStorageCheck.exportCsv')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExportPrint}
+                    className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
+                  >
+                    {t('admin.journalStorageCheck.exportPrintPdf')}
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('admin.journalStorageCheck.exportPrintHint')}</p>
+
               <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-600">
                 <table className="w-full text-sm text-left">
                   <thead className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
@@ -330,7 +672,7 @@ export default function AdminJournalStorageCheckPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                    {bulkRows.map((row) => (
+                    {filteredSortedRows.map((row) => (
                       <tr key={row.learnerId} className="text-slate-800 dark:text-slate-200">
                         <td className="px-3 py-2">
                           <div className="font-mono text-xs">{row.learnerId}</div>
@@ -362,6 +704,8 @@ export default function AdminJournalStorageCheckPage() {
                             >
                               {t('admin.journalStorageCheck.viewRowDetail')}
                             </button>
+                          ) : viewingHistory ? (
+                            <span className="text-xs text-slate-400">{t('admin.journalStorageCheck.historyNoDetail')}</span>
                           ) : null}
                         </td>
                       </tr>

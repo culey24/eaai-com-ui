@@ -177,6 +177,8 @@ export default function AdminJournalStorageCheckPage() {
   const [rowSearch, setRowSearch] = useState('')
   const [sortKey, setSortKey] = useState('badFirst')
   const [lastBulkCompletedAt, setLastBulkCompletedAt] = useState(null)
+  const [reconcilingLearnerId, setReconcilingLearnerId] = useState(null)
+  const [reconcileFlash, setReconcileFlash] = useState('')
 
   const learners = useMemo(
     () =>
@@ -236,6 +238,11 @@ export default function AdminJournalStorageCheckPage() {
     }
     return { periodId, periodTitle, createdAt: lastBulkCompletedAt || Date.now() }
   }, [selectedHistoryId, historyList, periodId, periodTitle, lastBulkCompletedAt])
+
+  const viewingHistory = Boolean(selectedHistoryId)
+  const needJwt = !apiToken || user?.role !== ROLES.ADMIN
+  const periodSelectDisabled = periods.length === 0 || needJwt
+  const hasBulkTable = baseRows.length > 0 && !bulkLoading
 
   const filteredSortedRows = useMemo(() => {
     const q = rowSearch.trim().toLowerCase()
@@ -416,10 +423,75 @@ export default function AdminJournalStorageCheckPage() {
     setSelectedHistoryId('')
   }
 
-  const needJwt = !apiToken || user?.role !== ROLES.ADMIN
-  const periodSelectDisabled = periods.length === 0 || needJwt
-  const hasBulkTable = baseRows.length > 0 && !bulkLoading
-  const viewingHistory = Boolean(selectedHistoryId)
+  const canReconcileRow = (row) =>
+    !viewingHistory && (Boolean(row.mismatch) || Number(row.bucketFileCount) > 0)
+
+  const handleReconcileRow = async (row) => {
+    if (!apiToken || viewingHistory || needJwt) return
+    if (!canReconcileRow(row)) {
+      window.alert(t('admin.journalStorageCheck.reconcileNoBucket'))
+      return
+    }
+    const pid = sessionMeta.periodId
+    if (
+      !window.confirm(
+        t('admin.journalStorageCheck.reconcileConfirm', { learner: row.learnerId })
+      )
+    ) {
+      return
+    }
+    setError('')
+    setReconcileFlash('')
+    setReconcilingLearnerId(row.learnerId)
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/journal-reconcile`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ learnerId: row.learnerId, periodId: pid }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(j?.error || j?.message || `HTTP ${res.status}`)
+        return
+      }
+      const chk = await fetchStorageCheck(apiToken, row.learnerId, pid)
+      if (chk.res.ok && chk.data) {
+        const d = chk.data
+        const mismatch =
+          Boolean(d.bucketFilesWithoutDbRow) ||
+          (Array.isArray(d.extraBucketKeysVersusLatestDb) && d.extraBucketKeysVersusLatestDb.length > 0)
+        setBulkRows((prev) =>
+          prev.map((r) =>
+            r.learnerId === row.learnerId
+              ? {
+                  learnerId: row.learnerId,
+                  username: row.username,
+                  fullName: row.fullName,
+                  error: null,
+                  mismatch,
+                  bucketFileCount: d.bucketFileCount ?? 0,
+                  dbRowCount: d.dbRowCount ?? 0,
+                  payload: d,
+                }
+              : r
+          )
+        )
+      }
+      setReconcileFlash(
+        t('admin.journalStorageCheck.reconcileOk', {
+          deleted: String(j.orphanObjectsDeleted ?? 0),
+        })
+      )
+      setTimeout(() => setReconcileFlash(''), 5000)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setReconcilingLearnerId(null)
+    }
+  }
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
@@ -659,6 +731,14 @@ export default function AdminJournalStorageCheckPage() {
                 </div>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">{t('admin.journalStorageCheck.exportPrintHint')}</p>
+              {viewingHistory && (
+                <p className="text-xs text-amber-700 dark:text-amber-300">{t('admin.journalStorageCheck.reconcileHistoryDisabled')}</p>
+              )}
+              {reconcileFlash && (
+                <p className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-2">
+                  {reconcileFlash}
+                </p>
+              )}
 
               <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-600">
                 <table className="w-full text-sm text-left">
@@ -669,6 +749,9 @@ export default function AdminJournalStorageCheckPage() {
                       <th className="px-3 py-2 font-medium">{t('admin.journalStorageCheck.colBucket')}</th>
                       <th className="px-3 py-2 font-medium">{t('admin.journalStorageCheck.colDb')}</th>
                       <th className="px-3 py-2 font-medium w-28" />
+                      {!viewingHistory && (
+                        <th className="px-3 py-2 font-medium w-32">{t('admin.journalStorageCheck.colReconcile')}</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -708,6 +791,26 @@ export default function AdminJournalStorageCheckPage() {
                             <span className="text-xs text-slate-400">{t('admin.journalStorageCheck.historyNoDetail')}</span>
                           ) : null}
                         </td>
+                        {!viewingHistory && (
+                          <td className="px-3 py-2">
+                            {canReconcileRow(row) ? (
+                              <button
+                                type="button"
+                                disabled={Boolean(reconcilingLearnerId)}
+                                onClick={() => handleReconcileRow(row)}
+                                className="text-xs font-medium px-2 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 hover:bg-amber-200 dark:hover:bg-amber-900/60 disabled:opacity-50"
+                              >
+                                {reconcilingLearnerId === row.learnerId ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin inline" />
+                                ) : (
+                                  t('admin.journalStorageCheck.reconcileBtn')
+                                )}
+                              </button>
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

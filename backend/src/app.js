@@ -12,6 +12,7 @@ import adminSurveySubmissionsRoutes from './routes/adminSurveySubmissions.js'
 import adminSupporterAssignmentsRoutes from './routes/adminSupporterAssignments.js'
 import adminJournalStatsRoutes from './routes/adminJournalStats.js'
 import adminJournalPeriodsRoutes from './routes/adminJournalPeriods.js'
+import adminJournalReconcileRoutes from './routes/adminJournalReconcile.js'
 import adminStatsExclusionsRoutes from './routes/adminStatsExclusions.js'
 import adminFaqRoutes from './routes/adminFaq.js'
 import supporterRoutes from './routes/supporter.js'
@@ -75,6 +76,7 @@ export function createApp() {
   app.use('/api/admin', adminSupporterAssignmentsRoutes)
   app.use('/api/admin', adminJournalStatsRoutes)
   app.use('/api/admin', adminJournalPeriodsRoutes)
+  app.use('/api/admin', adminJournalReconcileRoutes)
   app.use('/api/admin', adminStatsExclusionsRoutes)
   app.use('/api/admin', adminFaqRoutes)
   app.use('/api/supporter', supporterRoutes)

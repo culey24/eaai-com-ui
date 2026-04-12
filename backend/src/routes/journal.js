@@ -2,7 +2,8 @@ import { Router } from 'express'
 import multer from 'multer'
 import { prisma } from '../lib/prisma.js'
 import {
-  removeJournalUpload,
+  removeAllJournalObjectsInPeriod,
+  listJournalStorageKeysInPeriod,
   saveJournalUpload,
   readJournalUploadWithFallback,
 } from '../lib/journalFileStorage.js'
@@ -55,10 +56,15 @@ router.get('/me', authMiddleware, async (req, res) => {
     }
     const userId = req.auth.userId
     const rows = await prisma.$queryRaw`
-      SELECT ju.upload_id, ju.period_id, ju.original_file_name, ju.submitted_at, ju.status
-      FROM journal_uploads ju
-      WHERE ju.user_id = ${userId}
-      ORDER BY ju.submitted_at DESC
+      SELECT t.upload_id, t.period_id, t.original_file_name, t.submitted_at, t.status
+      FROM (
+        SELECT DISTINCT ON (ju.period_id)
+          ju.upload_id, ju.period_id, ju.original_file_name, ju.submitted_at, ju.status
+        FROM journal_uploads ju
+        WHERE ju.user_id = ${userId}
+        ORDER BY ju.period_id, ju.submitted_at DESC, ju.upload_id DESC
+      ) AS t
+      ORDER BY t.submitted_at DESC
     `
     return res.status(200).json(jsonSafe({ uploads: rows || [] }))
   } catch (err) {
@@ -112,14 +118,90 @@ router.get('/by-user/:learnerId', authMiddleware, async (req, res) => {
     }
 
     const rows = await prisma.$queryRaw`
-      SELECT ju.upload_id, ju.period_id, ju.original_file_name, ju.submitted_at, ju.status
-      FROM journal_uploads ju
-      WHERE ju.user_id = ${learnerId}
-      ORDER BY ju.submitted_at DESC
+      SELECT t.upload_id, t.period_id, t.original_file_name, t.submitted_at, t.status
+      FROM (
+        SELECT DISTINCT ON (ju.period_id)
+          ju.upload_id, ju.period_id, ju.original_file_name, ju.submitted_at, ju.status
+        FROM journal_uploads ju
+        WHERE ju.user_id = ${learnerId}
+        ORDER BY ju.period_id, ju.submitted_at DESC, ju.upload_id DESC
+      ) AS t
+      ORDER BY t.submitted_at DESC
     `
     return res.status(200).json(jsonSafe({ uploads: rows || [] }))
   } catch (err) {
     console.error('[journal GET by-user]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /api/journal/storage-check?periodId=...&learnerId=...
+ * So sánh object trên bucket/đĩa với bảng journal_uploads cho (learner, đợt).
+ * - Học viên: chỉ kiểm tra chính mình (bỏ qua learnerId).
+ * - Admin / supporter: bắt buộc query learnerId (cùng quy tắc quyền như by-user / tải file).
+ */
+router.get('/storage-check', authMiddleware, async (req, res) => {
+  try {
+    let learnerId
+    if (req.auth.userRole === 'student') {
+      learnerId = req.auth.userId
+    } else {
+      learnerId = String(req.query.learnerId || '').trim()
+      if (!learnerId) {
+        return res.status(400).json({ error: 'Thiếu learnerId (query)' })
+      }
+    }
+
+    await assertCanDownloadJournalFile(req.auth, learnerId)
+
+    const periodId = String(req.query.periodId ?? 'default').trim().slice(0, 64) || 'default'
+    const bucketKeys = await listJournalStorageKeysInPeriod(learnerId, periodId)
+
+    const dbRows = await prisma.$queryRaw`
+      SELECT ju.upload_id, ju.period_id, ju.storage_key, ju.original_file_name, ju.submitted_at, ju.status
+      FROM journal_uploads ju
+      WHERE ju.user_id = ${learnerId} AND ju.period_id = ${periodId}
+      ORDER BY ju.submitted_at DESC, ju.upload_id DESC
+    `
+    const rows = Array.isArray(dbRows) ? dbRows : []
+    const latestKey = rows[0]?.storage_key != null ? String(rows[0].storage_key) : null
+
+    const bucketFilesWithoutDbRow = rows.length === 0 && bucketKeys.length > 0
+    const extraBucketKeysVersusLatestDb =
+      latestKey != null && bucketKeys.length > 0
+        ? bucketKeys.filter((k) => k !== latestKey)
+        : latestKey == null && bucketKeys.length > 0
+          ? bucketKeys
+          : []
+
+    return res.status(200).json(
+      jsonSafe({
+        learnerId,
+        periodId,
+        bucketKeys,
+        bucketFileCount: bucketKeys.length,
+        dbRows: rows,
+        dbRowCount: rows.length,
+        latestDbStorageKey: latestKey,
+        /** true = có file trên storage nhưng không có dòng journal_uploads cho (user, period) */
+        bucketFilesWithoutDbRow,
+        /** object trên bucket không trùng storage_key của bản DB mới nhất (có DB nhưng thừa file, hoặc có file mà không có dòng thì liệt kê hết) */
+        extraBucketKeysVersusLatestDb,
+      })
+    )
+  } catch (err) {
+    const status = err?.status
+    if (status === 403) {
+      return res.status(403).json({ error: 'Không có quyền' })
+    }
+    if (status === 404) {
+      return res.status(404).json({ error: 'Không tìm thấy' })
+    }
+    console.error('[journal GET storage-check]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),
@@ -259,6 +341,13 @@ function safeBaseName(name) {
   return String(name || 'file').replace(/[/\\?%*:|"<>]/g, '_').slice(0, 200)
 }
 
+/** PostgreSQL UTF-8 không chấp nhận byte NUL (0x00) trong TEXT/VARCHAR — gây 22021. */
+function stripNulBytes(s) {
+  if (s == null) return s
+  const t = String(s)
+  return t.includes('\0') ? t.replace(/\0/g, '') : t
+}
+
 function journalAutoEnsurePeriod() {
   const v = String(process.env.JOURNAL_AUTO_ENSURE_PERIOD ?? '1').toLowerCase()
   return v !== '0' && v !== 'false' && v !== 'off'
@@ -376,19 +465,15 @@ router.post('/upload', authMiddleware, journalUploadLimiter, upload.single('file
       })
     }
 
-    const original = req.file.originalname || 'upload.bin'
+    const original = stripNulBytes(req.file.originalname || 'upload.bin')
     const { text: extractedText, note: extractNote } = await extractDocumentText(
       req.file.buffer,
       original
     )
+    const extractedForDb =
+      extractedText && extractedText.length > 0 ? stripNulBytes(extractedText) : null
 
-    const prevRows = await prisma.$queryRaw`
-      SELECT storage_key FROM journal_uploads
-      WHERE user_id = ${userId} AND period_id = ${periodId}
-      LIMIT 1
-    `
-    const prevKey = Array.isArray(prevRows) && prevRows[0]?.storage_key
-    if (prevKey) await removeJournalUpload(prevKey)
+    await removeAllJournalObjectsInPeriod(userId, periodId)
 
     const storedName = `${Date.now()}_${safeBaseName(original)}`
     const { storageKey } = await saveJournalUpload({
@@ -405,7 +490,7 @@ router.post('/upload', authMiddleware, journalUploadLimiter, upload.single('file
 
     const inserted = await prisma.$queryRaw`
       INSERT INTO journal_uploads (user_id, period_id, storage_key, original_file_name, status, extracted_text)
-      VALUES (${userId}, ${periodId}, ${storageKey}, ${original.slice(0, 512)}, 'submitted', ${extractedText || null})
+      VALUES (${userId}, ${periodId}, ${storageKey}, ${original.slice(0, 512)}, 'submitted', ${extractedForDb})
       RETURNING upload_id, submitted_at
     `
 
@@ -416,8 +501,8 @@ router.post('/upload', authMiddleware, journalUploadLimiter, upload.single('file
         uploadId: row?.upload_id != null ? String(row.upload_id) : undefined,
         periodId,
         storageKey,
-        extractNote: extractNote || (extractedText ? undefined : 'Không trích được văn bản.'),
-        charsExtracted: extractedText ? extractedText.length : 0,
+        extractNote: extractNote || (extractedForDb ? undefined : 'Không trích được văn bản.'),
+        charsExtracted: extractedForDb ? extractedForDb.length : 0,
       })
     )
   } catch (err) {
@@ -434,7 +519,7 @@ router.post('/upload', authMiddleware, journalUploadLimiter, upload.single('file
 
 /**
  * DELETE /api/journal/upload?periodId=default
- * Xóa bản ghi submission trong DB; giữ lại file đã lưu.
+ * Xóa bản ghi trong DB và toàn bộ file journal trên storage cho đợt đó (gom sau lỗi nhiều file).
  */
 router.delete('/upload', authMiddleware, async (req, res) => {
   try {
@@ -446,6 +531,7 @@ router.delete('/upload', authMiddleware, async (req, res) => {
     if (!periodId) {
       return res.status(400).json({ error: 'periodId không hợp lệ' })
     }
+    await removeAllJournalObjectsInPeriod(userId, periodId)
     await prisma.$executeRaw`
       DELETE FROM journal_uploads WHERE user_id = ${userId} AND period_id = ${periodId}
     `

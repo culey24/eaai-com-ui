@@ -29,6 +29,7 @@ import AdminSubmissionsPage from './pages/admin/AdminSubmissionsPage'
 import AdminSurveyResultsPage from './pages/admin/AdminSurveyResultsPage'
 import AdminFaqPage from './pages/admin/AdminFaqPage'
 import AdminChangeUserPasswordPage from './pages/admin/AdminChangeUserPasswordPage'
+import AdminJournalStorageCheckPage from './pages/admin/AdminJournalStorageCheckPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
 import PretestGate from './components/PretestGate'
 import SessionExpiredBridge from './components/SessionExpiredBridge'
@@ -159,6 +160,7 @@ function AppRoutes() {
           <Route path="blacklist" element={<AdminStatsBlacklistPage />} />
         </Route>
         <Route path="submissions" element={<AdminSubmissionsPage />} />
+        <Route path="journal-storage-check" element={<AdminJournalStorageCheckPage />} />
         <Route path="surveys" element={<AdminSurveyResultsPage />} />
         <Route path="faq" element={<AdminFaqPage />} />
         <Route path="doi-mat-khau-user" element={<AdminChangeUserPasswordPage />} />

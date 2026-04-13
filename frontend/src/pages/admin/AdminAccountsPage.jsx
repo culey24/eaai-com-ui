@@ -15,6 +15,7 @@ export default function AdminAccountsPage() {
     allUsers,
     createUser,
     updateUserRole,
+    updateUserClass,
     deleteUser,
     roleOverrides,
     roleUpdateError,
@@ -243,7 +244,30 @@ export default function AdminAccountsPage() {
                         <span className="line-clamp-3 break-words">{u.fullName?.trim() || '—'}</span>
                       </td>
                       <td className="px-5 sm:px-6 py-5 text-slate-600 dark:text-slate-400 align-top whitespace-nowrap">
-                        {u.classCode || '-'}
+                        {u.role === ROLES.LEARNER && u.fromApi && apiToken ? (
+                          <select
+                            value={
+                              u.classCode && VALID_CLASS_CODES.includes(u.classCode)
+                                ? u.classCode
+                                : ''
+                            }
+                            onChange={(e) => {
+                              const v = e.target.value
+                              if (!v) return
+                              void updateUserClass(u.id, v)
+                            }}
+                            className="min-w-[6.5rem] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-sm"
+                          >
+                            <option value="">{t('admin.selectClass')}</option>
+                            {VALID_CLASS_CODES.map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span>{u.classCode || '-'}</span>
+                        )}
                       </td>
                       <td className="px-5 sm:px-6 py-5 align-top">
                         <select

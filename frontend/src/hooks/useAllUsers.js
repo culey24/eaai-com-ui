@@ -388,6 +388,57 @@ export function useAllUsers() {
     [roleOverrides, apiToken, user?.role]
   )
 
+  const updateUserClass = useCallback(
+    async (userId, classCode) => {
+      setRoleUpdateError(null)
+      if (!userId.startsWith('api-')) {
+        const msg =
+          'Chỉ tài khoản trên máy chủ (danh sách từ API) mới đổi được mã lớp qua giao diện này.'
+        setRoleUpdateError(msg)
+        return { ok: false, error: msg }
+      }
+      if (!apiToken || user?.role !== ROLES.ADMIN) {
+        const msg =
+          'Để lưu mã lớp vào database, admin phải đăng nhập bằng tài khoản trên máy chủ (có JWT).'
+        setRoleUpdateError(msg)
+        return { ok: false, error: msg }
+      }
+      const backendId = userId.slice(4).trim().slice(0, 10)
+      if (!backendId) {
+        const msg = 'Không xác định được mã người dùng trên server.'
+        setRoleUpdateError(msg)
+        return { ok: false, error: msg }
+      }
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/admin/users/${encodeURIComponent(backendId)}/class`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${apiToken}`,
+            },
+            body: JSON.stringify({ classCode }),
+          }
+        )
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          const msg =
+            data.error || data.message || (data.code ? String(data.code) : null) || `Lỗi HTTP ${res.status}`
+          setRoleUpdateError(msg)
+          return { ok: false, error: msg }
+        }
+        setAdminUsersRefresh((n) => n + 1)
+        return { ok: true }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Lỗi mạng'
+        setRoleUpdateError(msg)
+        return { ok: false, error: msg }
+      }
+    },
+    [apiToken, user?.role]
+  )
+
   const deleteUser = useCallback(
     (userId) => {
       if (userId.startsWith('api-')) return false
@@ -418,6 +469,7 @@ export function useAllUsers() {
     getByClass,
     createUser,
     updateUserRole,
+    updateUserClass,
     deleteUser,
     roleUpdateError,
     clearRoleUpdateError,

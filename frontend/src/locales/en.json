@@ -212,7 +212,8 @@
       "envHint": "Only accounts listed below are excluded from statistics; manage them on this page."
     },
     "createAccount": "Create account",
-    "searchPlaceholder": "Search by username, full name, ID...",
+    "searchPlaceholder": "Search by username, email, full name, ID...",
+    "email": "Email",
     "allRoles": "All roles",
     "allClasses": "All classes",
     "nameOrId": "Name / ID",
@@ -467,7 +468,13 @@
       "ended": "Ended",
       "noSubmissions": "No submissions yet",
       "statsLoading": "Loading submission stats from server…",
-      "noClassBreakdown": "No per-class row: students may have no class set in the database, or there are no learners yet."
+      "noClassBreakdown": "No per-class row: students may have no class set in the database, or there are no learners yet.",
+      "copyPendingEmails": "Copy emails (not submitted)",
+      "copyPendingEmailsTitle": "Copy comma-separated emails of learners who have not uploaded for this period (excludes stats blacklist; only accounts with an email in the database).",
+      "copyPendingEmailsLoading": "Loading…",
+      "copyPendingEmailsSuccess": "Copied {count} email address(es) to the clipboard (comma-separated).",
+      "copyPendingEmailsNone": "No email addresses to copy: either everyone submitted, or pending learners have no email on file.",
+      "copyPendingEmailsFallback": "Copy this text manually:"
     }
   },
   "pretest": {

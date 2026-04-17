@@ -47,6 +47,37 @@ async function getPendingLearnersForPeriod(periodId, excludedNorm) {
   return Array.isArray(rows) ? rows : []
 }
 
+/** Email (đã trim, khác rỗng) của học viên chưa nộp kỳ — cùng logic blacklist / role với thống kê journal. */
+async function getPendingLearnerEmailsForPeriod(periodId, excludedNorm) {
+  const excludeUsernameSql =
+    excludedNorm.length === 0
+      ? Prisma.empty
+      : Prisma.sql`AND LOWER(u.username) NOT IN (${Prisma.join(excludedNorm)})`
+  const rows = await prisma.$queryRaw`
+    SELECT DISTINCT TRIM(BOTH FROM u.email) AS email
+    FROM users u
+    WHERE u.user_role = 'student'
+    ${excludeUsernameSql}
+    AND u.email IS NOT NULL AND TRIM(BOTH FROM u.email) <> ''
+    AND NOT EXISTS (
+      SELECT 1
+      FROM journal_uploads ju
+      WHERE ju.user_id = u.user_id AND ju.period_id = ${periodId}
+    )
+    ORDER BY 1 ASC
+  `
+  if (!Array.isArray(rows)) return []
+  const out = []
+  const seen = new Set()
+  for (const r of rows) {
+    const e = r?.email != null ? String(r.email).trim() : ''
+    if (!e || seen.has(e.toLowerCase())) continue
+    seen.add(e.toLowerCase())
+    out.push(e)
+  }
+  return out
+}
+
 /**
  * GET /api/admin/submission-reminder-summary
  * Admin: kỳ submission gần nhất (đang mở ưu tiên, nếu không có thì lấy kỳ sắp mở)
@@ -202,9 +233,10 @@ router.post('/submission-reminder-send', authMiddleware, async (req, res) => {
 })
 
 /**
- * GET /api/admin/journal-upload-stats?periodId=...
+ * GET /api/admin/journal-upload-stats?periodId=...&pendingEmails=1
  * Admin: số học viên (role student) đã có bản nộp journal trên server cho period_id.
  * Không tính username trong blacklist (stats_analytics_exclusions).
+ * pendingEmails=1: thêm mảng pendingEmails (email học viên chưa nộp, có email trên CSDL).
  */
 router.get('/journal-upload-stats', authMiddleware, async (req, res) => {
   try {
@@ -292,7 +324,24 @@ router.get('/journal-upload-stats', authMiddleware, async (req, res) => {
         notSubmitted: (totalByClass[classCode] || 0) - (submittedByClass[classCode] || 0),
       }))
 
-    return res.status(200).json(jsonSafe({ periodId, submitted, total, byClass }))
+    const wantPendingEmails =
+      req.query.pendingEmails === '1' ||
+      req.query.pendingEmails === 'true' ||
+      req.query.pendingEmails === 'yes'
+    let pendingEmails
+    if (wantPendingEmails) {
+      pendingEmails = await getPendingLearnerEmailsForPeriod(periodId, excluded)
+    }
+
+    return res.status(200).json(
+      jsonSafe({
+        periodId,
+        submitted,
+        total,
+        byClass,
+        ...(wantPendingEmails ? { pendingEmails } : {}),
+      })
+    )
   } catch (err) {
     console.error('[admin journal-upload-stats]', err)
     return res.status(500).json({

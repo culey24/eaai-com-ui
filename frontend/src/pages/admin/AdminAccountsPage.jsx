@@ -46,10 +46,12 @@ export default function AdminAccountsPage() {
   const filtered = allUsers.filter((u) => {
     const q = (search || '').toLowerCase()
     const fullNameLc = (u.fullName || '').trim().toLowerCase()
+    const emailLc = (u.email || '').trim().toLowerCase()
     const matchSearch =
       !q ||
       u.username.toLowerCase().includes(q) ||
       fullNameLc.includes(q) ||
+      emailLc.includes(q) ||
       u.id.toLowerCase().includes(q)
     const matchRole = !filterRole || u.role === filterRole
     const matchClass = !filterClass || u.classCode === filterClass
@@ -210,11 +212,14 @@ export default function AdminAccountsPage() {
           {/* Table — cuộn ngang trên màn hẹp, cột supporter đủ rộng */}
           <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/20 shadow-sm overflow-hidden">
             <div className="overflow-x-auto overscroll-x-contain">
-              <table className="w-full min-w-[860px] text-[15px]">
+              <table className="w-full min-w-[960px] text-[15px]">
                 <thead className="bg-slate-50 dark:bg-slate-800/60">
                   <tr>
                     <th className="text-left px-5 sm:px-6 py-4 font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
                       {t('admin.nameOrId')}
+                    </th>
+                    <th className="text-left px-5 sm:px-6 py-4 font-medium text-slate-600 dark:text-slate-400 min-w-[10rem] max-w-[18rem]">
+                      {t('admin.email')}
                     </th>
                     <th className="text-left px-5 sm:px-6 py-4 font-medium text-slate-600 dark:text-slate-400 min-w-[8rem]">
                       {t('admin.fullName')}
@@ -239,6 +244,9 @@ export default function AdminAccountsPage() {
                       <td className="px-5 sm:px-6 py-5 align-top">
                         <span className="font-medium text-slate-800 dark:text-white">{u.username}</span>
                         <span className="block text-xs text-slate-500 mt-0.5 break-all">{u.id}</span>
+                      </td>
+                      <td className="px-5 sm:px-6 py-5 text-slate-600 dark:text-slate-400 align-top max-w-[18rem]">
+                        <span className="break-all text-sm">{u.email || '—'}</span>
                       </td>
                       <td className="px-5 sm:px-6 py-5 text-slate-600 dark:text-slate-400 align-top max-w-[14rem]">
                         <span className="line-clamp-3 break-words">{u.fullName?.trim() || '—'}</span>

@@ -58,6 +58,7 @@ function toUser(entry, id, source, roleOverride) {
     id,
     username: entry.username,
     fullName: entry.fullName ?? null,
+    email: entry.email != null && String(entry.email).trim() ? String(entry.email).trim() : null,
     role,
     classCode: entry.classCode ?? null,
     managedClasses: entry.managedClasses ?? null,
@@ -204,6 +205,7 @@ export function useAllUsers() {
         {
           username: u.username,
           fullName: u.fullname,
+          email: u.email,
           role: mapDbRoleToUi(u.userRole),
           classCode: mapUserClassToUi(u.userClass),
           managedClasses: null,

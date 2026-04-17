@@ -38,6 +38,7 @@ router.get('/users', async (req, res) => {
         userId: true,
         username: true,
         fullname: true,
+        email: true,
         userRole: true,
         userClass: true,
       },

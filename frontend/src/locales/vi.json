@@ -212,7 +212,8 @@
       "envHint": "Chỉ các tài khoản trong bảng dưới bị loại khỏi thống kê; quản lý hoàn toàn tại đây."
     },
     "createAccount": "Tạo tài khoản",
-    "searchPlaceholder": "Tìm theo username, họ tên, ID...",
+    "searchPlaceholder": "Tìm theo username, email, họ tên, ID...",
+    "email": "Email",
     "allRoles": "Tất cả vai trò",
     "allClasses": "Tất cả lớp",
     "nameOrId": "Tên / ID",
@@ -467,7 +468,13 @@
       "ended": "Đã kết thúc",
       "noSubmissions": "Chưa có submission nào",
       "statsLoading": "Đang tải thống kê nộp từ máy chủ…",
-      "noClassBreakdown": "Chưa có dòng theo lớp: học viên có thể chưa được gán lớp trên CSDL, hoặc chưa có người học."
+      "noClassBreakdown": "Chưa có dòng theo lớp: học viên có thể chưa được gán lớp trên CSDL, hoặc chưa có người học.",
+      "copyPendingEmails": "Sao chép email chưa nộp",
+      "copyPendingEmailsTitle": "Sao chép danh sách email (cách nhau bằng dấu phẩy) của học viên chưa nộp bản journal cho đợt này — đã trừ blacklist thống kê; chỉ tài khoản có email trên CSDL.",
+      "copyPendingEmailsLoading": "Đang tải…",
+      "copyPendingEmailsSuccess": "Đã sao chép {count} email vào clipboard (cách nhau bằng dấu phẩy).",
+      "copyPendingEmailsNone": "Không có email để sao chép: mọi người đã nộp, hoặc người chưa nộp chưa có email trên hệ thống.",
+      "copyPendingEmailsFallback": "Sao chép thủ công đoạn sau:"
     }
   },
   "pretest": {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, FileText, Plus, Pencil, Trash2, Calendar } from 'lucide-react'
+import { ArrowLeft, FileText, Plus, Pencil, Trash2, Calendar, Copy } from 'lucide-react'
 import { useJournal } from '../../context/JournalContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
@@ -17,6 +17,7 @@ export default function AdminSubmissionsPage() {
   const [formDescription, setFormDescription] = useState('')
   const [formStartsAt, setFormStartsAt] = useState('')
   const [formEndsAt, setFormEndsAt] = useState('')
+  const [copyingEmailsForPeriodId, setCopyingEmailsForPeriodId] = useState(null)
 
   const submissions = getSubmissions()
   const submissionIdsKey = useMemo(() => submissions.map((s) => s.id).join('|'), [submissions])
@@ -155,6 +156,35 @@ export default function AdminSubmissionsPage() {
     setShowForm(false)
   }
 
+  const copyPendingSubmissionEmails = async (periodId) => {
+    if (!apiToken || user?.role !== ROLES.ADMIN) return
+    setCopyingEmailsForPeriodId(periodId)
+    try {
+      const r = await fetch(
+        `${API_BASE}/api/admin/journal-upload-stats?periodId=${encodeURIComponent(periodId)}&pendingEmails=1`,
+        { headers: { Authorization: `Bearer ${apiToken}` } }
+      )
+      const data = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+      const list = Array.isArray(data.pendingEmails) ? data.pendingEmails : []
+      if (list.length === 0) {
+        window.alert(t('admin.submissions.copyPendingEmailsNone'))
+        return
+      }
+      const text = list.join(', ')
+      try {
+        await navigator.clipboard.writeText(text)
+        window.alert(t('admin.submissions.copyPendingEmailsSuccess', { count: list.length }))
+      } catch {
+        window.prompt(t('admin.submissions.copyPendingEmailsFallback'), text)
+      }
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e))
+    } finally {
+      setCopyingEmailsForPeriodId(null)
+    }
+  }
+
   const dateTimeFields = (
     <>
       <div>
@@ -283,6 +313,15 @@ export default function AdminSubmissionsPage() {
                 const open = isOpenWindow(sub)
                 const scheduled = isScheduled(sub)
                 const isEditing = editingId === sub.id
+                const notSubmittedCount =
+                  srv && !srv.loading && !srv.error ? Math.max(0, (srv.total || 0) - (srv.submitted || 0)) : 0
+                const showCopyPendingEmails =
+                  Boolean(apiToken) &&
+                  user?.role === ROLES.ADMIN &&
+                  srv &&
+                  !srv.loading &&
+                  !srv.error &&
+                  notSubmittedCount > 0
 
                 return (
                   <div
@@ -383,6 +422,20 @@ export default function AdminSubmissionsPage() {
                                     <p className="text-sm text-slate-500 dark:text-slate-400">
                                       {srv.total === 0 ? t('admin.noMembers') : t('admin.submissions.noClassBreakdown')}
                                     </p>
+                                  )}
+                                  {showCopyPendingEmails && (
+                                    <button
+                                      type="button"
+                                      onClick={() => void copyPendingSubmissionEmails(sub.id)}
+                                      disabled={copyingEmailsForPeriodId === sub.id}
+                                      title={t('admin.submissions.copyPendingEmailsTitle')}
+                                      className="mt-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 disabled:opacity-60"
+                                    >
+                                      <Copy className="w-4 h-4 shrink-0" />
+                                      {copyingEmailsForPeriodId === sub.id
+                                        ? t('admin.submissions.copyPendingEmailsLoading')
+                                        : t('admin.submissions.copyPendingEmails')}
+                                    </button>
                                   )}
                                 </>
                               )}

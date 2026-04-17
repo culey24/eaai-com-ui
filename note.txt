@@ -1,0 +1,11 @@
+Để chạy thì ae nhớ là phải có tải docker, mở docker lên trước.
+Đầu tiên là mình sẽ chạy db -> frontend -> backend -> agent assistant.
+Chỗ này ae có thể tham khảo làm 1 file Makefile cũng được, ở root (/) để chạy, hỏi AI thử.
+Nhớ giữ cho terminal chyạ nhe
+Quên, ae nhớ npm run db:up ở root trước rồi mới mở frontend
+1. "npm run db:up" ở root
+2. "cd frontend" xong "npm run dev"
+3. về root, "cd backend", "npm run dev"
+4. về root, "cd agent-assistant", chạy "./run-docker.sh" nếu ae xài windows thì có cách chạy khác, hỏi quang anh
+Các file .env có 3 file, để tui gửi ae.
+

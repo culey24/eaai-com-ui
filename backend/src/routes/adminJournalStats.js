@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
 import { getStatsExcludedUsernamesNormalized } from '../lib/statsExcludedUsernames.js'
+import { isSupporterUserRole } from '../lib/roles.js'
 
 const router = Router()
 
@@ -344,6 +345,99 @@ router.get('/journal-upload-stats', authMiddleware, async (req, res) => {
     )
   } catch (err) {
     console.error('[admin journal-upload-stats]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /api/admin/journal-submissions-matrix
+ * Admin / supporter: học viên (trừ blacklist thống kê) + mọi đợt journal_periods + bản nộp mới nhất mỗi (user, period).
+ * Dùng cho xuất CSV; link tải file: route SPA + JWT (xem /journal-file-download).
+ */
+router.get('/journal-submissions-matrix', authMiddleware, async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'admin' && !isSupporterUserRole(req.auth.userRole)) {
+      return res.status(403).json({ error: 'Chỉ admin hoặc supporter' })
+    }
+
+    const excluded = await getStatsExcludedUsernamesNormalized(prisma)
+    const excludeUsernameSql =
+      excluded.length === 0
+        ? Prisma.empty
+        : Prisma.sql`AND LOWER(u.username) NOT IN (${Prisma.join(excluded)})`
+
+    const periodRows = await prisma.journalPeriod.findMany({
+      orderBy: { endsAt: 'asc' },
+      select: { periodId: true, title: true },
+    })
+
+    const learnerRows = await prisma.$queryRaw`
+      SELECT u.user_id AS "userId", u.username, u.fullname AS "fullName",
+             u.student_school_id AS "studentSchoolId", u.user_class::text AS "classCode"
+      FROM users u
+      WHERE u.user_role = 'student'
+      ${excludeUsernameSql}
+      ORDER BY u.user_id ASC
+    `
+    const learners = Array.isArray(learnerRows) ? learnerRows : []
+
+    const uploadRows = await prisma.$queryRaw`
+      SELECT DISTINCT ON (ju.user_id, ju.period_id)
+        ju.user_id AS "userId",
+        ju.period_id AS "periodId",
+        ju.upload_id::text AS "uploadId",
+        ju.original_file_name AS "originalFileName"
+      FROM journal_uploads ju
+      INNER JOIN users u ON u.user_id = ju.user_id AND u.user_role = 'student'
+      WHERE 1=1
+      ${excludeUsernameSql}
+      ORDER BY ju.user_id, ju.period_id, ju.submitted_at DESC, ju.upload_id DESC
+    `
+    const uploads = Array.isArray(uploadRows) ? uploadRows : []
+
+    const byUser = new Map()
+    for (const row of uploads) {
+      const uid = row?.userId != null ? String(row.userId) : ''
+      const pid = row?.periodId != null ? String(row.periodId) : ''
+      if (!uid || !pid) continue
+      if (!byUser.has(uid)) byUser.set(uid, {})
+      const upId = row?.uploadId != null ? String(row.uploadId) : ''
+      if (!upId) continue
+      byUser.get(uid)[pid] = {
+        uploadId: upId,
+        originalFileName:
+          row?.originalFileName != null ? String(row.originalFileName).slice(0, 512) : '',
+      }
+    }
+
+    const rows = learners.map((r) => {
+      const userId = r?.userId != null ? String(r.userId) : ''
+      const uploadsForUser = byUser.get(userId) || {}
+      return {
+        userId,
+        username: r?.username != null ? String(r.username) : '',
+        fullName: r?.fullName != null ? String(r.fullName) : '',
+        studentSchoolId:
+          r?.studentSchoolId != null ? String(r.studentSchoolId).trim() : '',
+        classCode: r?.classCode != null ? String(r.classCode) : '',
+        uploadsByPeriod: uploadsForUser,
+      }
+    })
+
+    return res.status(200).json(
+      jsonSafe({
+        periods: periodRows.map((p) => ({
+          periodId: p.periodId,
+          title: p.title,
+        })),
+        rows,
+      })
+    )
+  } catch (err) {
+    console.error('[admin journal-submissions-matrix]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),

@@ -172,7 +172,12 @@
     "noAssignedUsers": "No assigned users",
     "selectUserToView": "Select a user to view chat and journal",
     "noManagedClasses": "No classes assigned",
-    "requestSupport": "Request support"
+    "requestSupport": "Request support",
+    "journalExport": {
+      "title": "Export journal CSV",
+      "desc": "Download MSSV, name, username, class, and per-period file links (supporter login required when opening a link).",
+      "nav": "Export journal CSV"
+    }
   },
   "roles": {
     "learner": "Learner",
@@ -474,7 +479,20 @@
       "copyPendingEmailsLoading": "Loading…",
       "copyPendingEmailsSuccess": "Copied {count} email address(es) to the clipboard (comma-separated).",
       "copyPendingEmailsNone": "No email addresses to copy: either everyone submitted, or pending learners have no email on file.",
-      "copyPendingEmailsFallback": "Copy this text manually:"
+      "copyPendingEmailsFallback": "Copy this text manually:",
+      "exportCsv": "Export CSV",
+      "exportCsvTitle": "Export learners and per-period journal download links (admin or supporter login when opening a link)",
+      "exportCsvLoading": "Loading…",
+      "csvColMssv": "Student ID",
+      "csvColFullName": "Full name",
+      "csvColUsername": "Username",
+      "csvColClass": "Class code",
+      "journalDownloadLoading": "Downloading file…",
+      "journalDownloadDone": "Download started.",
+      "journalDownloadBadParams": "Missing or invalid learnerId / uploadId.",
+      "journalDownloadNeedStaff": "Admin or supporter login is required to download this file.",
+      "journalDownloadHydrating": "Checking your session…",
+      "journalDownloadFailed": "Could not download the file."
     }
   },
   "pretest": {

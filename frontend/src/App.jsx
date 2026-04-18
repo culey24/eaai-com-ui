@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { AdminProvider } from './context/AdminContext'
 import { ReportsProvider } from './context/ReportsContext'
@@ -26,16 +26,23 @@ import AdminAccountsPage from './pages/admin/AdminAccountsPage'
 import AdminSupportRequestsPage from './pages/admin/AdminSupportRequestsPage'
 import AdminStatsBlacklistPage from './pages/admin/AdminStatsBlacklistPage'
 import AdminSubmissionsPage from './pages/admin/AdminSubmissionsPage'
+import AdminJournalFileDownloadPage from './pages/admin/AdminJournalFileDownloadPage'
 import AdminSurveyResultsPage from './pages/admin/AdminSurveyResultsPage'
 import AdminFaqPage from './pages/admin/AdminFaqPage'
 import AdminChangeUserPasswordPage from './pages/admin/AdminChangeUserPasswordPage'
 import AdminJournalStorageCheckPage from './pages/admin/AdminJournalStorageCheckPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
+import SupporterJournalExportPage from './pages/supporter/SupporterJournalExportPage'
 import PretestGate from './components/PretestGate'
 import SessionExpiredBridge from './components/SessionExpiredBridge'
 import ClassesWithWidget from './components/supporter/ClassesWithWidget'
 import Sidebar from './components/layout/Sidebar'
 import { ROLES } from './constants/roles'
+
+function JournalFileDownloadLegacyRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={`/journal-file-download${search}`} replace />
+}
 
 function HomeOrRedirect() {
   const { user } = useAuth()
@@ -142,6 +149,36 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/journal-file-download"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.ASSISTANT]}>
+              <div className="flex h-screen overflow-hidden">
+                <Sidebar activeChannelId={null} onSelectChannel={() => {}} />
+                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                  <AdminJournalFileDownloadPage />
+                </div>
+              </div>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/supporter/journal-export"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={[ROLES.ASSISTANT]}>
+              <div className="flex h-screen overflow-hidden">
+                <Sidebar activeChannelId={null} onSelectChannel={() => {}} />
+                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                  <SupporterJournalExportPage />
+                </div>
+              </div>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin"
         element={
           <ProtectedRoute>
@@ -160,6 +197,7 @@ function AppRoutes() {
           <Route path="blacklist" element={<AdminStatsBlacklistPage />} />
         </Route>
         <Route path="submissions" element={<AdminSubmissionsPage />} />
+        <Route path="journal-file-download" element={<JournalFileDownloadLegacyRedirect />} />
         <Route path="journal-storage-check" element={<AdminJournalStorageCheckPage />} />
         <Route path="surveys" element={<AdminSurveyResultsPage />} />
         <Route path="faq" element={<AdminFaqPage />} />

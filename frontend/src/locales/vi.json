@@ -422,6 +422,11 @@
       "colSubmitted": "Thời gian nộp",
       "colDetail": "Chi tiết",
       "view": "Xem JSON",
+      "exportCsvPretest": "Xuất CSV — PRETEST",
+      "exportCsvPosttest": "Xuất CSV — POST-TEST",
+      "exportCsvTitlePretest": "Tải CSV: MSSV, họ tên, username, mã lớp và toàn bộ trường khảo sát (A/B/C) cho PRETEST.",
+      "exportCsvTitlePosttest": "Tải CSV: MSSV, họ tên, username, mã lớp và toàn bộ trường khảo sát (A/B/C) cho POST-TEST (cùng layout cột với PRETEST).",
+      "exportCsvNoData": "Chưa có bài nộp cho khảo sát này — nút sẽ bật khi có dữ liệu.",
       "stats": {
         "total": "Tổng số bài nộp: {count}",
         "sectionA": "Phần A — Thông tin nền",

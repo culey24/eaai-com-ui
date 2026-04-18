@@ -172,7 +172,12 @@
     "noAssignedUsers": "Chưa có học viên được phân công",
     "selectUserToView": "Chọn user để xem chat và journal",
     "noManagedClasses": "Chưa được phân công lớp nào",
-    "requestSupport": "Yêu cầu nhận support"
+    "requestSupport": "Yêu cầu nhận support",
+    "journalExport": {
+      "title": "Xuất CSV journal",
+      "desc": "Tải bảng MSSV, họ tên, username, lớp và link tải file theo từng đợt nộp (cần đăng nhập supporter khi mở link).",
+      "nav": "Xuất CSV journal"
+    }
   },
   "roles": {
     "learner": "Người học",
@@ -474,7 +479,20 @@
       "copyPendingEmailsLoading": "Đang tải…",
       "copyPendingEmailsSuccess": "Đã sao chép {count} email vào clipboard (cách nhau bằng dấu phẩy).",
       "copyPendingEmailsNone": "Không có email để sao chép: mọi người đã nộp, hoặc người chưa nộp chưa có email trên hệ thống.",
-      "copyPendingEmailsFallback": "Sao chép thủ công đoạn sau:"
+      "copyPendingEmailsFallback": "Sao chép thủ công đoạn sau:",
+      "exportCsv": "Xuất CSV",
+      "exportCsvTitle": "Xuất danh sách học viên và link tải journal theo từng đợt (mở link khi đã đăng nhập admin hoặc supporter)",
+      "exportCsvLoading": "Đang tải dữ liệu…",
+      "csvColMssv": "MSSV",
+      "csvColFullName": "Họ và tên",
+      "csvColUsername": "Username",
+      "csvColClass": "Mã lớp",
+      "journalDownloadLoading": "Đang tải file…",
+      "journalDownloadDone": "Đã bắt đầu tải file xuống máy.",
+      "journalDownloadBadParams": "Thiếu hoặc sai learnerId / uploadId.",
+      "journalDownloadNeedStaff": "Cần đăng nhập tài khoản admin hoặc supporter để tải file.",
+      "journalDownloadHydrating": "Đang kiểm tra phiên đăng nhập…",
+      "journalDownloadFailed": "Không tải được file."
     }
   },
   "pretest": {

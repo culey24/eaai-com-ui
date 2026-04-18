@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, FileText, Plus, Pencil, Trash2, Calendar, Copy } from 'lucide-react'
+import { ArrowLeft, FileText, Plus, Pencil, Trash2, Calendar, Copy, Download } from 'lucide-react'
 import { useJournal } from '../../context/JournalContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import { ROLES } from '../../constants/roles'
+import { exportJournalSubmissionsMatrixCsv } from '../../lib/journalMatrixCsvExport'
 
 export default function AdminSubmissionsPage() {
   const { t } = useLanguage()
@@ -18,6 +19,7 @@ export default function AdminSubmissionsPage() {
   const [formStartsAt, setFormStartsAt] = useState('')
   const [formEndsAt, setFormEndsAt] = useState('')
   const [copyingEmailsForPeriodId, setCopyingEmailsForPeriodId] = useState(null)
+  const [exportingCsv, setExportingCsv] = useState(false)
 
   const submissions = getSubmissions()
   const submissionIdsKey = useMemo(() => submissions.map((s) => s.id).join('|'), [submissions])
@@ -156,6 +158,18 @@ export default function AdminSubmissionsPage() {
     setShowForm(false)
   }
 
+  const exportSubmissionsMatrixCsv = async () => {
+    if (!apiToken || user?.role !== ROLES.ADMIN) return
+    setExportingCsv(true)
+    try {
+      await exportJournalSubmissionsMatrixCsv({ apiToken, t })
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e))
+    } finally {
+      setExportingCsv(false)
+    }
+  }
+
   const copyPendingSubmissionEmails = async (periodId) => {
     if (!apiToken || user?.role !== ROLES.ADMIN) return
     setCopyingEmailsForPeriodId(periodId)
@@ -232,15 +246,29 @@ export default function AdminSubmissionsPage() {
             </p>
           </div>
         </div>
-        {!showForm && !editingId && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            {t('admin.submissions.create')}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {apiToken && user?.role === ROLES.ADMIN && (
+            <button
+              type="button"
+              onClick={() => void exportSubmissionsMatrixCsv()}
+              disabled={exportingCsv}
+              title={t('admin.submissions.exportCsvTitle')}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium disabled:opacity-60"
+            >
+              <Download className="w-4 h-4" />
+              {exportingCsv ? t('admin.submissions.exportCsvLoading') : t('admin.submissions.exportCsv')}
+            </button>
+          )}
+          {!showForm && !editingId && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 text-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              {t('admin.submissions.create')}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-8">

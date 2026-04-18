@@ -78,7 +78,7 @@ router.get('/me', authMiddleware, async (req, res) => {
 
 /**
  * GET /api/journal/by-user/:learnerId
- * Admin: mọi học viên. Supporter: learner được gán hoặc thuộc lớp quản lý.
+ * Admin / supporter: mọi học viên (supporter không lọc theo lớp hay gán).
  */
 router.get('/by-user/:learnerId', authMiddleware, async (req, res) => {
   try {
@@ -95,24 +95,8 @@ router.get('/by-user/:learnerId', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Không tìm thấy learner' })
     }
 
-    if (req.auth.userRole === 'admin') {
-      /* full list */
-    } else if (isSupporterUserRole(req.auth.userRole)) {
-      const assign = await prisma.learnerSupporterAssignment.findUnique({
-        where: { learnerId },
-        select: { supporterId: true },
-      })
-      const scopes = await prisma.assistantManagedClass.findMany({
-        where: { supporterId: req.auth.userId },
-        select: { userClass: true },
-      })
-      const allowed = new Set(scopes.map((s) => s.userClass))
-      const okByAssign = assign?.supporterId === req.auth.userId
-      const okByClass =
-        learner.userClass != null && allowed.has(learner.userClass)
-      if (!okByAssign && !okByClass) {
-        return res.status(403).json({ error: 'Không có quyền xem journal của learner này' })
-      }
+    if (req.auth.userRole === 'admin' || isSupporterUserRole(req.auth.userRole)) {
+      /* admin / supporter: toàn bộ học viên (không lọc theo lớp hay gán) */
     } else {
       return res.status(403).json({ error: 'Không có quyền' })
     }
@@ -142,7 +126,7 @@ router.get('/by-user/:learnerId', authMiddleware, async (req, res) => {
  * GET /api/journal/storage-check?periodId=...&learnerId=...
  * So sánh object trên bucket/đĩa với bảng journal_uploads cho (learner, đợt).
  * - Học viên: chỉ kiểm tra chính mình (bỏ qua learnerId).
- * - Admin / supporter: bắt buộc query learnerId (cùng quy tắc quyền như by-user / tải file).
+ * - Admin / supporter: bắt buộc query learnerId (mọi học viên; cùng assertCanDownloadJournalFile với by-user / tải file).
  */
 router.get('/storage-check', authMiddleware, async (req, res) => {
   try {
@@ -223,7 +207,7 @@ async function assertCanDownloadJournalFile(reqAuth, learnerId) {
     }
     return
   }
-  if (reqAuth.userRole === 'admin') {
+  if (reqAuth.userRole === 'admin' || isSupporterUserRole(reqAuth.userRole)) {
     const learner = await prisma.user.findUnique({
       where: { userId: learnerId },
       select: { userRole: true },
@@ -233,35 +217,12 @@ async function assertCanDownloadJournalFile(reqAuth, learnerId) {
     }
     return
   }
-  if (!isSupporterUserRole(reqAuth.userRole)) {
-    throw Object.assign(new Error('Forbidden'), { status: 403 })
-  }
-  const learner = await prisma.user.findUnique({
-    where: { userId: learnerId },
-    select: { userId: true, userRole: true, userClass: true },
-  })
-  if (!learner || learner.userRole !== 'student') {
-    throw Object.assign(new Error('Not found'), { status: 404 })
-  }
-  const assign = await prisma.learnerSupporterAssignment.findUnique({
-    where: { learnerId },
-    select: { supporterId: true },
-  })
-  const scopes = await prisma.assistantManagedClass.findMany({
-    where: { supporterId: reqAuth.userId },
-    select: { userClass: true },
-  })
-  const allowed = new Set(scopes.map((s) => s.userClass))
-  const okByAssign = assign?.supporterId === reqAuth.userId
-  const okByClass = learner.userClass != null && allowed.has(learner.userClass)
-  if (!okByAssign && !okByClass) {
-    throw Object.assign(new Error('Forbidden'), { status: 403 })
-  }
+  throw Object.assign(new Error('Forbidden'), { status: 403 })
 }
 
 /**
  * GET /api/journal/learner/:learnerId/file/:uploadId
- * Learner (chính mình), admin, hoặc supporter được phép — tải binary đã lưu.
+ * Learner (chính mình), admin, hoặc supporter — tải binary đã lưu (supporter: mọi học viên).
  */
 router.get('/learner/:learnerId/file/:uploadId', authMiddleware, async (req, res) => {
   try {

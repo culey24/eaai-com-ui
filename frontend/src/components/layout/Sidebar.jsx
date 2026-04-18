@@ -19,6 +19,7 @@ import {
   BookOpen,
   KeyRound,
   FolderSearch,
+  Download,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -73,6 +74,7 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const isReportsPage = location.pathname === '/reports'
   const isClassesPage = location.pathname === '/classes'
   const isJournalPage = location.pathname === '/journal'
+  const isJournalExportPage = location.pathname === '/supporter/journal-export'
   const isAssistant = user?.role === ROLES.ASSISTANT
   /** Gộp API + gán + placeholder từ assignments (học viên api-* chưa có trong allUsers khi GET lỗi / chưa đồng bộ). */
   const supporterChatUsers = useMemo(() => {
@@ -135,7 +137,7 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const getChannelLabel = (ch) => (ch.labelKey ? t(ch.labelKey, { code: ch.code }) : ch.label)
 
   const handleChannelClick = (ch) => {
-    if (isSettingsPage || isReportsPage || isClassesPage || isJournalPage) {
+    if (isSettingsPage || isReportsPage || isClassesPage || isJournalPage || isJournalExportPage) {
       navigate('/', { state: { channel: ch } })
     } else {
       onSelectChannel?.(ch)
@@ -374,6 +376,23 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
                 <Users className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && <span className="text-sm font-medium truncate">{t('sidebar.classManagement')}</span>}
               </Link>
+              {isAssistant && (
+                <Link
+                  to="/supporter/journal-export"
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                    collapsed ? 'justify-center' : ''
+                  } ${
+                    isJournalExportPage
+                      ? 'bg-primary text-white shadow-glow-primary'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                  }`}
+                >
+                  <Download className="w-5 h-5 flex-shrink-0" />
+                  {!collapsed && (
+                    <span className="text-sm font-medium truncate">{t('supporter.journalExport.nav')}</span>
+                  )}
+                </Link>
+              )}
             </div>
           </>
         )}

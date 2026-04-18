@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ClipboardList } from 'lucide-react'
+import { ArrowLeft, ClipboardList, Download } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
@@ -10,6 +10,7 @@ import { aggregateSurveySubmissions, SURVEY_SECTION_A_KEYS } from '../../lib/sur
 import { PRETEST_TOPICS } from '../../data/pretest/pretestTopics'
 import { SECTION_C_ITEMS } from '../../data/pretest/sectionCItems'
 import { getSectionBQuestions } from '../../data/pretest/sectionB'
+import { downloadPretestSurveyCsv } from '../../lib/pretestSurveyCsvExport'
 
 function topicLabel(id, lang) {
   const x = PRETEST_TOPICS.find((p) => p.id === id)
@@ -86,21 +87,55 @@ export default function AdminSurveyResultsPage() {
 
   const stats = useMemo(() => aggregateSurveySubmissions(rows), [rows])
 
+  const handleExportSurveyCsv = () => {
+    if (rows.length === 0) return
+    try {
+      const prefix =
+        activeKind === SURVEY_KIND_POSTTEST ? 'posttest-submissions' : 'pretest-submissions'
+      downloadPretestSurveyCsv({ rows, filenamePrefix: prefix })
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  const exportCsvLabel =
+    activeKind === SURVEY_KIND_POSTTEST
+      ? t('admin.surveys.exportCsvPosttest')
+      : t('admin.surveys.exportCsvPretest')
+  const exportCsvTitle =
+    activeKind === SURVEY_KIND_POSTTEST
+      ? t('admin.surveys.exportCsvTitlePosttest')
+      : t('admin.surveys.exportCsvTitlePretest')
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden">
-      <div className="flex-shrink-0 px-8 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-4">
-        <Link
-          to="/admin"
-          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div className="flex items-center gap-2">
-          <ClipboardList className="w-5 h-5 text-primary" />
-          <h1 className="font-semibold text-slate-800 dark:text-white text-lg">
-            {t('admin.surveys.title')}
-          </h1>
+      <div className="flex-shrink-0 px-8 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <Link
+            to="/admin"
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 shrink-0"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div className="flex items-center gap-2 min-w-0">
+            <ClipboardList className="w-5 h-5 text-primary shrink-0" />
+            <h1 className="font-semibold text-slate-800 dark:text-white text-lg truncate">
+              {t('admin.surveys.title')}
+            </h1>
+          </div>
         </div>
+        {apiToken && user?.role === ROLES.ADMIN && !loading && !error && (
+          <button
+            type="button"
+            onClick={handleExportSurveyCsv}
+            disabled={rows.length === 0}
+            title={rows.length === 0 ? t('admin.surveys.exportCsvNoData') : exportCsvTitle}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-4 h-4" />
+            {exportCsvLabel}
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-8 py-6">

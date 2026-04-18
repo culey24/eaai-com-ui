@@ -422,6 +422,11 @@
       "colSubmitted": "Submitted at",
       "colDetail": "Detail",
       "view": "View JSON",
+      "exportCsvPretest": "Export CSV — PRETEST",
+      "exportCsvPosttest": "Export CSV — POST-TEST",
+      "exportCsvTitlePretest": "Download CSV: student ID, full name, username, class, and all survey fields (A/B/C) for PRETEST.",
+      "exportCsvTitlePosttest": "Download CSV: student ID, full name, username, class, and all survey fields (A/B/C) for POST-TEST (same column layout as PRETEST).",
+      "exportCsvNoData": "No submissions for this survey yet — the button enables when data exists.",
       "stats": {
         "total": "Total responses: {count}",
         "sectionA": "Section A — Background",

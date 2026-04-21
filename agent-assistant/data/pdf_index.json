@@ -1,0 +1,79 @@
+[
+    {
+        "filename": "Chapter3_PartII-Fuzzy.pdf",
+        "description": "Bài trình bày này khám phá cách đối phó với sự không chắc chắn trong hệ thống, tập trung vào lý thuyết xác suất, lý thuyết độ chắc chắn và đặc biệt là logic mờ để xử lý thông tin không rõ ràng.",
+        "main_topics": [
+            "Lý thuyết độ chắc chắn (Certainty Theory)",
+            "Giá trị độ chắc chắn và Cách cập nhật độ chắc chắn (Certainty Value and Updating)",
+            "Tập mờ và Logic mờ (Fuzzy Set and Fuzzy Logic)",
+            "Hợp lý hóa (Defuzzification)",
+            "Quy tắc và toán tử mờ (Fuzzy Rules and Operators)"
+        ]
+    },
+    {
+        "filename": "RecommenderSystems-Shortened.pdf",
+        "description": "Tìm hiểu sâu về Hệ thống gợi ý: từ nguyên lý cơ bản đến các phương pháp lọc cộng tác, cách đo lường hiệu quả và ứng dụng thực tiễn.",
+        "main_topics": [
+            "Hệ thống gợi ý (Recommender Systems)",
+            "Lọc cộng tác (Collaborative Filtering)",
+            "Lọc dựa trên nội dung (Content-based Filtering)",
+            "Gợi ý dựa trên tri thức (Knowledge-based Recommendations)",
+            "Đánh giá hiệu suất hệ thống gợi ý (Evaluation techniques for Recommender Systems)"
+        ]
+    },
+    {
+        "filename": "Latent-Dirichlet-Allocation.pdf",
+        "description": "Bài thuyết trình đào sâu vào Khai thác phân phối Dirichlet tiềm ẩn (LDA), một công cụ mạnh mẽ để khám phá các chủ đề ẩn trong một tập hợp tài liệu, thông qua ví dụ trực quan và giải thích chi tiết về cơ chế hoạt động, đặc biệt là lấy mẫu Gibbs.",
+        "main_topics": [
+            "Phân bổ Dirichlet Tiềm ẩn (LDA)",
+            "Phân phối Dirichlet",
+            "Lấy mẫu Gibbs (Gibbs Sampling)",
+            "Phân phối đa thức (Multinomial Distribution)",
+            "Mô hình hóa chủ đề (Topic Modeling)"
+        ]
+    },
+    {
+        "filename": "Association Rules Mining.pdf",
+        "description": "Khám phá kỹ thuật Khai thác Luật Kết hợp để tìm ra mối quan hệ ẩn sâu từ dữ liệu giao dịch lớn, mở ra những hiểu biết giá trị cho doanh nghiệp.",
+        "main_topics": [
+            "Giới thiệu về Khai thác Luật Kết hợp",
+            "Định nghĩa hình thức và Phân rã bài toán",
+            "Thuật toán Apriori",
+            "Độ hỗ trợ (Support) và Độ tin cậy (Confidence)",
+            "Ứng dụng của Luật kết hợp"
+        ]
+    },
+    {
+        "filename": "2-DL-NLP.pdf",
+        "description": "Bài thuyết trình giới thiệu các mạng nơ-ron sâu và kỹ thuật nhúng từ (Word Embedding) trong Xử lý Ngôn ngữ Tự nhiên, từ cơ bản đến các kiến trúc nâng cao và ứng dụng.",
+        "main_topics": [
+            "Mạng Nơ-ron và Mạng Nơ-ron Sâu (Deep Neural Networks)",
+            "Nhúng Từ (Word Embedding) và Word2Vec",
+            "Autoencoder và Stacked Autoencoder",
+            "Phân loại Văn bản (Text Classification)",
+            "Kết hợp TF-IDF và Word Embedding"
+        ]
+    },
+    {
+        "filename": "4-LogisticRegression.pdf",
+        "description": "Bài giảng này giới thiệu về ứng dụng của Logistics Regression trong phân loại văn bản, với trọng tâm là các kỹ thuật Machine Learning truyền thống và bước đầu \"lộ trình\" tiếp cận Neural-based trong Xử lý Ngôn ngữ Tự nhiên (NLP).",
+        "main_topics": [
+            "Hồi quy Logistic cho Phân loại Văn bản",
+            "Kỹ thuật Machine Learning truyền thống trong NLP",
+            "Hệ số TF-IDF (Term Frequency-Inverse Document Frequency)",
+            "Mô hình không gian vector và ma trận thuật ngữ-tài liệu",
+            "Giới thiệu Tiếp cận dựa trên Mạng Neural trong NLP"
+        ]
+    },
+    {
+        "filename": "3-LinearRegression.pdf",
+        "description": "Khám phá hồi quy tuyến tính và lựa chọn đặc trưng: Từ những khái niệm cơ bản đến phương pháp tối thiểu bình phương và kỹ thuật Regularization.",
+        "main_topics": [
+            "Hồi Quy Tuyến Tính (Linear Regression)",
+            "Hồi Quy Phi Tuyến (Non-linear Regression)",
+            "Hệ Số Tương Quan (Correlation Coefficient)",
+            "Phương Pháp Bình Phương Tối Thiểu (Least Squares Method)",
+            "Hồi Quy Chính Quy (Regularized Regression - Ridge & Lasso)"
+        ]
+    }
+]

@@ -12,6 +12,7 @@ export default function MessageItem({
   perspective = 'learner',
   conversationId = null,
   apiToken = null,
+  onPdfClick = null,
 }) {
   const { t } = useLanguage()
   const fromLearner = message.role === 'user'
@@ -102,7 +103,22 @@ export default function MessageItem({
           (message.content ? (
             message.role === 'assistant' ? (
               <div className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-                {formatAgentChatMarkdown(message.content)}
+                {formatAgentChatMarkdown(message.content).map((node, i) => {
+                  if (node && typeof node === 'object' && node.type === 'pdf-suggest') {
+                    return (
+                      <button
+                        key={node.key || i}
+                        type="button"
+                        onClick={() => onPdfClick?.(node.filename, node.title)}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 my-1 mx-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-colors text-sm font-medium"
+                      >
+                        <FileText className="w-4 h-4" />
+                        {node.title}
+                      </button>
+                    )
+                  }
+                  return node
+                })}
               </div>
             ) : (
               <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">

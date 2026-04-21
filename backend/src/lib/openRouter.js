@@ -38,6 +38,7 @@ export async function openRouterChatCompletion(messages) {
 
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
+    console.error('[OpenRouter Error Response]', JSON.stringify(data, null, 2))
     const msg = data?.error?.message || data?.message || res.statusText || 'OpenRouter lỗi'
     throw new Error(msg)
   }

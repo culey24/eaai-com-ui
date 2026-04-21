@@ -385,8 +385,8 @@ router.post(
           fileStorageKey,
           metadata:
             userRole === 'admin' &&
-            senderRole === MessageSender.user &&
-            ch === 'test-agent'
+              senderRole === MessageSender.user &&
+              ch === 'test-agent'
               ? { directAgentTest: true }
               : {},
         },

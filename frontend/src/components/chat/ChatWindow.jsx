@@ -1,6 +1,6 @@
 import { useRef, useEffect, useLayoutEffect, useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageSquare, Flag, Loader2, ChevronDown } from 'lucide-react'
+import { MessageSquare, Flag, Loader2, ChevronDown, X, ExternalLink } from 'lucide-react'
 import MessageItem from './MessageItem'
 import ChatInput from './ChatInput'
 import ReportModal from './ReportModal'
@@ -19,6 +19,41 @@ function messagesEndSignature(msgs) {
   if (!msgs?.length) return '0'
   const last = msgs[msgs.length - 1]
   return `${msgs.length}:${last.id}`
+}
+
+function PdfViewerModal({ isOpen, onClose, pdfUrl, title }) {
+  if (!isOpen) return null
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-5xl h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-slate-700">
+        <div className="flex-shrink-0 px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <ExternalLink className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-800 dark:text-white leading-tight">{title}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Tài liệu học tập</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <div className="flex-1 bg-slate-100 dark:bg-slate-800 relative">
+          <iframe
+            src={pdfUrl}
+            className="w-full h-full border-none"
+            title={title}
+          />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function ChatWindow({
@@ -49,6 +84,13 @@ export default function ChatWindow({
   const [busyClock, setBusyClock] = useState(0)
   /** null = không áp dụng; false = chưa gán supporter (internal-chat / IS-2) */
   const [hasSupporterAssignment, setHasSupporterAssignment] = useState(null)
+  
+  const [pdfModal, setPdfModal] = useState({ isOpen: false, url: '', title: '' })
+
+  const handlePdfClick = (filename, title) => {
+    const url = `${API_BASE}/api/docs/slides/${encodeURIComponent(filename)}`
+    setPdfModal({ isOpen: true, url, title })
+  }
 
   const internalMask =
     maskAssistantAsAgent && channel?.id === 'internal-chat' && messagePerspective === 'learner'
@@ -282,6 +324,7 @@ export default function ChatWindow({
                   agentLabel={agentMaskLabel}
                   conversationId={remoteConversationId}
                   apiToken={apiToken}
+                  onPdfClick={handlePdfClick}
                 />
               ))}
               {showIs3BusyHint && (
@@ -348,6 +391,13 @@ export default function ChatWindow({
               ? t('chat.inputLockedPlaceholder')
               : t('chat.inputPlaceholder')
         }
+      />
+
+      <PdfViewerModal
+        isOpen={pdfModal.isOpen}
+        onClose={() => setPdfModal({ ...pdfModal, isOpen: false })}
+        pdfUrl={pdfModal.url}
+        title={pdfModal.title}
       />
     </div>
   )

@@ -14,6 +14,7 @@ from .sub_agents.persona_agent import create_agent as create_persona_agent
 from .sub_agents.provider_agent import create_agent as create_provider_agent
 from .sub_agents.supporter_agent import create_agent as create_supporter_agent
 from .sub_agents.journal_coach_agent import create_agent as create_journal_coach_agent
+from .sub_agents.suggestion_agent import create_agent as create_suggestion_agent
 
 _BE_SERVER = get_be_server_base_url()
 
@@ -183,4 +184,24 @@ async def call_journal_coach_agent(query: str, tool_context: ToolContext):
     except Exception as e:
         logger.error(f"Error journal coach agent: {str(e)}")
         return f"Error journal coach agent: {str(e)}"
+
+
+async def call_suggestion_agent(query: str, tool_context: ToolContext):
+    """
+    Calls the suggestion agent to recommend relevant PDF slides based on the query.
+    """
+    try:
+        merge_invocation_user_id_into_state(tool_context)
+        suggestion_agent = create_suggestion_agent(query=query)
+        suggestion_tool = agent_tool.AgentTool(agent=suggestion_agent)
+        await suggestion_tool.run_async(
+            args={"request": "Suggest relevant PDF slides based on the query and profile."},
+            tool_context=tool_context
+        )
+        res = tool_context.state.get("suggestion_infos", "")
+        logger.info(f"Suggestion Agent result: {res}")
+        return res
+    except Exception as e:
+        logger.error(f"Error calling suggestion agent: {str(e)}")
+        return f"Error calling suggestion agent: {str(e)}"
 

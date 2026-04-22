@@ -106,6 +106,7 @@ export default function AdminDashboardPage() {
     error: null,
   })
   const [reminderSummary, setReminderSummary] = useState({ loading: false, data: null, error: null })
+  const [interactionStats, setInteractionStats] = useState({ loading: false, data: null, error: null })
   const [tickNow, setTickNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -182,6 +183,38 @@ export default function AdminDashboardPage() {
   }, [apiToken, user?.role])
 
   useEffect(() => {
+    if (!apiToken || user?.role !== ROLES.ADMIN) {
+      setInteractionStats({ loading: false, data: null, error: null })
+      return
+    }
+    let cancelled = false
+    setInteractionStats((s) => ({ ...s, loading: true, error: null }))
+    fetch(`${API_BASE}/api/admin/stats/interactions`, {
+      headers: { Authorization: `Bearer ${apiToken}` },
+    })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+        return data
+      })
+      .then((data) => {
+        if (!cancelled) setInteractionStats({ loading: false, data: data.stats, error: null })
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setInteractionStats({
+            loading: false,
+            data: null,
+            error: err instanceof Error ? err.message : String(err),
+          })
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [apiToken, user?.role])
+
+  useEffect(() => {
     const tid = setInterval(() => setTickNow(Date.now()), 60000)
     return () => clearInterval(tid)
   }, [])
@@ -195,6 +228,7 @@ export default function AdminDashboardPage() {
   const navItems = [
     { to: '/admin/chats', icon: MessageSquare, labelKey: 'admin.chatChannels' },
     { to: '/admin/classes', icon: Users, labelKey: 'admin.classList' },
+    { to: '/admin/is2-monitor', icon: Users, labelKey: 'admin.is2Monitor' },
     { to: '/admin/accounts', icon: UserCog, labelKey: 'admin.accountManagement' },
     { to: '/admin/submissions', icon: FileText, labelKey: 'admin.submissions.title' },
     { to: '/admin/surveys', icon: ClipboardList, labelKey: 'admin.surveys.title' },
@@ -287,6 +321,32 @@ export default function AdminDashboardPage() {
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-400" />
               </Link>
+            ))}
+          </div>
+
+          {/* Interaction Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4">
+            {['IS-1', 'IS-2', 'IS-3'].map((cls) => (
+              <div
+                key={cls}
+                className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm"
+              >
+                <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  Tương tác {cls}
+                </div>
+                <div className="text-2xl font-bold text-slate-800 dark:text-white">
+                  {interactionStats.loading ? (
+                    <span className="text-slate-300">...</span>
+                  ) : interactionStats.data ? (
+                    interactionStats.data[cls] || 0
+                  ) : (
+                    '—'
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">
+                  Tổng số câu hỏi
+                </div>
+              </div>
             ))}
           </div>
         </div>

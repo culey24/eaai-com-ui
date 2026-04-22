@@ -139,9 +139,9 @@ export function useMessages(pollChannelId = null, options = {}) {
 
   const isRemoteAssistant = Boolean(
     apiToken &&
-      user?.role === ROLES.ASSISTANT &&
-      assistantViewLearnerId &&
-      pollChannelId
+    user?.role === ROLES.ASSISTANT &&
+    assistantViewLearnerId &&
+    pollChannelId
   )
 
   const isRemoteAdmin = Boolean(
@@ -389,17 +389,17 @@ export function useMessages(pollChannelId = null, options = {}) {
           } else {
             const body = conversationId
               ? {
-                  channelId,
-                  content: content || '',
-                  role: 'assistant',
-                  conversationId,
-                }
+                channelId,
+                content: content || '',
+                role: 'assistant',
+                conversationId,
+              }
               : {
-                  channelId,
-                  content: content || '',
-                  role: 'assistant',
-                  learnerId: assistantViewLearnerId,
-                }
+                channelId,
+                content: content || '',
+                role: 'assistant',
+                learnerId: assistantViewLearnerId,
+              }
             res = await fetch(`${API_BASE}/api/messages`, {
               method: 'POST',
               cache: 'no-store',
@@ -461,17 +461,17 @@ export function useMessages(pollChannelId = null, options = {}) {
           } else {
             const body = conversationId
               ? {
-                  channelId,
-                  content: content || '',
-                  role: postRole,
-                  conversationId,
-                }
+                channelId,
+                content: content || '',
+                role: postRole,
+                conversationId,
+              }
               : {
-                  channelId,
-                  content: content || '',
-                  role: postRole,
-                  learnerId: adminViewLearnerId,
-                }
+                channelId,
+                content: content || '',
+                role: postRole,
+                learnerId: adminViewLearnerId,
+              }
             res = await fetch(`${API_BASE}/api/messages`, {
               method: 'POST',
               cache: 'no-store',

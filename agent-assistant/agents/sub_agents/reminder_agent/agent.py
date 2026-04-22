@@ -21,7 +21,6 @@ from utils.llm_provider import get_adk_model
 from utils.be_integration import be_integration_headers
 
 from .prompt import REMINDER_AGENT_INSTRUCTION_PROMPT
-from ...language_rules import OUTPUT_LANGUAGE_RULES_MARKDOWN
 from .tools import (
     get_active_journal_periods,
     get_current_schedule,
@@ -195,7 +194,7 @@ def create_agent(query: Optional[str] = None) -> Agent:
             current_attempt="{current_attempt}",
             static_profile="{static_profile}",
             dynamic_profile="{dynamic_profile}",
-            language_rules=OUTPUT_LANGUAGE_RULES_MARKDOWN,
+            language="{language}",
         ),
         before_model_callback=setup_before_model_call,
         before_agent_callback=init_session_state,

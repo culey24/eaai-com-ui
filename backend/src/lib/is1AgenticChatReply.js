@@ -93,7 +93,7 @@ async function fetchChatbot(path, { method, body, timeoutMs }) {
   const { header: authz } = await getChatbotAuthorizationHeader().catch((e) => {
     throw new Error(
       `Không lấy được token gọi chatbot (GCP/ADC): ${e instanceof Error ? e.message : String(e)}. ` +
-        'Local: thử `gcloud auth application-default login` hoặc đặt GOOGLE_APPLICATION_CREDENTIALS.'
+      'Local: thử `gcloud auth application-default login` hoặc đặt GOOGLE_APPLICATION_CREDENTIALS.'
     )
   })
   const hadAuth = Boolean(authz)

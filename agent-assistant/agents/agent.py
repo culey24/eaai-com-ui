@@ -15,7 +15,6 @@ from google.adk.models import LlmResponse, LlmRequest
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
-from .language_rules import OUTPUT_LANGUAGE_RULES_MARKDOWN
 from .prompt import MANAGER_AGENT_INSTRUCTION_PROMPT
 from .sub_agents.reminder_agent.tools import (
     get_active_journal_periods,
@@ -32,6 +31,7 @@ from .tools import (
     call_journal_coach_agent,
     read_uploaded_data_file,
     read_user_journal_submissions,
+    call_suggestion_agent,
 )
 
 load_dotenv()  # Load environment variables from .env file
@@ -206,6 +206,9 @@ def init_session_state(callback_context: CallbackContext) -> None:
     if "dynamic_profile" not in callback_context.state:
         callback_context.state["dynamic_profile"] = []
 
+    if "language" not in callback_context.state:
+        callback_context.state["language"] = "vi"
+
     # logger.info(f"Current State: {callback_context.state}")
 
 
@@ -227,7 +230,7 @@ def create_agent() -> Agent:
             current_attempt="{current_attempt}",
             static_profile="{static_profile}",
             dynamic_profile="{dynamic_profile}",
-            language_rules=OUTPUT_LANGUAGE_RULES_MARKDOWN,
+            language="{language}",
         ),
         before_model_callback=setup_before_model_call,
         before_agent_callback=init_session_state,
@@ -246,6 +249,7 @@ def create_agent() -> Agent:
             list_user_reminders,
             set_reminder,
             call_journal_coach_agent,
+            call_suggestion_agent,
         ],
         generate_content_config=types.GenerateContentConfig(
             temperature=0.2,

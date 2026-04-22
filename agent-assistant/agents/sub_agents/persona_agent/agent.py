@@ -69,6 +69,8 @@ def after_model_call(
     step = int(callback_context.state.get(_ATTEMPT_KEY, 0))
 
     current_profile = callback_context.state.get("dynamic_profile", [])
+    if isinstance(current_profile, dict):
+        current_profile = [current_profile]
 
     if llm_response.content and llm_response.content.parts:
         if llm_response.content.parts[0].text:
@@ -90,10 +92,16 @@ def after_model_call(
                 if isinstance(updated_profile, list) or isinstance(updated_profile, dict):
                     # Update the subject information to match the subject_name, while keeping the rest of the subjects unchanged.
                     if current_profile == []:
-                        logger.info(f"Updated dynamic profile: {updated_profile}")
-                        callback_context.state["dynamic_profile"] = updated_profile
+                        logger.info(f"Updated dynamic profile (initial): {updated_profile}")
+                        callback_context.state["dynamic_profile"] = [updated_profile] if isinstance(updated_profile, dict) else updated_profile
                         return None
                     
+                    if isinstance(updated_profile, list):
+                        if len(updated_profile) > 0:
+                            updated_profile = updated_profile[0]
+                        else:
+                            return None
+
                     target_subject_name = updated_profile.get('subject_name')
                     found = False
 

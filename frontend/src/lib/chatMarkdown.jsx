@@ -174,6 +174,26 @@ const BOLD_RE = /(\*\*[\s\S]*?\*\*)/g
 const STRIKE_RE = /(~~[\s\S]*?~~)/g
 /** *word* — ít nhất một ký tự giữa hai dấu * */
 const ITALIC_SPLIT = /(\*[^*\n]+?\*)/g
+const PDF_SUGGEST_RE = /(\[\[pdf:[^|]+\|[^\]]+\]\])/g
+
+function parsePdfSuggest(str, keyPrefix) {
+  const parts = str.split(PDF_SUGGEST_RE)
+  const out = []
+  parts.forEach((part, i) => {
+    const match = /^\[\[pdf:([^|]+)\|([^\]]+)\]\]$/.exec(part)
+    if (match) {
+      out.push({
+        type: 'pdf-suggest',
+        key: kid(`${keyPrefix}pdf`),
+        filename: match[1],
+        title: match[2],
+      })
+    } else if (part) {
+      out.push(part)
+    }
+  })
+  return out
+}
 
 function parseItalic(str, keyPrefix) {
   const parts = str.split(ITALIC_SPLIT)
@@ -186,7 +206,7 @@ function parseItalic(str, keyPrefix) {
         </em>
       )
     } else if (part) {
-      out.push(part)
+      out.push(...parsePdfSuggest(part, `${keyPrefix}pdf`))
     }
   })
   return out

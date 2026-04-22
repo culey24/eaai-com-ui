@@ -1,4 +1,6 @@
 import express from 'express'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import cors from 'cors'
 import authRoutes from './routes/auth.js'
 import conversationsRoutes from './routes/conversations.js'
@@ -50,6 +52,10 @@ export function createApp() {
 
   // Tích hợp agentic_assistant: http://host:port/... (không prefix /api)
   app.use(agentIntegrationRoutes)
+
+  const __filename = fileURLToPath(import.meta.url)
+  const __dirname = path.dirname(__filename)
+  app.use('/api/docs/slides', express.static(path.join(__dirname, '../../docs/slides for IS')))
 
   app.use('/api', apiGeneralLimiter)
 

@@ -26,6 +26,7 @@ from utils.llm_provider import chat_completion_text, use_openrouter
 from utils.be_integration import be_integration_headers
 from utils.upload_paths import uploaded_data_dir
 from utils.faq_agent import run_faq_agent
+from agents.sub_agents.batch_evaluator_agent.agent import create_agent as create_batch_evaluator_agent
 
 load_dotenv()
 logging.basicConfig(
@@ -604,7 +605,90 @@ async def run_agent(request: Request):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.post("/chat-with-llm")
+@app.post("/evaluate-journal")
+async def evaluate_journal(request: Request):
+    """
+    Specialized endpoint for batch evaluation of journal content.
+    Does not save to DB (handled by the caller) and uses BatchEvaluatorAgent directly.
+    """
+    try:
+        request_data = await request.json()
+        user_id = request_data.get("user_id")
+        content = request_data.get("content")
+        
+        if not user_id or not content:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "user_id and content are required"}
+            )
+            
+        # Create the specialized evaluator agent
+        # We don't pass query here to avoid curly brace parsing issues in system instruction
+        agent = create_batch_evaluator_agent()
+        
+        # We need a Runner to execute the agent
+        from google.adk.runners import Runner
+        from google.adk.sessions import InMemorySessionService
+        from google.genai import types
+        
+        # Use a one-off session
+        session_id = str(uuid.uuid4())
+        session_service = InMemorySessionService()
+        
+        # We MUST create the session before running
+        await session_service.create_session(
+            app_name=f"{APP_NAME}_batch",
+            user_id=user_id,
+            session_id=session_id
+        )
+        
+        runner = Runner(
+            app_name=f"{APP_NAME}_batch",
+            agent=agent,
+            session_service=session_service
+        )
+        
+        # Run the agent directly via Runner
+        try:
+            # Runner.run() is a generator
+            def run_sync():
+                events = runner.run(
+                    user_id=user_id,
+                    session_id=session_id,
+                    new_message=types.Content(
+                        role="user",
+                        parts=[types.Part(text=f"Please evaluate this journal content:\n\n{content}")]
+                    )
+                )
+                
+                # Collect bot text from events
+                bot_text = ""
+                for event in events:
+                    if event.is_final_response() and event.content and event.content.parts:
+                        for part in event.content.parts:
+                            if part.text:
+                                bot_text += part.text
+                return bot_text
+            
+            evaluation = await asyncio.to_thread(run_sync)
+            
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "user_id": user_id,
+                    "evaluation": evaluation.strip() or "No evaluation generated",
+                }
+            )
+        except Exception as e:
+            logger.error("Runner.run failed: %s", e)
+            return JSONResponse(
+                status_code=500,
+                content={"error": f"Agent execution failed: {str(e)}"}
+            )
+            
+    except Exception as e:
+        logger.exception("Error in evaluate-journal: %s", e)
+        return JSONResponse(status_code=500, content={"error": str(e)})
 async def run_llm(request: Request, max_retries: int = 3):
     request_data = await request.json()
     user_id = request_data.get("user_id")

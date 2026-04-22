@@ -18,6 +18,7 @@ import adminJournalReconcileRoutes from './routes/adminJournalReconcile.js'
 import adminStatsExclusionsRoutes from './routes/adminStatsExclusions.js'
 import adminFaqRoutes from './routes/adminFaq.js'
 import adminMonitorRoutes from './routes/adminMonitor.js'
+import adminJournalEvaluationRoutes from './routes/adminJournalEvaluation.js'
 import supporterRoutes from './routes/supporter.js'
 import meRoutes from './routes/me.js'
 import agentIntegrationRoutes from './routes/agentIntegration.js'
@@ -87,6 +88,7 @@ export function createApp() {
   app.use('/api/admin', adminStatsExclusionsRoutes)
   app.use('/api/admin', adminFaqRoutes)
   app.use('/api/admin', adminMonitorRoutes)
+  app.use('/api/admin/journal-evaluate', adminJournalEvaluationRoutes)
   app.use('/api/supporter', supporterRoutes)
   app.use('/api/me', meRoutes)
 

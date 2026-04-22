@@ -214,3 +214,29 @@ export async function generateIs1AgenticReply(userId, userMessageText) {
   }
   return text.trim()
 }
+
+/**
+ * Gọi agent server để đánh giá bài journal.
+ * @returns {Promise<string>} Nội dung đánh giá.
+ */
+export async function evaluateJournalContent(userId, content) {
+  const base = chatbotBaseUrl()
+  if (!base) throw new Error('AGENTIC_CHATBOT_BASE_URL chưa được cấu hình')
+
+  const reply = await fetchChatbot('/evaluate-journal', {
+    method: 'POST',
+    body: JSON.stringify({ user_id: userId, content }),
+    timeoutMs: 120_000,
+  })
+
+  if (!reply.ok) {
+    const err = summarizeChatbotFailure(reply.status, reply.data, reply.hadAuth)
+    throw new Error(`Lỗi gọi agent đánh giá: ${err}`)
+  }
+
+  const evaluation = reply.data?.evaluation
+  if (typeof evaluation !== 'string' || !evaluation.trim()) {
+    throw new Error('Agent không trả về nội dung đánh giá')
+  }
+  return evaluation.trim()
+}

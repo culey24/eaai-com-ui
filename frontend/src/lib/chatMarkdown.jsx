@@ -175,6 +175,26 @@ const STRIKE_RE = /(~~[\s\S]*?~~)/g
 /** *word* — ít nhất một ký tự giữa hai dấu * */
 const ITALIC_SPLIT = /(\*[^*\n]+?\*)/g
 const PDF_SUGGEST_RE = /(\[\[pdf:[^|]+\|[^\]]+\]\])/g
+const WEB_SUGGEST_RE = /(\[\[web:[^|]+\|[^\]]+\]\])/g
+
+function parseWebSuggest(str, keyPrefix) {
+  const parts = str.split(WEB_SUGGEST_RE)
+  const out = []
+  parts.forEach((part, i) => {
+    const match = /^\[\[web:([^|]+)\|([^\]]+)\]\]$/.exec(part)
+    if (match) {
+      out.push({
+        type: 'web-suggest',
+        key: kid(`${keyPrefix}web`),
+        url: match[1],
+        title: match[2],
+      })
+    } else if (part) {
+      out.push(part)
+    }
+  })
+  return out
+}
 
 function parsePdfSuggest(str, keyPrefix) {
   const parts = str.split(PDF_SUGGEST_RE)
@@ -189,7 +209,7 @@ function parsePdfSuggest(str, keyPrefix) {
         title: match[2],
       })
     } else if (part) {
-      out.push(part)
+      out.push(...parseWebSuggest(part, `${keyPrefix}w${i}`))
     }
   })
   return out

@@ -203,6 +203,8 @@ model JournalUpload {
   submittedAt      DateTime @default(now()) @map("submitted_at")
   status           String   @default("submitted") @db.VarChar(32)
   extractedText    String?  @map("extracted_text") @db.Text
+  aiEvaluation     String?  @map("ai_evaluation") @db.Text
+  evaluatedAt      DateTime? @map("evaluated_at")
 
   user   User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
   period JournalPeriod @relation(fields: [periodId], references: [periodId], onDelete: Cascade)

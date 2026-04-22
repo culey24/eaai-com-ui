@@ -1,4 +1,4 @@
-import { Bot, User, FileText, Download } from 'lucide-react'
+import { Bot, User, FileText, Download, ExternalLink } from 'lucide-react'
 import { formatAgentChatMarkdown } from '../../lib/chatMarkdown'
 import { API_BASE } from '../../config/api'
 import { useLanguage } from '../../context/LanguageContext'
@@ -115,6 +115,20 @@ export default function MessageItem({
                         <FileText className="w-4 h-4" />
                         {node.title}
                       </button>
+                    )
+                  }
+                  if (node && typeof node === 'object' && node.type === 'web-suggest') {
+                    return (
+                      <a
+                        key={node.key || i}
+                        href={node.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 my-1 mx-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition-colors text-sm font-medium no-underline"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        {node.title}
+                      </a>
                     )
                   }
                   return node

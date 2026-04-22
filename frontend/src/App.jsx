@@ -31,6 +31,7 @@ import AdminSurveyResultsPage from './pages/admin/AdminSurveyResultsPage'
 import AdminFaqPage from './pages/admin/AdminFaqPage'
 import AdminChangeUserPasswordPage from './pages/admin/AdminChangeUserPasswordPage'
 import AdminJournalStorageCheckPage from './pages/admin/AdminJournalStorageCheckPage'
+import AdminIs2MonitorPage from './pages/admin/AdminIs2MonitorPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
 import SupporterJournalExportPage from './pages/supporter/SupporterJournalExportPage'
 import PretestGate from './components/PretestGate'
@@ -201,6 +202,7 @@ function AppRoutes() {
         <Route path="journal-storage-check" element={<AdminJournalStorageCheckPage />} />
         <Route path="surveys" element={<AdminSurveyResultsPage />} />
         <Route path="faq" element={<AdminFaqPage />} />
+        <Route path="is2-monitor" element={<AdminIs2MonitorPage />} />
         <Route path="doi-mat-khau-user" element={<AdminChangeUserPasswordPage />} />
         <Route path="xem-mk" element={<Navigate to="/admin/doi-mat-khau-user" replace />} />
       </Route>

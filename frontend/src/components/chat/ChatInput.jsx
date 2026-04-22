@@ -5,6 +5,7 @@ export default function ChatInput({ onSend, disabled, placeholder = 'Nhập tin 
   const [message, setMessage] = useState('')
   const [attachedFile, setAttachedFile] = useState(null)
   const fileInputRef = useRef(null)
+  const textareaRef = useRef(null)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -14,6 +15,9 @@ export default function ChatInput({ onSend, disabled, placeholder = 'Nhập tin 
     onSend(trimmed, attachedFile)
     setMessage('')
     setAttachedFile(null)
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
   }
 
   const handleFileChange = (e) => {
@@ -64,13 +68,19 @@ export default function ChatInput({ onSend, disabled, placeholder = 'Nhập tin 
           >
             <Paperclip className="w-5 h-5" />
           </button>
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
-            className="flex-1 px-4 py-2.5 rounded-xl border-0 bg-transparent focus:ring-0 outline-none disabled:opacity-50 disabled:cursor-not-allowed text-[15px] placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-800 dark:text-white"
+            rows={1}
+            className="flex-1 px-4 py-2.5 rounded-xl border-0 bg-transparent focus:ring-0 outline-none disabled:opacity-50 disabled:cursor-not-allowed text-[15px] placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-800 dark:text-white resize-none min-h-[44px] max-h-[200px] overflow-y-auto"
+            style={{ height: 'auto' }}
+            onInput={(e) => {
+              e.target.style.height = 'auto'
+              e.target.style.height = `${e.target.scrollHeight}px`
+            }}
           />
           <button
             type="submit"

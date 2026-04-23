@@ -93,20 +93,17 @@ router.get('/stats/interactions', async (req, res) => {
     })
     
     // Better: Count messages per class using a query on User
-    const classes = [UserClass.IS_1, UserClass.IS_2, UserClass.IS_3]
-    const results = {}
-
-    for (const cls of classes) {
-      const count = await prisma.message.count({
-        where: {
-          conversation: {
-            learner: {
-              userClass: cls,
-            },
-          },
-        },
-      })
-      results[cls] = count
+    // Map results to the format expected by the frontend (with hyphens)
+    const results = {
+      'IS-1': await prisma.message.count({
+        where: { conversation: { learner: { userClass: UserClass.IS_1 } } },
+      }),
+      'IS-2': await prisma.message.count({
+        where: { conversation: { learner: { userClass: UserClass.IS_2 } } },
+      }),
+      'IS-3': await prisma.message.count({
+        where: { conversation: { learner: { userClass: UserClass.IS_3 } } },
+      }),
     }
 
     return res.status(200).json(jsonSafe({ stats: results }))

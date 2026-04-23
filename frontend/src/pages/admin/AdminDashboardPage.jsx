@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Flag,
   ChevronRight,
+  Brain,
 } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useJournal } from '../../context/JournalContext'
@@ -231,6 +232,7 @@ export default function AdminDashboardPage() {
     { to: '/admin/is2-monitor', icon: Users, labelKey: 'admin.is2Monitor' },
     { to: '/admin/accounts', icon: UserCog, labelKey: 'admin.accountManagement' },
     { to: '/admin/submissions', icon: FileText, labelKey: 'admin.submissions.title' },
+    { to: '/admin/journal-evaluate', icon: Brain, labelKey: 'Đánh giá Journal AI' },
     { to: '/admin/surveys', icon: ClipboardList, labelKey: 'admin.surveys.title' },
     { to: '/reports', icon: Flag, labelKey: 'sidebar.reports' },
   ]

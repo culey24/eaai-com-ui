@@ -32,6 +32,7 @@ import AdminFaqPage from './pages/admin/AdminFaqPage'
 import AdminChangeUserPasswordPage from './pages/admin/AdminChangeUserPasswordPage'
 import AdminJournalStorageCheckPage from './pages/admin/AdminJournalStorageCheckPage'
 import AdminIs2MonitorPage from './pages/admin/AdminIs2MonitorPage'
+import AdminJournalEvaluationPage from './pages/admin/AdminJournalEvaluationPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
 import SupporterJournalExportPage from './pages/supporter/SupporterJournalExportPage'
 import PretestGate from './components/PretestGate'
@@ -204,6 +205,7 @@ function AppRoutes() {
         <Route path="faq" element={<AdminFaqPage />} />
         <Route path="is2-monitor" element={<AdminIs2MonitorPage />} />
         <Route path="doi-mat-khau-user" element={<AdminChangeUserPasswordPage />} />
+        <Route path="journal-evaluate" element={<AdminJournalEvaluationPage />} />
         <Route path="xem-mk" element={<Navigate to="/admin/doi-mat-khau-user" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

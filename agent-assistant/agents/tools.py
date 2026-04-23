@@ -15,6 +15,7 @@ from .sub_agents.provider_agent import create_agent as create_provider_agent
 from .sub_agents.supporter_agent import create_agent as create_supporter_agent
 from .sub_agents.journal_coach_agent import create_agent as create_journal_coach_agent
 from .sub_agents.suggestion_agent import create_agent as create_suggestion_agent
+from .sub_agents.batch_evaluator_agent.agent import create_agent as create_batch_evaluator_agent
 
 _BE_SERVER = get_be_server_base_url()
 
@@ -204,4 +205,21 @@ async def call_suggestion_agent(query: str, tool_context: ToolContext):
     except Exception as e:
         logger.error(f"Error calling suggestion agent: {str(e)}")
         return f"Error calling suggestion agent: {str(e)}"
+
+async def call_batch_evaluator_agent(query: str, tool_context: ToolContext):
+    """
+    Calls the batch evaluator agent to provide structured feedback on journal content.
+    """
+    try:
+        merge_invocation_user_id_into_state(tool_context)
+        agent = create_batch_evaluator_agent(query=query)
+        tool = agent_tool.AgentTool(agent=agent)
+        await tool.run_async(
+            args={"request": "Evaluate the journal content and provide feedback."},
+            tool_context=tool_context
+        )
+        return tool_context.state.get("evaluation_result", "")
+    except Exception as e:
+        logger.error(f"Error calling batch evaluator agent: {str(e)}")
+        return f"Error calling batch evaluator agent: {str(e)}"
 

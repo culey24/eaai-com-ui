@@ -174,22 +174,33 @@ const BOLD_RE = /(\*\*[\s\S]*?\*\*)/g
 const STRIKE_RE = /(~~[\s\S]*?~~)/g
 /** *word* — ít nhất một ký tự giữa hai dấu * */
 const ITALIC_SPLIT = /(\*[^*\n]+?\*)/g
-const PDF_SUGGEST_RE = /(\[\[pdf:[^|]+\|[^\]]+\]\])/g
-
-function parsePdfSuggest(str, keyPrefix) {
-  const parts = str.split(PDF_SUGGEST_RE)
+function splitSuggestions(text) {
   const out = []
-  parts.forEach((part, i) => {
-    const match = /^\[\[pdf:([^|]+)\|([^\]]+)\]\]$/.exec(part)
-    if (match) {
+  let i = 0
+  const s = String(text)
+  // Combine PDF and Web regex for splitting
+  const SUGGEST_RE = /(\[\[(?:pdf|web):[^|]+\|[^\]]+\]\])/g
+  const parts = s.split(SUGGEST_RE)
+  
+  parts.forEach((part) => {
+    if (!part) return
+    const pdfMatch = /^\[\[pdf:([^|]+)\|([^\]]+)\]\]$/.exec(part)
+    const webMatch = /^\[\[web:([^|]+)\|([^\]]+)\]\]$/.exec(part)
+    
+    if (pdfMatch) {
       out.push({
         type: 'pdf-suggest',
-        key: kid(`${keyPrefix}pdf`),
-        filename: match[1],
-        title: match[2],
+        filename: pdfMatch[1],
+        title: pdfMatch[2],
       })
-    } else if (part) {
-      out.push(part)
+    } else if (webMatch) {
+      out.push({
+        type: 'web-suggest',
+        url: webMatch[1],
+        title: webMatch[2],
+      })
+    } else {
+      out.push({ type: 'text', value: part })
     }
   })
   return out
@@ -206,7 +217,7 @@ function parseItalic(str, keyPrefix) {
         </em>
       )
     } else if (part) {
-      out.push(...parsePdfSuggest(part, `${keyPrefix}pdf`))
+      out.push(part)
     }
   })
   return out
@@ -269,7 +280,7 @@ function parseCodeAndRest(str, keyPrefix, codeClass) {
  * Định dạng nhẹ cho phản hồi agent: **đậm**, *nghiêng*, `code`, ~~gạch~~
  * Khối code: ```lang\\n...\\n```
  * Công thức: `$...$` (inline), `$$...$$` (khối) — KaTeX/LaTeX.
- * Thứ tự: ``` fence ``` → tách công thức → trong mỗi đoạn văn: `code` → **bold** → ~~strike~~ → *italic*
+ * Thứ tự: ``` fence ``` → tách công thức → tách gợi ý (PDF/Web) → trong mỗi đoạn văn: `code` → **bold** → ~~strike~~ → *italic*
  */
 export function formatAgentChatMarkdown(text) {
   if (text == null || text === '') return []
@@ -283,14 +294,25 @@ export function formatAgentChatMarkdown(text) {
       out.push(<CodeBlock key={kid('cb')} lang={chunk.lang} content={chunk.content} />)
       continue
     }
-    const segments = splitMathSegments(chunk.value)
-    for (const seg of segments) {
-      if (seg.type === 'text') {
-        out.push(...parseCodeAndRest(seg.value, 'md', codeClass))
-      } else if (seg.type === 'inline') {
-        out.push(<MathInline key={kid('k')} tex={seg.value} />)
+    const mathSegments = splitMathSegments(chunk.value)
+    for (const mSeg of mathSegments) {
+      if (mSeg.type === 'inline') {
+        out.push(<MathInline key={kid('k')} tex={mSeg.value} />)
+      } else if (mSeg.type === 'display') {
+        out.push(<MathDisplay key={kid('kd')} tex={mSeg.value} />)
       } else {
-        out.push(<MathDisplay key={kid('kd')} tex={seg.value} />)
+        // text segment -> split by suggestions
+        const suggestSegments = splitSuggestions(mSeg.value)
+        for (const sSeg of suggestSegments) {
+          if (sSeg.type === 'pdf-suggest') {
+            out.push({ ...sSeg, key: kid('pdf') })
+          } else if (sSeg.type === 'web-suggest') {
+            out.push({ ...sSeg, key: kid('web') })
+          } else {
+            // text segment -> parse formatting
+            out.push(...parseCodeAndRest(sSeg.value, 'md', codeClass))
+          }
+        }
       }
     }
   }

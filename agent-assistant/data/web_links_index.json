@@ -1,0 +1,142 @@
+[
+  {
+    "id": "wikipedia-ai",
+    "title": "Artificial Intelligence - Wikipedia",
+    "url": "https://en.wikipedia.org/wiki/Artificial_intelligence",
+    "description": "General overview of Artificial Intelligence concepts and history.",
+    "categories": [
+      "AI",
+      "Introduction"
+    ]
+  },
+  {
+    "id": "fuzzy-logic-tutorial",
+    "title": "Fuzzy Logic Tutorial",
+    "url": "https://www.tutorialspoint.com/fuzzy_logic/index.htm",
+    "description": "Comprehensive tutorial on Fuzzy Logic systems and applications.",
+    "categories": [
+      "Fuzzy Logic",
+      "Theory"
+    ]
+  },
+  {
+    "id": "scikit-learn-docs",
+    "title": "Scikit-Learn Documentation",
+    "url": "https://scikit-learn.org/stable/",
+    "description": "Official documentation for the popular machine learning library in Python.",
+    "categories": [
+      "Machine Learning",
+      "Python",
+      "Tools"
+    ]
+  },
+  {
+    "id": "hcmut-e-learning",
+    "title": "HCMUT BKeL",
+    "url": "https://e-learning.hcmut.edu.vn/",
+    "description": "Hệ thống quản lý học tập chính thức của ĐH Bách Khoa TP.HCM.",
+    "categories": [
+      "HCMUT",
+      "General"
+    ]
+  },
+  {
+    "id": "deep-learning-ai",
+    "title": "DeepLearning.AI",
+    "url": "https://www.deeplearning.ai/",
+    "description": "Nền tảng học tập chuyên sâu về Deep Learning và AI của Andrew Ng.",
+    "categories": [
+      "Deep Learning",
+      "AI",
+      "Theory"
+    ]
+  },
+  {
+    "id": "overleaf-guides",
+    "title": "Overleaf Documentation",
+    "url": "https://www.overleaf.com/learn",
+    "description": "Hướng dẫn sử dụng LaTeX cho viết báo khoa học và trình bày học thuật.",
+    "categories": [
+      "LaTeX",
+      "Writing",
+      "Tools"
+    ]
+  },
+  {
+    "id": "geeksforgeeks-dsa",
+    "title": "Data Structures & Algorithms",
+    "url": "https://www.geeksforgeeks.org/data-structures/",
+    "description": "Tài liệu chi tiết về cấu trúc dữ liệu và giải thuật.",
+    "categories": [
+      "Computer Science",
+      "Algorithms",
+      "Theory"
+    ]
+  },
+  {
+    "id": "opencv-tutorials",
+    "title": "OpenCV Tutorials",
+    "url": "https://docs.opencv.org/master/d9/df8/tutorial_root.html",
+    "description": "Hướng dẫn thực hành và lý thuyết về Xử lý ảnh (Computer Vision).",
+    "categories": [
+      "Computer Vision",
+      "Tools",
+      "Theory"
+    ]
+  },
+  {
+    "id": "linear-regression-theory",
+    "title": "Linear Regression - Wikipedia",
+    "url": "https://en.wikipedia.org/wiki/Linear_regression",
+    "description": "Lý thuyết chi tiết về mô hình Hồi quy tuyến tính trong thống kê và học máy.",
+    "categories": [
+      "Machine Learning",
+      "Math",
+      "Theory"
+    ]
+  },
+  {
+    "id": "logistic-regression-theory",
+    "title": "Logistic Regression - Wikipedia",
+    "url": "https://en.wikipedia.org/wiki/Logistic_regression",
+    "description": "Lý thuyết về Hồi quy Logistic dùng trong các bài toán phân lớp.",
+    "categories": [
+      "Machine Learning",
+      "Math",
+      "Theory"
+    ]
+  },
+  {
+    "id": "association-rules-mining",
+    "title": "Association Rule Learning",
+    "url": "https://en.wikipedia.org/wiki/Association_rule_learning",
+    "description": "Kiến thức về khai phá luật kết hợp (Apriori, FP-Growth).",
+    "categories": [
+      "Data Mining",
+      "Algorithms",
+      "Theory"
+    ]
+  },
+  {
+    "id": "lda-topic-modeling",
+    "title": "Latent Dirichlet Allocation (LDA)",
+    "url": "https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation",
+    "description": "Mô hình xác suất cho việc phân tách chủ đề (Topic Modeling) trong NLP.",
+    "categories": [
+      "NLP",
+      "Topic Modeling",
+      "Theory"
+    ]
+  },
+  {
+    "id": "recommender-systems-intro",
+    "title": "Recommender Systems - Wikipedia",
+    "url": "https://en.wikipedia.org/wiki/Recommender_system",
+    "description": "Tổng quan về các hệ thống gợi ý (Collaborative Filtering, Content-based).",
+    "categories": [
+      "Machine Learning",
+      "Information Retrieval",
+      "Theory"
+    ]
+  }
+]

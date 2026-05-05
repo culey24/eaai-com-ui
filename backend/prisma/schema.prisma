@@ -179,14 +179,18 @@ model SurveyResponse {
 
 /// Đợt nộp journal (submission window). Production: không FK tới Classes — class_id tuỳ chọn, text.
 model JournalPeriod {
-  periodId    String   @id @map("period_id") @db.VarChar(64)
-  title       String   @db.VarChar(255)
-  description String   @default("") @db.Text
-  startsAt    DateTime @map("starts_at")
-  endsAt      DateTime @map("ends_at")
-  classId     String?  @map("class_id") @db.VarChar(50)
-  createdBy   String?  @map("created_by") @db.VarChar(10)
-  createdAt   DateTime @default(now()) @map("created_at")
+  periodId         String   @id @map("period_id") @db.VarChar(64)
+  title            String   @db.VarChar(255)
+  description      String   @default("") @db.Text
+  startsAt         DateTime @map("starts_at")
+  endsAt           DateTime @map("ends_at")
+  classId          String?  @map("class_id") @db.VarChar(50)
+  createdBy        String?  @map("created_by") @db.VarChar(10)
+  createdAt        DateTime @default(now()) @map("created_at")
+  /// Yêu cầu học viên hoàn thành PostTest trước khi nộp bài
+  requirePosttest  Boolean  @default(false) @map("require_posttest")
+  /// Đây là submission cuối khóa (kích hoạt requirePosttest tự động)
+  isEndOfCourse    Boolean  @default(false) @map("is_end_of_course")
 
   creator User?           @relation("JournalPeriodCreator", fields: [createdBy], references: [userId], onDelete: SetNull)
   uploads JournalUpload[]

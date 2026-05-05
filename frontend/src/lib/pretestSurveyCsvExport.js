@@ -63,6 +63,7 @@ export function downloadPretestSurveyCsv({ rows, filenamePrefix = 'pretest-submi
       }
     }
     const c = row?.sectionC
+    // Export all 15 columns; empty if survey has only 10
     for (let ci = 1; ci <= 15; ci++) {
       cells.push(csvEscape(cellC(c, ci)))
     }

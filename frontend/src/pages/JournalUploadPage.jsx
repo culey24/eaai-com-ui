@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, FileText, Upload, CheckCircle, Pencil, Trash2, Calendar } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useJournal } from '../context/JournalContext'
 import { useAuth } from '../context/AuthContext'
+import PosttestModal from '../components/posttest/PosttestModal'
 import { ROLES } from '../constants/roles'
 import { API_BASE } from '../config/api'
 
@@ -30,6 +31,8 @@ export default function JournalUploadPage() {
   const [uploading, setUploading] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [uploadError, setUploadError] = useState(null)
+  const [posttestStatus, setPosttestStatus] = useState(null) // { completed: boolean }
+  const [showPosttest, setShowPosttest] = useState(false)
 
   const userId = user?.stableId || (user?.name ? `reg-${user.name}` : user?.id)
   const activeSub = getActiveSubmission()
@@ -40,6 +43,23 @@ export default function JournalUploadPage() {
     .sort((a, b) => b.endsAt - a.endsAt)
   const currentEntry = activeSub ? getJournalForUserAndSubmission(userId, activeSub.id) : null
 
+  const needsPosttest = activeSub?.requirePosttest && posttestStatus?.completed === false
+
+  const refreshPosttest = useCallback(() => {
+    if (apiToken && user?.role === ROLES.LEARNER) {
+      fetch(`${API_BASE}/api/me/posttest`, {
+        headers: { Authorization: `Bearer ${apiToken}` },
+      })
+        .then((r) => r.json())
+        .then((data) => setPosttestStatus(data))
+        .catch(() => {})
+    }
+  }, [apiToken, user?.role])
+
+  useEffect(() => {
+    refreshPosttest()
+  }, [refreshPosttest])
+
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file || !user || !activeSub) return
@@ -47,6 +67,13 @@ export default function JournalUploadPage() {
     setUploading(true)
     setUploadSuccess(false)
     setUploadError(null)
+
+    if (needsPosttest) {
+      setShowPosttest(true)
+      e.target.value = ''
+      setUploading(false)
+      return
+    }
 
     try {
       if (apiToken && user?.backendUserId && user?.role === ROLES.LEARNER) {
@@ -141,7 +168,14 @@ export default function JournalUploadPage() {
                   <Calendar className="w-5 h-5 text-primary" />
                   {t('journal.currentSubmission')}
                 </h2>
-                <p className="text-slate-700 dark:text-slate-300">{activeSub.title}</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{activeSub.title}</h1>
+                  {activeSub.isEndOfCourse && (
+                    <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-[10px] font-bold uppercase tracking-wider">
+                      End of Course
+                    </span>
+                  )}
+                </div>
                 {activeSub.description && (
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 whitespace-pre-wrap">
                     {activeSub.description}
@@ -166,14 +200,14 @@ export default function JournalUploadPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx,.txt,.md,.csv"
+                  accept=".pdf,.doc,.docx,.txt,.md,.csv,.zip"
                   onChange={handleFileChange}
                   className="hidden"
                 />
                 <input
                   ref={editInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx,.txt,.md,.csv"
+                  accept=".pdf,.doc,.docx,.txt,.md,.csv,.zip"
                   onChange={handleFileChange}
                   className="hidden"
                 />
@@ -222,7 +256,7 @@ export default function JournalUploadPage() {
                     <Upload className="w-12 h-12 text-slate-400" />
                     <p className="font-medium text-slate-800 dark:text-white">{t('journal.upload')}</p>
                     <p className="text-sm text-slate-500 dark:text-slate-400">{t('journal.dragDrop')}</p>
-                    <p className="text-xs text-slate-400">PDF, DOC, DOCX, TXT, MD (trích văn bản cho chatbot)</p>
+                    <p className="text-xs text-slate-400">PDF, DOC, DOCX, TXT, MD, ZIP (Max 100MB)</p>
                   </div>
                 )}
               </div>
@@ -244,44 +278,59 @@ export default function JournalUploadPage() {
             <div>
               <h2 className="font-semibold text-slate-800 dark:text-white mb-4">{t('journal.uploadHistory')}</h2>
               <div className="space-y-3">
-                {historySubs
-                  .map((sub) => {
-                    const entry = getJournalForUserAndSubmission(userId, sub.id)
-                    return (
-                      <div
-                        key={sub.id}
-                        className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <FileText className="w-5 h-5 text-primary flex-shrink-0" />
-                          <div className="min-w-0">
+                {historySubs.map((sub) => {
+                  const entry = getJournalForUserAndSubmission(userId, sub.id)
+                  return (
+                    <div
+                      key={sub.id}
+                      className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FileText className="w-5 h-5 text-primary flex-shrink-0" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
                             <p className="font-medium text-slate-800 dark:text-white truncate">
                               {sub.title}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {entry ? (
-                                <>
-                                  {entry.fileName} • {t('journal.uploadedAt')}: {formatDate(entry.uploadedAt)}
-                                </>
-                              ) : (
-                                t('journal.noVersions')
-                              )}
-                            </p>
+                            {sub.isEndOfCourse && (
+                              <span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-[8px] font-bold uppercase tracking-wider">
+                                End of Course
+                              </span>
+                            )}
                           </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {entry ? (
+                              <>
+                                {entry.fileName} • {t('journal.uploadedAt')}: {formatDate(entry.uploadedAt)}
+                              </>
+                            ) : (
+                              t('journal.noVersions')
+                            )}
+                          </p>
                         </div>
-                        {entry && (
-                          <span className="text-xs text-green-600 dark:text-green-400 flex-shrink-0 ml-2">
-                            ✓
-                          </span>
-                        )}
                       </div>
-                    )
-                  })}
+                      {entry && (
+                        <span className="text-xs text-green-600 dark:text-green-400 flex-shrink-0 ml-2">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
         </div>
       </div>
+      {showPosttest && (
+        <PosttestModal
+          onComplete={() => {
+            setShowPosttest(false)
+            refreshPosttest()
+          }}
+          onCancel={() => setShowPosttest(false)}
+        />
+      )}
     </div>
   )
 }

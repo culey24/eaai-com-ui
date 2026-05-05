@@ -23,6 +23,9 @@ router.put('/journal-periods', authMiddleware, async (req, res) => {
     const description = String(req.body?.description ?? '')
     const startsAt = Number(req.body?.startsAt)
     const endsAt = Number(req.body?.endsAt)
+    const requirePosttest = !!req.body?.requirePosttest
+    const isEndOfCourse = !!req.body?.isEndOfCourse
+
     if (!periodId || !title) {
       return res.status(400).json({ error: 'Thiếu periodId hoặc title' })
     }
@@ -38,6 +41,8 @@ router.put('/journal-periods', authMiddleware, async (req, res) => {
         description,
         startsAt: new Date(startsAt),
         endsAt: new Date(endsAt),
+        requirePosttest,
+        isEndOfCourse,
         createdBy: null,
       },
       update: {
@@ -45,6 +50,8 @@ router.put('/journal-periods', authMiddleware, async (req, res) => {
         description,
         startsAt: new Date(startsAt),
         endsAt: new Date(endsAt),
+        requirePosttest,
+        isEndOfCourse,
       },
     })
 

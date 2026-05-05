@@ -31,12 +31,14 @@ export function isPretestEnabled() {
   return parseEnvOnOff(process.env.PRETEST_ENABLED, true)
 }
 
+/** Gate POST /api/me/posttest. Mặc định bật khi biến không đặt. */
+export function isPosttestEnabled() {
+  return parseEnvOnOff(process.env.SURVEY_POSTTEST_ENABLED, true)
+}
+
 /** Học viên có được POST /api/me/... nộp bài cho loại này chưa */
 export function isLearnerSurveySubmissionEnabled(kind) {
   if (kind === SURVEY_KIND_PRETEST) return isPretestEnabled()
-  if (kind === SURVEY_KIND_POSTTEST) {
-    const v = process.env.SURVEY_POSTTEST_ENABLED
-    return v === '1' || v === 'true' || v === 'yes'
-  }
+  if (kind === SURVEY_KIND_POSTTEST) return isPosttestEnabled()
   return false
 }

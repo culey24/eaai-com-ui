@@ -24,12 +24,10 @@ export function aggregateSurveySubmissions(rows) {
   const n = rows.length
   const sectionA = Object.fromEntries(SURVEY_SECTION_A_KEYS.map((k) => [k, {}]))
 
-  const sectionC = Object.fromEntries(
-    Array.from({ length: 15 }, (_, i) => {
-      const k = `c${i + 1}`
-      return [k, { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }]
-    })
-  )
+  const sectionC = {}
+  for (let i = 1; i <= 15; i++) {
+    sectionC[`c${i}`] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+  }
 
   /** @type {Record<string, Record<string, Record<string, number>>>} */
   const sectionB = {}

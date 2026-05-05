@@ -200,4 +200,20 @@ CREATE TABLE IF NOT EXISTS stats_analytics_exclusions (
       err instanceof Error ? err.message : String(err)
     )
   }
+
+  const JOURNAL_PERIODS_POSTTEST_PATCHES = [
+    `ALTER TABLE journal_periods ADD COLUMN IF NOT EXISTS require_posttest BOOLEAN NOT NULL DEFAULT false`,
+    `ALTER TABLE journal_periods ADD COLUMN IF NOT EXISTS is_end_of_course BOOLEAN NOT NULL DEFAULT false`,
+  ]
+
+  for (const sql of JOURNAL_PERIODS_POSTTEST_PATCHES) {
+    try {
+      await prisma.$executeRawUnsafe(sql)
+    } catch (err) {
+      console.warn(
+        '[db-patches] journal_periods posttest fields:',
+        err instanceof Error ? err.message : String(err)
+      )
+    }
+  }
 }

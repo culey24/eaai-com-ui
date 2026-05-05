@@ -11,9 +11,13 @@ import { PRETEST_TOPICS } from '../../data/pretest/pretestTopics'
 import { SECTION_C_ITEMS } from '../../data/pretest/sectionCItems'
 import { getSectionBQuestions } from '../../data/pretest/sectionB'
 import { downloadPretestSurveyCsv } from '../../lib/pretestSurveyCsvExport'
+import { POSTTEST_TOPICS } from '../../data/posttest/posttestTopics'
+import { SECTION_C_ITEMS as POSTTEST_SECTION_C_ITEMS } from '../../data/posttest/sectionCItems'
+import { getSectionBQuestions as getPosttestSectionBQuestions } from '../../data/posttest/sectionB'
 
-function topicLabel(id, lang) {
-  const x = PRETEST_TOPICS.find((p) => p.id === id)
+function topicLabel(id, lang, kind) {
+  const list = kind === SURVEY_KIND_POSTTEST ? POSTTEST_TOPICS : PRETEST_TOPICS
+  const x = list.find((p) => p.id === id)
   if (!x) return id
   return lang === 'vi' ? x.title.vi : x.title.en
 }
@@ -185,7 +189,7 @@ export default function AdminSurveyResultsPage() {
                   let dist = { ...stats.sectionA[key] }
                   if (key === 'topicFirst' || key === 'topicSecond') {
                     dist = Object.fromEntries(
-                      Object.entries(dist).map(([k, v]) => [topicLabel(k, lang), v])
+                      Object.entries(dist).map(([k, v]) => [topicLabel(k, lang, activeKind), v])
                     )
                   }
                   return (
@@ -227,7 +231,10 @@ export default function AdminSurveyResultsPage() {
                 {Object.keys(stats.sectionB)
                   .sort()
                   .map((topicId) => {
-                    const qs = getSectionBQuestions(topicId)
+                    const qs =
+                      activeKind === SURVEY_KIND_POSTTEST
+                        ? getPosttestSectionBQuestions(topicId)
+                        : getSectionBQuestions(topicId)
                     const topicStats = stats.sectionB[topicId]
                     return (
                       <div
@@ -235,7 +242,7 @@ export default function AdminSurveyResultsPage() {
                         className="border border-slate-200 dark:border-slate-600 rounded-xl p-4 bg-white dark:bg-slate-900/50"
                       >
                         <h3 className="font-medium text-slate-900 dark:text-white mb-4">
-                          {topicLabel(topicId, lang)}
+                          {topicLabel(topicId, lang, activeKind)}
                         </h3>
                         <div className="space-y-6">
                           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
@@ -264,8 +271,9 @@ export default function AdminSurveyResultsPage() {
             <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 p-6">
               <h2 className="text-lg font-semibold text-primary mb-4">{t('admin.surveys.stats.sectionC')}</h2>
               <div className="space-y-6">
-                {SECTION_C_ITEMS.map((item, idx) => {
-                  const ck = `c${idx + 1}`
+                {(activeKind === SURVEY_KIND_POSTTEST ? POSTTEST_SECTION_C_ITEMS : SECTION_C_ITEMS).map(
+                  (item, idx) => {
+                    const ck = `c${idx + 1}`
                   const distRaw = stats.sectionC[ck] || {}
                   const dist = Object.fromEntries(
                     [1, 2, 3, 4, 5].map((n) => [

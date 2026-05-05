@@ -18,6 +18,8 @@ export default function AdminSubmissionsPage() {
   const [formDescription, setFormDescription] = useState('')
   const [formStartsAt, setFormStartsAt] = useState('')
   const [formEndsAt, setFormEndsAt] = useState('')
+  const [formRequirePosttest, setFormRequirePosttest] = useState(false)
+  const [formIsEndOfCourse, setFormIsEndOfCourse] = useState(false)
   const [copyingEmailsForPeriodId, setCopyingEmailsForPeriodId] = useState(null)
   const [exportingCsv, setExportingCsv] = useState(false)
 
@@ -101,11 +103,16 @@ export default function AdminSubmissionsPage() {
     if (!formTitle.trim() || !formStartsAt || !formEndsAt) return
     if (new Date(formStartsAt).getTime() >= new Date(formEndsAt).getTime()) return
     try {
-      await addSubmission(formTitle.trim(), formDescription.trim(), formStartsAt, formEndsAt)
+      await addSubmission(formTitle.trim(), formDescription.trim(), formStartsAt, formEndsAt, {
+        requirePosttest: formRequirePosttest,
+        isEndOfCourse: formIsEndOfCourse,
+      })
       setFormTitle('')
       setFormDescription('')
       setFormStartsAt('')
       setFormEndsAt('')
+      setFormRequirePosttest(false)
+      setFormIsEndOfCourse(false)
       setShowForm(false)
     } catch (e) {
       window.alert(e instanceof Error ? e.message : String(e))
@@ -121,6 +128,8 @@ export default function AdminSubmissionsPage() {
         description: formDescription.trim(),
         startsAt: new Date(formStartsAt).getTime(),
         endsAt: new Date(formEndsAt).getTime(),
+        requirePosttest: formRequirePosttest,
+        isEndOfCourse: formIsEndOfCourse,
       })
       setEditingId(null)
       setFormTitle('')
@@ -147,6 +156,8 @@ export default function AdminSubmissionsPage() {
     setFormDescription(sub.description || '')
     setFormStartsAt(new Date(sub.startsAt).toISOString().slice(0, 16))
     setFormEndsAt(new Date(sub.endsAt).toISOString().slice(0, 16))
+    setFormRequirePosttest(!!sub.requirePosttest)
+    setFormIsEndOfCourse(!!sub.isEndOfCourse)
   }
 
   const cancelEdit = () => {
@@ -155,6 +166,8 @@ export default function AdminSubmissionsPage() {
     setFormDescription('')
     setFormStartsAt('')
     setFormEndsAt('')
+    setFormRequirePosttest(false)
+    setFormIsEndOfCourse(false)
     setShowForm(false)
   }
 
@@ -222,6 +235,26 @@ export default function AdminSubmissionsPage() {
           onChange={(e) => setFormEndsAt(e.target.value)}
           className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
         />
+      </div>
+      <div className="flex flex-col gap-2 pt-2">
+        <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={formRequirePosttest}
+            onChange={(e) => setFormRequirePosttest(e.target.checked)}
+            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+          />
+          {t('admin.submissions.requirePosttestLabel')}
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={formIsEndOfCourse}
+            onChange={(e) => setFormIsEndOfCourse(e.target.checked)}
+            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+          />
+          {t('admin.submissions.isEndOfCourseLabel')}
+        </label>
       </div>
     </>
   )
@@ -384,6 +417,26 @@ export default function AdminSubmissionsPage() {
                           onChange={(e) => setFormEndsAt(e.target.value)}
                           className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
                         />
+                        <div className="flex flex-col gap-2 pt-2">
+                          <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+                            <input
+                              type="checkbox"
+                              checked={formRequirePosttest}
+                              onChange={(e) => setFormRequirePosttest(e.target.checked)}
+                              className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                            />
+                            {t('admin.submissions.requirePosttestLabel')}
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+                            <input
+                              type="checkbox"
+                              checked={formIsEndOfCourse}
+                              onChange={(e) => setFormIsEndOfCourse(e.target.checked)}
+                              className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                            />
+                            {t('admin.submissions.isEndOfCourseLabel')}
+                          </label>
+                        </div>
                         <div className="flex gap-2">
                           <button
                             onClick={handleUpdate}
@@ -415,21 +468,33 @@ export default function AdminSubmissionsPage() {
                             <p className="text-sm text-slate-500 dark:text-slate-400">
                               {t('admin.submissions.endsAtLabel')}: {formatTs(sub.endsAt)}
                             </p>
-                            <span
-                              className={`inline-block mt-2 px-2 py-0.5 rounded text-xs font-medium ${
-                                open
-                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            <div className="flex gap-2 mt-2 items-center">
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                  open
+                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                    : scheduled
+                                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                                      : 'bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-400'
+                                }`}
+                              >
+                                {open
+                                  ? t('admin.submissions.active')
                                   : scheduled
-                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
-                                    : 'bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-400'
-                              }`}
-                            >
-                              {open
-                                ? t('admin.submissions.active')
-                                : scheduled
-                                  ? t('admin.submissions.scheduled')
-                                  : t('admin.submissions.ended')}
-                            </span>
+                                    ? t('admin.submissions.scheduled')
+                                    : t('admin.submissions.ended')}
+                              </span>
+                              {sub.requirePosttest && (
+                                <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+                                  Post-test
+                                </span>
+                              )}
+                              {sub.isEndOfCourse && (
+                                <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-[10px] font-bold uppercase tracking-wider">
+                                  End of Course
+                                </span>
+                              )}
+                            </div>
                             <div className="mt-2 space-y-1">
                               {!srv || srv.loading ? (
                                 <p className="text-sm text-slate-500 dark:text-slate-400">{t('admin.submissions.statsLoading')}</p>

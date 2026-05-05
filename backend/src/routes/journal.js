@@ -32,6 +32,8 @@ router.get('/periods', authMiddleware, async (req, res) => {
           description: p.description,
           startsAt: p.startsAt.toISOString(),
           endsAt: p.endsAt.toISOString(),
+          requirePosttest: !!p.requirePosttest,
+          isEndOfCourse: !!p.isEndOfCourse,
           createdAt: p.createdAt.toISOString(),
         })),
       })
@@ -292,7 +294,7 @@ router.get('/learner/:learnerId/file/:uploadId', authMiddleware, async (req, res
   }
 })
 
-const maxBytes = Math.min(Number(process.env.JOURNAL_MAX_FILE_BYTES) || 20 * 1024 * 1024, 50 * 1024 * 1024)
+const maxBytes = Math.min(Number(process.env.JOURNAL_MAX_FILE_BYTES) || 100 * 1024 * 1024, 200 * 1024 * 1024)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: maxBytes, files: 1 },
@@ -418,13 +420,35 @@ router.post('/upload', authMiddleware, journalUploadLimiter, upload.single('file
     }
 
     const userId = req.auth.userId
-    const periodId = await resolvePeriodIdForUpload(req.body?.periodId, req.body)
-    if (!periodId) {
+    const periodIdRaw = req.body?.periodId
+    const resolvedPeriodId = await resolvePeriodIdForUpload(periodIdRaw, req.body)
+    if (!resolvedPeriodId) {
       return res.status(400).json({
         error:
           'Không tìm thấy đợt journal (journal_periods). Gửi periodId trùng submission.id; bật JOURNAL_AUTO_ENSURE_PERIOD hoặc tạo đợt trong DB.',
       })
     }
+
+    // Posttest gating logic
+    const period = await prisma.journalPeriod.findUnique({
+      where: { periodId: resolvedPeriodId },
+      select: { requirePosttest: true },
+    })
+
+    if (period?.requirePosttest) {
+      const posttest = await prisma.surveyResponse.findFirst({
+        where: { userId, surveyKind: 'POSTTEST' },
+        select: { userId: true },
+      })
+      if (!posttest) {
+        return res.status(403).json({
+          code: 'POSTTEST_REQUIRED',
+          error: 'Bạn phải hoàn thành Post-test trước khi nộp bài cho đợt này.',
+        })
+      }
+    }
+
+    const periodId = resolvedPeriodId
 
     const original = stripNulBytes(req.file.originalname || 'upload.bin')
     const { text: extractedText, note: extractNote } = await extractDocumentText(

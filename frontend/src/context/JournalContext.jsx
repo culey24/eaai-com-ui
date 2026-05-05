@@ -19,7 +19,14 @@ function loadJson(key, fallback) {
 function normalizeSubmission(s) {
   const endsAt = s.endsAt ?? s.deadline ?? Date.now() + 30 * 24 * 60 * 60 * 1000
   const startsAt = s.startsAt !== undefined && s.startsAt !== null ? s.startsAt : s.createdAt ?? 0
-  return { ...s, endsAt, startsAt, deadline: endsAt }
+  return {
+    ...s,
+    endsAt,
+    startsAt,
+    deadline: endsAt,
+    requirePosttest: !!s.requirePosttest,
+    isEndOfCourse: !!s.isEndOfCourse,
+  }
 }
 
 /** Phản hồi GET /api/journal/periods → submission UI */
@@ -45,6 +52,8 @@ function mapApiPeriodToSubmission(p) {
     startsAt,
     endsAt,
     createdAt,
+    requirePosttest: !!p.requirePosttest,
+    isEndOfCourse: !!p.isEndOfCourse,
   })
 }
 
@@ -202,7 +211,7 @@ export function JournalProvider({ children }) {
   const getSubmissions = useCallback(() => submissions, [submissions])
 
   const addSubmission = useCallback(
-    async (title, description, startsAt, endsAt) => {
+    async (title, description, startsAt, endsAt, options = {}) => {
       const id = `sub-${Date.now()}-${Math.random().toString(36).slice(2)}`
       const start = new Date(startsAt).getTime()
       const end = new Date(endsAt).getTime()
@@ -213,6 +222,8 @@ export function JournalProvider({ children }) {
         startsAt: start,
         endsAt: end,
         createdAt: Date.now(),
+        requirePosttest: !!options.requirePosttest,
+        isEndOfCourse: !!options.isEndOfCourse,
       })
 
       if (apiToken && user?.role === ROLES.ADMIN) {
@@ -228,6 +239,8 @@ export function JournalProvider({ children }) {
             description: sub.description,
             startsAt: sub.startsAt,
             endsAt: sub.endsAt,
+            requirePosttest: sub.requirePosttest,
+            isEndOfCourse: sub.isEndOfCourse,
           }),
         })
         const data = await res.json().catch(() => ({}))
@@ -288,6 +301,8 @@ export function JournalProvider({ children }) {
           description: merged.description,
           startsAt: merged.startsAt,
           endsAt: merged.endsAt,
+          requirePosttest: merged.requirePosttest,
+          isEndOfCourse: merged.isEndOfCourse,
         }),
       })
       const data = await res.json().catch(() => ({}))

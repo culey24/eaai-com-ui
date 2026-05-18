@@ -29,6 +29,8 @@ BEGIN
     WHERE table_schema = 'public' AND table_name = 'journal_uploads'
   ) THEN
     ALTER TABLE journal_uploads ADD COLUMN IF NOT EXISTS extracted_text TEXT;
+    ALTER TABLE journal_uploads ADD COLUMN IF NOT EXISTS ai_evaluation TEXT;
+    ALTER TABLE journal_uploads ADD COLUMN IF NOT EXISTS evaluated_at TIMESTAMPTZ;
   END IF;
 END $$;
 `
@@ -235,4 +237,20 @@ CREATE TABLE IF NOT EXISTS student_gradings (
       err instanceof Error ? err.message : String(err)
     )
   }
+
+  const APP_SETTINGS_TABLE = `
+CREATE TABLE IF NOT EXISTS app_settings (
+    setting_key VARCHAR(128) PRIMARY KEY,
+    value JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+)`
+  try {
+    await prisma.$executeRawUnsafe(APP_SETTINGS_TABLE)
+  } catch (err) {
+    console.warn(
+      '[db-patches] app_settings:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
 }
+

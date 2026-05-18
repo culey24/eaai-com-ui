@@ -35,6 +35,9 @@ import AdminIs2MonitorPage from './pages/admin/AdminIs2MonitorPage'
 import AdminJournalEvaluationPage from './pages/admin/AdminJournalEvaluationPage'
 import SupporterDashboardPage from './pages/supporter/SupporterDashboardPage'
 import SupporterJournalExportPage from './pages/supporter/SupporterJournalExportPage'
+import SupporterGradingListPage from './pages/supporter/SupporterGradingListPage'
+import GradingWorkspacePage from './pages/supporter/GradingWorkspacePage'
+import AdminGradingConfigPage from './pages/admin/AdminGradingConfigPage'
 import PretestGate from './components/PretestGate'
 import SessionExpiredBridge from './components/SessionExpiredBridge'
 import ClassesWithWidget from './components/supporter/ClassesWithWidget'
@@ -181,6 +184,36 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/supporter/grading"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={[ROLES.ASSISTANT, ROLES.ADMIN]}>
+              <div className="flex h-screen overflow-hidden">
+                <Sidebar activeChannelId={null} onSelectChannel={() => {}} />
+                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                  <SupporterGradingListPage />
+                </div>
+              </div>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/supporter/grading/:learnerId"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={[ROLES.ASSISTANT, ROLES.ADMIN]}>
+              <div className="flex h-screen overflow-hidden">
+                <Sidebar activeChannelId={null} onSelectChannel={() => {}} />
+                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                  <GradingWorkspacePage />
+                </div>
+              </div>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin"
         element={
           <ProtectedRoute>
@@ -199,6 +232,7 @@ function AppRoutes() {
           <Route path="blacklist" element={<AdminStatsBlacklistPage />} />
         </Route>
         <Route path="submissions" element={<AdminSubmissionsPage />} />
+        <Route path="grading-config" element={<AdminGradingConfigPage />} />
         <Route path="journal-file-download" element={<JournalFileDownloadLegacyRedirect />} />
         <Route path="journal-storage-check" element={<AdminJournalStorageCheckPage />} />
         <Route path="surveys" element={<AdminSurveyResultsPage />} />

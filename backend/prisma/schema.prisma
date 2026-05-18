@@ -137,6 +137,8 @@ model User {
   agentSessions   AgentSession[]
   surveyResponses SurveyResponse[]
   agentReminders  AgentUserReminder[]
+  gradingAsLearner StudentGrading? @relation("GradingLearner")
+  gradingsAsSupporter StudentGrading[] @relation("GradingSupporter")
 
   // init SQL: CREATE TABLE Users → PostgreSQL lưu là public.users (không phải bảng "User" của Prisma mặc định)
   @@map("users")
@@ -398,4 +400,21 @@ model StatsAnalyticsExclusion {
   createdByUserId    String?  @map("created_by") @db.VarChar(10)
 
   @@map("stats_analytics_exclusions")
+}
+
+/// Kết quả chấm bài tổng hợp của học viên (các bài nộp + khảo sát) do supporter đánh giá.
+model StudentGrading {
+  id          BigInt   @id @default(autoincrement()) @map("grading_id")
+  learnerId   String   @unique @map("learner_id") @db.VarChar(10)
+  supporterId String   @map("supporter_id") @db.VarChar(10)
+  scores      Json     @default("{}") @map("scores")
+  comments    Json     @default("{}") @map("comments")
+  totalScore  Float?   @map("total_score")
+  gradedAt    DateTime @default(now()) @updatedAt @map("graded_at")
+
+  learner     User @relation("GradingLearner", fields: [learnerId], references: [userId], onDelete: Cascade)
+  supporter   User @relation("GradingSupporter", fields: [supporterId], references: [userId], onDelete: Cascade)
+
+  @@index([supporterId])
+  @@map("student_gradings")
 }

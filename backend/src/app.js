@@ -21,6 +21,7 @@ import adminMonitorRoutes from './routes/adminMonitor.js'
 import adminJournalEvaluationRoutes from './routes/adminJournalEvaluation.js'
 import supporterRoutes from './routes/supporter.js'
 import meRoutes from './routes/me.js'
+import gradingRoutes from './routes/grading.js'
 import agentIntegrationRoutes from './routes/agentIntegration.js'
 import internalCronRoutes from './routes/internalCron.js'
 import { apiGeneralLimiter } from './lib/rateLimits.js'
@@ -91,6 +92,7 @@ export function createApp() {
   app.use('/api/admin/journal-evaluate', adminJournalEvaluationRoutes)
   app.use('/api/supporter', supporterRoutes)
   app.use('/api/me', meRoutes)
+  app.use('/api/grading', gradingRoutes)
 
   return app
 }

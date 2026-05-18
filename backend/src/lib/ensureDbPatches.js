@@ -216,4 +216,23 @@ CREATE TABLE IF NOT EXISTS stats_analytics_exclusions (
       )
     }
   }
+
+  const STUDENT_GRADINGS_TABLE = `
+CREATE TABLE IF NOT EXISTS student_gradings (
+  grading_id BIGSERIAL PRIMARY KEY,
+  learner_id VARCHAR(10) NOT NULL UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+  supporter_id VARCHAR(10) NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  scores JSONB NOT NULL DEFAULT '{}',
+  comments JSONB NOT NULL DEFAULT '{}',
+  total_score DOUBLE PRECISION,
+  graded_at TIMESTAMPTZ NOT NULL DEFAULT now()
+)`
+  try {
+    await prisma.$executeRawUnsafe(STUDENT_GRADINGS_TABLE)
+  } catch (err) {
+    console.warn(
+      '[db-patches] student_gradings:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
 }

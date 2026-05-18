@@ -75,6 +75,7 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const isClassesPage = location.pathname === '/classes'
   const isJournalPage = location.pathname === '/journal'
   const isJournalExportPage = location.pathname === '/supporter/journal-export'
+  const isGradingPage = location.pathname.startsWith('/supporter/grading')
   const isAssistant = user?.role === ROLES.ASSISTANT
   /** Gộp API + gán + placeholder từ assignments (học viên api-* chưa có trong allUsers khi GET lỗi / chưa đồng bộ). */
   const supporterChatUsers = useMemo(() => {
@@ -137,7 +138,7 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
   const getChannelLabel = (ch) => (ch.labelKey ? t(ch.labelKey, { code: ch.code }) : ch.label)
 
   const handleChannelClick = (ch) => {
-    if (isSettingsPage || isReportsPage || isClassesPage || isJournalPage || isJournalExportPage) {
+    if (isSettingsPage || isReportsPage || isClassesPage || isJournalPage || isJournalExportPage || isGradingPage) {
       navigate('/', { state: { channel: ch } })
     } else {
       onSelectChannel?.(ch)
@@ -270,6 +271,19 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
                 {!collapsed && <span className="text-sm font-medium truncate">{t('admin.submissions.title')}</span>}
               </Link>
               <Link
+                to="/admin/grading-config"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  location.pathname === '/admin/grading-config'
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <Settings className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">Cấu hình chấm bài</span>}
+              </Link>
+              <Link
                 to="/admin/journal-storage-check"
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
                   collapsed ? 'justify-center' : ''
@@ -388,6 +402,19 @@ export default function Sidebar({ activeChannelId, onSelectChannel, isAdminMode 
               >
                 <Users className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && <span className="text-sm font-medium truncate">{t('sidebar.classManagement')}</span>}
+              </Link>
+              <Link
+                to="/supporter/grading"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
+                  collapsed ? 'justify-center' : ''
+                } ${
+                  isGradingPage
+                    ? 'bg-primary text-white shadow-glow-primary'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                <ClipboardList className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">Chấm bài học viên</span>}
               </Link>
               {isAssistant && (
                 <Link

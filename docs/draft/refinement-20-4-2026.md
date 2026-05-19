@@ -14,3 +14,8 @@ Khi setting là tiếng Việt thì sẽ trả lời tiếng Việt, khi setting
 - Thêm AGENT SUGGESTION:
 """Agent: Cập nhật thêm 1 suggestion agent, chỉ ngoi lên khi mà user hỏi về lí thuyết. Kiểm tra xem hiện tại các AGENT đã có trích xuất ra main topic chưa. Thì khi mà người dùng hỏi 1 câu có liên quan tới một số lí thuyết nằm trong file ấy, thì sẽ dựa trên main topic mà đề xuất file pdf (Khi nhấn vào sẽ hiển thị trên web app) hoặc link web uy tín có liên quan cho user. File PDF ở đây như sau:
     - Dựa vào @docs/slide for IS, hãy đọc các file pdf, tạo description và xác định main topic cho từng file pdf đó, sau đó khi mà người dùng hỏi về 1 chủ đề nào đó có liên quan thì sẽ suggest file PDF đó cho người dùng (1 nút trên UI) trong chat đó, khi user nhấn vào thì sẽ hiển thị file pdf lên web app.
+
+## UI/UX
+Frontend: Cập nhật tính năng: Cái ô chat, khi đang viết mà nhấn enter thì sẽ xuống dòng trong ô chat chứ không gửi đi, chỉ gửi đi khi người dùng nhấn nút gửi th.
+Frontend + Backend: Ở tài khoản admin, tạo ra 1 trang để xem các người học ở IS-2 và thời điểm gần nhất nhắn tin của người đó kèm theo tên supporter. Mục đích của trang này là để mình nhắc supporter vào hỗ trợ nhanh nhanh
+Frontend + Backend: Ở dashboard có 3 ô ở dưới, mỗi ô sẽ monitor tổng số lần tương tác của User đối với hệ thống theo 3 lớp là IS-1, IS-2, IS-3 (tức là tổng số câu hỏi của lớp đó)

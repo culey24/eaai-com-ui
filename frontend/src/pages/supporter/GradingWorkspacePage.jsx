@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { renderAsync } from 'docx-preview'
 import {
   ArrowLeft,
   Save,
@@ -77,6 +78,14 @@ export default function GradingWorkspacePage() {
   const [pretestQScores, setPretestQScores] = useState({})
   const [posttestQScores, setPosttestQScores] = useState({})
 
+  // States for previewing files
+  const [fileBlob, setFileBlob] = useState(null)
+  const [fileUrl, setFileUrl] = useState(null)
+  const [fileLoading, setFileLoading] = useState(false)
+  const [fileError, setFileError] = useState(null)
+  const [txtContent, setTxtContent] = useState('')
+  const docxContainerRef = useRef(null)
+
   useEffect(() => {
     if (!apiToken || !learnerId) return
     setLoading(true)
@@ -111,6 +120,134 @@ export default function GradingWorkspacePage() {
       .catch((err) => console.error('[Fetch workspace err]', err))
       .finally(() => setLoading(false))
   }, [apiToken, learnerId])
+
+  // Revoke Blob URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (fileUrl) {
+        URL.revokeObjectURL(fileUrl)
+      }
+    }
+  }, [fileUrl])
+
+  // Fetch submission file blob when activeTab or submissions changes
+  useEffect(() => {
+    // If not an individual submission tab, clear everything
+    if (!activeTab.startsWith('sub')) {
+      setFileBlob(null)
+      setTxtContent('')
+      setFileUrl(null)
+      return
+    }
+
+    const sub = submissions[activeTab]
+    if (!sub) {
+      setFileBlob(null)
+      setTxtContent('')
+      setFileUrl(null)
+      return
+    }
+
+    const ext = sub.originalFileName ? sub.originalFileName.split('.').pop().toLowerCase() : ''
+    if (ext !== 'pdf' && ext !== 'docx' && ext !== 'txt') {
+      setFileBlob(null)
+      setTxtContent('')
+      setFileUrl(null)
+      return
+    }
+
+    let active = true
+    setFileLoading(true)
+    setFileError(null)
+    setTxtContent('')
+    setFileBlob(null)
+    setFileUrl(null)
+
+    fetch(`${API_BASE}/api/journal/learner/${encodeURIComponent(learnerId)}/file/${encodeURIComponent(sub.id)}`, {
+      headers: { Authorization: `Bearer ${apiToken}` }
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Không thể tải file từ server: HTTP ${res.status}`)
+        }
+        return res.blob()
+      })
+      .then(async blob => {
+        if (!active) return
+
+        let mimeType = blob.type
+        if (ext === 'pdf') mimeType = 'application/pdf'
+        else if (ext === 'docx') mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        else if (ext === 'txt') mimeType = 'text/plain;charset=utf-8'
+
+        const typedBlob = new Blob([blob], { type: mimeType })
+        const url = URL.createObjectURL(typedBlob)
+        
+        if (active) {
+          setFileBlob(typedBlob)
+          setFileUrl(url)
+        } else {
+          URL.revokeObjectURL(url)
+          return
+        }
+
+        if (ext === 'txt') {
+          try {
+            const text = await typedBlob.text()
+            if (active) setTxtContent(text)
+          } catch (textErr) {
+            console.error("Error reading text:", textErr)
+            if (active) setTxtContent('Không thể đọc nội dung file văn bản.')
+          }
+        }
+        if (active) setFileLoading(false)
+      })
+      .catch(err => {
+        if (!active) return
+        console.error(err)
+        setFileError(err.message)
+        setFileLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [activeTab, learnerId, submissions, apiToken])
+
+  // Render DOCX file client-side when fileBlob or container is ready
+  useEffect(() => {
+    if (!fileBlob || !docxContainerRef.current) return
+    const sub = submissions[activeTab]
+    if (!sub) return
+    const ext = sub.originalFileName ? sub.originalFileName.split('.').pop().toLowerCase() : ''
+    if (ext !== 'docx') return
+
+    let active = true
+    const renderDocx = async () => {
+      try {
+        // Clear previous content
+        docxContainerRef.current.innerHTML = '<div class="text-slate-400 p-4">Đang chuẩn bị xem trước tài liệu DOCX...</div>'
+        const arrayBuffer = await fileBlob.arrayBuffer()
+        if (!active) return
+        docxContainerRef.current.innerHTML = ''
+        await renderAsync(arrayBuffer, docxContainerRef.current, null, {
+          className: "docx-preview-wrap",
+          inWrapper: true,
+          ignoreWidth: true
+        })
+      } catch (err) {
+        console.error("Error rendering docx:", err)
+        if (active) {
+          docxContainerRef.current.innerHTML = `<div class="text-red-500 p-4">Không thể hiển thị bản xem trước DOCX: ${err.message || err}</div>`
+        }
+      }
+    }
+    renderDocx()
+
+    return () => {
+      active = false
+    }
+  }, [fileBlob, activeTab, submissions])
 
   const totalScore = useMemo(() => {
     const keys = ['sub1', 'sub2', 'sub3', 'sub4', 'final', 'pretest', 'posttest']
@@ -152,6 +289,7 @@ export default function GradingWorkspacePage() {
         setMessage({ type: 'error', text: data.error || 'Có lỗi xảy ra khi lưu bảng điểm.' })
       }
     } catch (err) {
+      console.error('[handleSave error]', err)
       setMessage({ type: 'error', text: 'Không thể kết nối đến máy chủ.' })
     } finally {
       setSaving(false)
@@ -485,9 +623,55 @@ export default function GradingWorkspacePage() {
                 </div>
               )}
 
-              <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner font-mono text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap overflow-x-auto leading-relaxed max-h-[50vh] overflow-y-auto">
-                {sub.extractedText ? sub.extractedText : <span className="italic text-slate-400">Không có văn bản trích xuất (vui lòng tải file gốc về để xem).</span>}
-              </div>
+              {/* File Preview Container */}
+              {fileLoading ? (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-400 space-y-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl h-[400px]">
+                  <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+                  <span className="text-sm font-medium">Đang tải bản xem trước tệp...</span>
+                </div>
+              ) : fileError ? (
+                <div className="p-6 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 rounded-2xl text-rose-600 dark:text-rose-400 text-sm flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6 shrink-0 text-rose-500" />
+                  <div>
+                    <span className="font-semibold">Không thể tải file để hiển thị trực tiếp.</span>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Lỗi: {fileError}. Bạn có thể tải file gốc bằng nút bấm ở trên để xem đầy đủ.</p>
+                  </div>
+                </div>
+              ) : (() => {
+                const ext = sub.originalFileName ? sub.originalFileName.split('.').pop().toLowerCase() : ''
+                if (ext === 'pdf' && fileUrl) {
+                  return (
+                    <div className="bg-slate-100 dark:bg-slate-950 p-4 md:p-6 rounded-2xl overflow-auto max-h-[70vh] flex justify-center shadow-inner border border-slate-200 dark:border-slate-800">
+                      <iframe src={fileUrl} className="w-full h-[65vh] border-0 rounded-xl shadow-lg max-w-[900px] bg-white" title="PDF Preview" />
+                    </div>
+                  )
+                }
+                if (ext === 'docx' && fileBlob) {
+                  return (
+                    <div className="bg-slate-100 dark:bg-slate-950 p-4 md:p-6 rounded-2xl overflow-auto max-h-[70vh] flex justify-center shadow-inner border border-slate-200 dark:border-slate-800">
+                      <div ref={docxContainerRef} className="docx-viewer w-full max-w-[850px] bg-white rounded-xl overflow-x-auto" />
+                    </div>
+                  )
+                }
+                if (ext === 'txt' && txtContent) {
+                  return (
+                    <div className="bg-slate-100 dark:bg-slate-950 p-4 md:p-6 rounded-2xl overflow-auto max-h-[70vh] flex justify-center shadow-inner border border-slate-200 dark:border-slate-800">
+                      <pre className="w-full bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 font-mono text-sm whitespace-pre-wrap overflow-x-auto leading-relaxed max-w-[900px] text-left">
+                        {txtContent}
+                      </pre>
+                    </div>
+                  )
+                }
+                return (
+                  <div className="p-8 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-2xl text-amber-800 dark:text-amber-300 text-sm flex flex-col items-center justify-center text-center space-y-3">
+                    <FileQuestion className="w-10 h-10 text-amber-500 opacity-80" />
+                    <div>
+                      <p className="font-bold text-base">Không hỗ trợ xem trước định dạng này</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Hệ thống chỉ hỗ trợ xem trước trực tuyến tệp PDF, DOCX và TXT. Vui lòng tải file gốc bằng nút tải ở trên để chấm bài.</p>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )}
 

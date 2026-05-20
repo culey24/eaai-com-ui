@@ -92,6 +92,14 @@ const PRETEST_SURVEY_KIND_SECONDARY_INDEX =
 
 export async function applyLightweightSchemaPatches(prisma) {
   try {
+    await prisma.$executeRawUnsafe('CREATE EXTENSION IF NOT EXISTS pgcrypto;')
+  } catch (err) {
+    console.warn(
+      '[db-patches] create extension pgcrypto:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
+  try {
     await prisma.$executeRawUnsafe(CHAT_CHANNELS_SEED)
   } catch (err) {
     console.warn(

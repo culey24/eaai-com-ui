@@ -498,7 +498,9 @@
       "journalDownloadBadParams": "Missing or invalid learnerId / uploadId.",
       "journalDownloadNeedStaff": "Admin or supporter login is required to download this file.",
       "journalDownloadHydrating": "Checking your session…",
-      "journalDownloadFailed": "Could not download the file."
+      "journalDownloadFailed": "Could not download the file.",
+      "exportFinalCsv": "Export Final CSV",
+      "exportingFinalCsv": "Exporting..."
     }
   },
   "pretest": {

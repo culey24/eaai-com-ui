@@ -498,7 +498,9 @@
       "journalDownloadBadParams": "Thiếu hoặc sai learnerId / uploadId.",
       "journalDownloadNeedStaff": "Cần đăng nhập tài khoản admin hoặc supporter để tải file.",
       "journalDownloadHydrating": "Đang kiểm tra phiên đăng nhập…",
-      "journalDownloadFailed": "Không tải được file."
+      "journalDownloadFailed": "Không tải được file.",
+      "exportFinalCsv": "Xuất CSV Final",
+      "exportingFinalCsv": "Đang xuất..."
     }
   },
   "pretest": {

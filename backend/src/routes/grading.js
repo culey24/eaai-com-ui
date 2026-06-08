@@ -17,6 +17,7 @@ const DEFAULT_CONFIG = {
   sub4: '',
   final_1: '',
   final_2: '',
+  minWordLimit: 100,
 }
 
 /**
@@ -55,6 +56,7 @@ router.put('/config', async (req, res) => {
       sub4: String(body.sub4 || '').trim(),
       final_1: String(body.final_1 || '').trim(),
       final_2: String(body.final_2 || '').trim(),
+      minWordLimit: body.minWordLimit !== undefined ? Number(body.minWordLimit) : 100,
     }
 
     const updated = await prisma.appSetting.upsert({
@@ -434,6 +436,62 @@ router.post('/learner/:learnerId', async (req, res) => {
     const safeScores = typeof scores === 'object' && scores ? scores : {}
     const safeComments = typeof comments === 'object' && comments ? comments : {}
     const safeTotalScore = typeof totalScore === 'number' ? totalScore : null
+
+    // 1. Lấy cấu hình đợt nộp bài và minWordLimit
+    const settingRow = await prisma.appSetting.findUnique({
+      where: { settingKey: CONFIG_KEY },
+    })
+    const config = settingRow && settingRow.value ? settingRow.value : DEFAULT_CONFIG
+    const minWordLimit = typeof config.minWordLimit === 'number' ? config.minWordLimit : 100
+
+    // 2. Kiểm tra xem học viên có nộp bài nào không
+    const uploads = await prisma.journalUpload.findMany({
+      where: { userId: learnerId },
+      select: { periodId: true },
+    })
+    const uploadedPeriods = new Set(uploads.map((u) => u.periodId))
+
+    const hasSub1 = (config.sub1_2 && uploadedPeriods.has(config.sub1_2)) || (config.sub1_1 && uploadedPeriods.has(config.sub1_1))
+    const hasSub2 = (config.sub2_2 && uploadedPeriods.has(config.sub2_2)) || (config.sub2_1 && uploadedPeriods.has(config.sub2_1))
+    const hasSub3 = config.sub3 && uploadedPeriods.has(config.sub3)
+    const hasSub4 = config.sub4 && uploadedPeriods.has(config.sub4)
+    const hasFinal = (config.final_2 && uploadedPeriods.has(config.final_2)) || (config.final_1 && uploadedPeriods.has(config.final_1))
+
+    const subExistence = {
+      sub1: hasSub1,
+      sub2: hasSub2,
+      sub3: hasSub3,
+      sub4: hasSub4,
+      final: hasFinal,
+    }
+
+    const countWords = (str) => {
+      if (!str || typeof str !== 'string') return 0
+      return str.trim().split(/\s+/).filter(Boolean).length
+    }
+
+    const keysToCheck = ['sub1', 'sub2', 'sub3', 'sub4', 'final']
+    for (const key of keysToCheck) {
+      if (subExistence[key]) {
+        const score = safeScores[key]
+        if (score !== undefined && score !== null && score !== 0) {
+          const comment = safeComments[key] || ''
+          const words = countWords(comment)
+          if (words < minWordLimit) {
+            const labels = {
+              sub1: 'Submission 1',
+              sub2: 'Submission 2',
+              sub3: 'Submission 3',
+              sub4: 'Submission 4',
+              final: 'Final Submission',
+            }
+            return res.status(400).json({
+              error: `Nhận xét giải thích điểm cho ${labels[key]} phải có ít nhất ${minWordLimit} từ (hiện tại: ${words} từ).`
+            })
+          }
+        }
+      }
+    }
 
     // Nếu đã có record thì giữ supporterId cũ, nếu chưa có thì gán cho người đang chấm
     const existing = await prisma.studentGrading.findUnique({

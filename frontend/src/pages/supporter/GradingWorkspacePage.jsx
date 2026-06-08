@@ -169,7 +169,7 @@ export default function GradingWorkspacePage() {
     8000
   )
 
-  useUnsavedWarning(initialized && isDirty)
+  const { blocker } = useUnsavedWarning(initialized && isDirty)
 
   useKeyboardShortcut({ key: 's', ctrl: true }, (e) => {
     e.preventDefault()
@@ -560,6 +560,39 @@ export default function GradingWorkspacePage() {
         />
       </div>
 
+      {blocker.state === 'blocked' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 max-w-md mx-4 space-y-6 border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-2xl">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                  {t('supporter.workspace.unsavedTitle')}
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  {t('supporter.workspace.unsavedDesc')}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => blocker.reset()}
+                className="px-5 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-sm rounded-xl transition-all"
+              >
+                {t('supporter.workspace.stay')}
+              </button>
+              <button
+                onClick={() => blocker.proceed()}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm rounded-xl transition-all"
+              >
+                {t('supporter.workspace.leave')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

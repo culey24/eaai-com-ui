@@ -1,10 +1,6 @@
-import { useEffect, useRef } from 'react'
-import { useBlocker } from 'react-router-dom'
+import { useEffect } from 'react'
 
 export default function useUnsavedWarning(isDirty) {
-  const isDirtyRef = useRef(isDirty)
-  isDirtyRef.current = isDirty
-
   useEffect(() => {
     if (!isDirty) return
 
@@ -15,11 +11,4 @@ export default function useUnsavedWarning(isDirty) {
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [isDirty])
-
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      isDirty && currentLocation.pathname !== nextLocation.pathname
-  )
-
-  return { blocker }
 }

@@ -42,6 +42,7 @@ export default function AdminGradingConfigPage() {
     sub4: '',
     final_1: '',
     final_2: '',
+    minWordLimit: 100,
   })
 
   const [loading, setLoading] = useState(false)
@@ -338,6 +339,28 @@ export default function AdminGradingConfigPage() {
                   </div>
                 </div>
               ))}
+
+              <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors">
+                <div className="space-y-1 max-w-md">
+                  <div className="flex items-center gap-2">
+                    <ChevronRight className="w-4 h-4 text-primary" />
+                    <span className="font-semibold text-slate-800 dark:text-white">Số từ tối thiểu cho nhận xét bài làm</span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 pl-6">Yêu cầu người chấm phải nhập lý do nhận xét chi tiết đạt tối thiểu số từ này.</p>
+                </div>
+
+                <div className="w-full md:w-96 flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="1000"
+                    value={config.minWordLimit !== undefined ? config.minWordLimit : 100}
+                    onChange={(e) => setConfig({ ...config, minWordLimit: Math.max(0, parseInt(e.target.value) || 0) })}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                  />
+                  <span className="text-sm text-slate-500 dark:text-slate-400 font-semibold shrink-0">từ</span>
+                </div>
+              </div>
             </div>
           )}
         </div>

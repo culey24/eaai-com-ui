@@ -5,7 +5,6 @@ import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
 import { getStatsExcludedUsernamesNormalized } from '../lib/statsExcludedUsernames.js'
 import { isSupporterUserRole } from '../lib/roles.js'
-import { FINAL_SUBMISSION_MAPPING } from '../lib/finalSubmissionMapping.js'
 
 const router = Router()
 
@@ -439,124 +438,6 @@ router.get('/journal-submissions-matrix', authMiddleware, async (req, res) => {
     )
   } catch (err) {
     console.error('[admin journal-submissions-matrix]', err)
-    return res.status(500).json({
-      error: 'Lỗi máy chủ',
-      message: err instanceof Error ? err.message : String(err),
-    })
-  }
-})
-
-/**
- * GET /api/admin/journal-final-csv
- * Xuất file CSV danh sách người học và trạng thái nộp bài final submission
- */
-router.get('/journal-final-csv', authMiddleware, async (req, res) => {
-  try {
-    if (req.auth.userRole !== 'admin') {
-      return res.status(403).json({ error: 'Chỉ admin' })
-    }
-
-    const { mainPeriodId, latePeriodId } = FINAL_SUBMISSION_MAPPING
-    if (!mainPeriodId || !latePeriodId) {
-      return res.status(400).json({ error: 'Chưa cấu hình đợt nộp chính và đợt nộp trễ trong finalSubmissionMapping.js' })
-    }
-
-    const excluded = await getStatsExcludedUsernamesNormalized(prisma)
-
-    // Lấy toàn bộ học viên có vai trò student
-    const allStudents = await prisma.user.findMany({
-      where: {
-        userRole: 'student',
-      },
-      select: {
-        userId: true,
-        studentSchoolId: true,
-        username: true,
-        fullname: true,
-        userClass: true,
-        email: true,
-        phoneNumber: true,
-      },
-      orderBy: [
-        { userClass: 'asc' },
-        { studentSchoolId: 'asc' },
-        { username: 'asc' },
-      ],
-    })
-
-    // Lọc bỏ danh sách loại trừ (blacklist)
-    const students = allStudents.filter((u) => !excluded.includes(u.username.toLowerCase()))
-
-    // Lấy danh sách upload cho cả 2 đợt
-    const uploads = await prisma.journalUpload.findMany({
-      where: {
-        periodId: {
-          in: [mainPeriodId, latePeriodId],
-        },
-      },
-      select: {
-        userId: true,
-        periodId: true,
-      },
-    })
-
-    const mainSubmissions = new Set(
-      uploads.filter((u) => u.periodId === mainPeriodId).map((u) => u.userId)
-    )
-    const lateSubmissions = new Set(
-      uploads.filter((u) => u.periodId === latePeriodId).map((u) => u.userId)
-    )
-
-    function escapeCsvValue(val) {
-      if (val === null || val === undefined) return ''
-      const str = String(val)
-      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
-        return `"${str.replace(/"/g, '""')}"`
-      }
-      return str
-    }
-
-    const headers = [
-      'Mã học viên',
-      'Mã sinh viên',
-      'Tên đăng nhập',
-      'Họ và tên',
-      'Lớp',
-      'Email',
-      'Số điện thoại',
-      'status',
-    ]
-
-    const csvRows = [headers.map(escapeCsvValue).join(',')]
-
-    for (const student of students) {
-      let status = 'Chưa nộp'
-      if (mainSubmissions.has(student.userId)) {
-        status = 'Nộp đúng hạn'
-      } else if (lateSubmissions.has(student.userId)) {
-        status = 'Nộp trễ'
-      }
-
-      const row = [
-        student.userId,
-        student.studentSchoolId || '',
-        student.username,
-        student.fullname,
-        student.userClass || '',
-        student.email || '',
-        student.phoneNumber || '',
-        status,
-      ]
-      csvRows.push(row.map(escapeCsvValue).join(','))
-    }
-
-    const csvContent = '\uFEFF' + csvRows.join('\r\n')
-
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
-    res.setHeader('Content-Disposition', 'attachment; filename="danh_sach_nop_bai_final.csv"')
-    return res.status(200).send(csvContent)
-  } catch (err) {
-    console.error('[admin journal-final-csv]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),

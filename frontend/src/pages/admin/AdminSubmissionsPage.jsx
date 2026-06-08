@@ -22,34 +22,6 @@ export default function AdminSubmissionsPage() {
   const [formIsEndOfCourse, setFormIsEndOfCourse] = useState(false)
   const [copyingEmailsForPeriodId, setCopyingEmailsForPeriodId] = useState(null)
   const [exportingCsv, setExportingCsv] = useState(false)
-  const [exportingFinal, setExportingFinal] = useState(false)
-
-  const handleExportFinalCsv = async () => {
-    if (!apiToken) return
-    setExportingFinal(true)
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/journal-final-csv`, {
-        headers: { Authorization: `Bearer ${apiToken}` },
-      })
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.error || `HTTP ${res.status}`)
-      }
-      const blob = await res.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'danh_sach_nop_bai_final.csv'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
-    } catch (e) {
-      window.alert('Lỗi xuất CSV: ' + (e instanceof Error ? e.message : String(e)))
-    } finally {
-      setExportingFinal(false)
-    }
-  }
 
   const submissions = getSubmissions()
   const submissionIdsKey = useMemo(() => submissions.map((s) => s.id).join('|'), [submissions])
@@ -318,17 +290,6 @@ export default function AdminSubmissionsPage() {
             >
               <Download className="w-4 h-4" />
               {exportingCsv ? t('admin.submissions.exportCsvLoading') : t('admin.submissions.exportCsv')}
-            </button>
-          )}
-          {apiToken && user?.role === ROLES.ADMIN && (
-            <button
-              type="button"
-              onClick={handleExportFinalCsv}
-              disabled={exportingFinal}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm font-medium disabled:opacity-50"
-            >
-              <Download className="w-4 h-4" />
-              {exportingFinal ? t('admin.submissions.exportingFinalCsv') : t('admin.submissions.exportFinalCsv')}
             </button>
           )}
           {!showForm && !editingId && (

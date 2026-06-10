@@ -191,8 +191,14 @@ model JournalPeriod {
   createdAt        DateTime @default(now()) @map("created_at")
   /// Yêu cầu học viên hoàn thành PostTest trước khi nộp bài
   requirePosttest  Boolean  @default(false) @map("require_posttest")
+  /// Yêu cầu học viên hoàn thành Post-test 2 trước khi nộp bài
+  requirePosttest2 Boolean  @default(false) @map("require_posttest2")
   /// Đây là submission cuối khóa (kích hoạt requirePosttest tự động)
   isEndOfCourse    Boolean  @default(false) @map("is_end_of_course")
+  /// Chỉ làm Post-test (không nộp bài)
+  isPosttest       Boolean  @default(false) @map("is_posttest")
+  /// Chỉ làm Post-test 2 (không nộp bài)
+  isPosttest2      Boolean  @default(false) @map("is_posttest2")
 
   creator User?           @relation("JournalPeriodCreator", fields: [createdBy], references: [userId], onDelete: SetNull)
   uploads JournalUpload[]

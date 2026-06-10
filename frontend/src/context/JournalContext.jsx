@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { useAuth } from './AuthContext'
 import { ROLES } from '../constants/roles'
@@ -25,7 +26,10 @@ function normalizeSubmission(s) {
     startsAt,
     deadline: endsAt,
     requirePosttest: !!s.requirePosttest,
+    requirePosttest2: !!s.requirePosttest2,
     isEndOfCourse: !!s.isEndOfCourse,
+    isPosttest: !!s.isPosttest,
+    isPosttest2: !!s.isPosttest2,
   }
 }
 
@@ -53,7 +57,10 @@ function mapApiPeriodToSubmission(p) {
     endsAt,
     createdAt,
     requirePosttest: !!p.requirePosttest,
+    requirePosttest2: !!p.requirePosttest2,
     isEndOfCourse: !!p.isEndOfCourse,
+    isPosttest: !!p.isPosttest,
+    isPosttest2: !!p.isPosttest2,
   })
 }
 
@@ -223,7 +230,10 @@ export function JournalProvider({ children }) {
         endsAt: end,
         createdAt: Date.now(),
         requirePosttest: !!options.requirePosttest,
+        requirePosttest2: !!options.requirePosttest2,
         isEndOfCourse: !!options.isEndOfCourse,
+        isPosttest: !!options.isPosttest,
+        isPosttest2: !!options.isPosttest2,
       })
 
       if (apiToken && user?.role === ROLES.ADMIN) {
@@ -240,7 +250,10 @@ export function JournalProvider({ children }) {
             startsAt: sub.startsAt,
             endsAt: sub.endsAt,
             requirePosttest: sub.requirePosttest,
+            requirePosttest2: sub.requirePosttest2,
             isEndOfCourse: sub.isEndOfCourse,
+            isPosttest: sub.isPosttest,
+            isPosttest2: sub.isPosttest2,
           }),
         })
         const data = await res.json().catch(() => ({}))
@@ -302,7 +315,10 @@ export function JournalProvider({ children }) {
           startsAt: merged.startsAt,
           endsAt: merged.endsAt,
           requirePosttest: merged.requirePosttest,
+          requirePosttest2: merged.requirePosttest2,
           isEndOfCourse: merged.isEndOfCourse,
+          isPosttest: merged.isPosttest,
+          isPosttest2: merged.isPosttest2,
         }),
       })
       const data = await res.json().catch(() => ({}))

@@ -33,7 +33,10 @@ router.get('/periods', authMiddleware, async (req, res) => {
           startsAt: p.startsAt.toISOString(),
           endsAt: p.endsAt.toISOString(),
           requirePosttest: !!p.requirePosttest,
+          requirePosttest2: !!p.requirePosttest2,
           isEndOfCourse: !!p.isEndOfCourse,
+          isPosttest: !!p.isPosttest,
+          isPosttest2: !!p.isPosttest2,
           createdAt: p.createdAt.toISOString(),
         })),
       })
@@ -432,8 +435,20 @@ router.post('/upload', authMiddleware, journalUploadLimiter, upload.single('file
     // Posttest gating logic
     const period = await prisma.journalPeriod.findUnique({
       where: { periodId: resolvedPeriodId },
-      select: { requirePosttest: true },
+      select: { 
+        requirePosttest: true, 
+        requirePosttest2: true,
+        isPosttest: true,
+        isPosttest2: true,
+      },
     })
+
+    if (period?.isPosttest || period?.isPosttest2) {
+      return res.status(400).json({
+        code: 'SURVEY_ONLY_PERIOD',
+        error: 'Đợt này chỉ dành cho khảo sát, không chấp nhận nộp bài tập.',
+      })
+    }
 
     if (period?.requirePosttest) {
       const posttest = await prisma.surveyResponse.findFirst({
@@ -444,6 +459,19 @@ router.post('/upload', authMiddleware, journalUploadLimiter, upload.single('file
         return res.status(403).json({
           code: 'POSTTEST_REQUIRED',
           error: 'Bạn phải hoàn thành Post-test trước khi nộp bài cho đợt này.',
+        })
+      }
+    }
+
+    if (period?.requirePosttest2) {
+      const posttest2 = await prisma.surveyResponse.findFirst({
+        where: { userId, surveyKind: 'POSTTEST2' },
+        select: { userId: true },
+      })
+      if (!posttest2) {
+        return res.status(403).json({
+          code: 'POSTTEST2_REQUIRED',
+          error: 'Bạn phải hoàn thành Post-test 2 trước khi nộp bài cho đợt này.',
         })
       }
     }

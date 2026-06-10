@@ -19,7 +19,10 @@ export default function AdminSubmissionsPage() {
   const [formStartsAt, setFormStartsAt] = useState('')
   const [formEndsAt, setFormEndsAt] = useState('')
   const [formRequirePosttest, setFormRequirePosttest] = useState(false)
+  const [formRequirePosttest2, setFormRequirePosttest2] = useState(false)
   const [formIsEndOfCourse, setFormIsEndOfCourse] = useState(false)
+  const [formIsPosttest, setFormIsPosttest] = useState(false)
+  const [formIsPosttest2, setFormIsPosttest2] = useState(false)
   const [copyingEmailsForPeriodId, setCopyingEmailsForPeriodId] = useState(null)
   const [exportingCsv, setExportingCsv] = useState(false)
 
@@ -105,14 +108,20 @@ export default function AdminSubmissionsPage() {
     try {
       await addSubmission(formTitle.trim(), formDescription.trim(), formStartsAt, formEndsAt, {
         requirePosttest: formRequirePosttest,
+        requirePosttest2: formRequirePosttest2,
         isEndOfCourse: formIsEndOfCourse,
+        isPosttest: formIsPosttest,
+        isPosttest2: formIsPosttest2,
       })
       setFormTitle('')
       setFormDescription('')
       setFormStartsAt('')
       setFormEndsAt('')
       setFormRequirePosttest(false)
+      setFormRequirePosttest2(false)
       setFormIsEndOfCourse(false)
+      setFormIsPosttest(false)
+      setFormIsPosttest2(false)
       setShowForm(false)
     } catch (e) {
       window.alert(e instanceof Error ? e.message : String(e))
@@ -129,13 +138,21 @@ export default function AdminSubmissionsPage() {
         startsAt: new Date(formStartsAt).getTime(),
         endsAt: new Date(formEndsAt).getTime(),
         requirePosttest: formRequirePosttest,
+        requirePosttest2: formRequirePosttest2,
         isEndOfCourse: formIsEndOfCourse,
+        isPosttest: formIsPosttest,
+        isPosttest2: formIsPosttest2,
       })
       setEditingId(null)
       setFormTitle('')
       setFormDescription('')
       setFormStartsAt('')
       setFormEndsAt('')
+      setFormRequirePosttest(false)
+      setFormRequirePosttest2(false)
+      setFormIsEndOfCourse(false)
+      setFormIsPosttest(false)
+      setFormIsPosttest2(false)
     } catch (e) {
       window.alert(e instanceof Error ? e.message : String(e))
     }
@@ -157,7 +174,10 @@ export default function AdminSubmissionsPage() {
     setFormStartsAt(new Date(sub.startsAt).toISOString().slice(0, 16))
     setFormEndsAt(new Date(sub.endsAt).toISOString().slice(0, 16))
     setFormRequirePosttest(!!sub.requirePosttest)
+    setFormRequirePosttest2(!!sub.requirePosttest2)
     setFormIsEndOfCourse(!!sub.isEndOfCourse)
+    setFormIsPosttest(!!sub.isPosttest)
+    setFormIsPosttest2(!!sub.isPosttest2)
   }
 
   const cancelEdit = () => {
@@ -167,7 +187,10 @@ export default function AdminSubmissionsPage() {
     setFormStartsAt('')
     setFormEndsAt('')
     setFormRequirePosttest(false)
+    setFormRequirePosttest2(false)
     setFormIsEndOfCourse(false)
+    setFormIsPosttest(false)
+    setFormIsPosttest2(false)
     setShowForm(false)
   }
 
@@ -236,7 +259,10 @@ export default function AdminSubmissionsPage() {
           className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
         />
       </div>
-      <div className="flex flex-col gap-2 pt-2">
+      <div className="flex flex-col gap-2 pt-2 border-t border-slate-100 dark:border-slate-700 mt-2">
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+          {t('admin.submissions.requirePosttestLabel') || 'Gating Rule (Requires Survey to Submit)'}
+        </p>
         <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
@@ -249,11 +275,43 @@ export default function AdminSubmissionsPage() {
         <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
+            checked={formRequirePosttest2}
+            onChange={(e) => setFormRequirePosttest2(e.target.checked)}
+            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+          />
+          {t('admin.submissions.requirePosttest2Label')}
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
             checked={formIsEndOfCourse}
             onChange={(e) => setFormIsEndOfCourse(e.target.checked)}
             className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
           />
           {t('admin.submissions.isEndOfCourseLabel')}
+        </label>
+      </div>
+      <div className="flex flex-col gap-2 pt-2 border-t border-slate-100 dark:border-slate-700 mt-2">
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+          Survey-Only Rule (No file submission)
+        </p>
+        <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={formIsPosttest}
+            onChange={(e) => setFormIsPosttest(e.target.checked)}
+            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+          />
+          {t('admin.submissions.isPosttestLabel')}
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={formIsPosttest2}
+            onChange={(e) => setFormIsPosttest2(e.target.checked)}
+            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+          />
+          {t('admin.submissions.isPosttest2Label')}
         </label>
       </div>
     </>
@@ -417,7 +475,10 @@ export default function AdminSubmissionsPage() {
                           onChange={(e) => setFormEndsAt(e.target.value)}
                           className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
                         />
-                        <div className="flex flex-col gap-2 pt-2">
+                        <div className="flex flex-col gap-2 pt-2 border-t border-slate-100 dark:border-slate-700 mt-2">
+                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            {t('admin.submissions.requirePosttestLabel') || 'Gating Rule (Requires Survey to Submit)'}
+                          </p>
                           <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
                             <input
                               type="checkbox"
@@ -430,11 +491,43 @@ export default function AdminSubmissionsPage() {
                           <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
                             <input
                               type="checkbox"
+                              checked={formRequirePosttest2}
+                              onChange={(e) => setFormRequirePosttest2(e.target.checked)}
+                              className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                            />
+                            {t('admin.submissions.requirePosttest2Label')}
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+                            <input
+                              type="checkbox"
                               checked={formIsEndOfCourse}
                               onChange={(e) => setFormIsEndOfCourse(e.target.checked)}
                               className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
                             />
                             {t('admin.submissions.isEndOfCourseLabel')}
+                          </label>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-2 border-t border-slate-100 dark:border-slate-700 mt-2">
+                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            Survey-Only Rule (No file submission)
+                          </p>
+                          <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+                            <input
+                              type="checkbox"
+                              checked={formIsPosttest}
+                              onChange={(e) => setFormIsPosttest(e.target.checked)}
+                              className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                            />
+                            {t('admin.submissions.isPosttestLabel')}
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+                            <input
+                              type="checkbox"
+                              checked={formIsPosttest2}
+                              onChange={(e) => setFormIsPosttest2(e.target.checked)}
+                              className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                            />
+                            {t('admin.submissions.isPosttest2Label')}
                           </label>
                         </div>
                         <div className="flex gap-2">
@@ -489,9 +582,24 @@ export default function AdminSubmissionsPage() {
                                   Post-test
                                 </span>
                               )}
+                              {sub.requirePosttest2 && (
+                                <span className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider">
+                                  Post-test 2
+                                </span>
+                              )}
                               {sub.isEndOfCourse && (
                                 <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-[10px] font-bold uppercase tracking-wider">
                                   End of Course
+                                </span>
+                              )}
+                              {sub.isPosttest && (
+                                <span className="px-2 py-0.5 rounded bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400 text-[10px] font-bold uppercase tracking-wider">
+                                  Post-test 1 Only
+                                </span>
+                              )}
+                              {sub.isPosttest2 && (
+                                <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 text-[10px] font-bold uppercase tracking-wider">
+                                  Post-test 2 Only
                                 </span>
                               )}
                             </div>

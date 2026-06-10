@@ -6,7 +6,8 @@ import { prismaRoleToApi } from '../lib/roles.js'
 import { jsonSafe } from '../lib/json.js'
 import { validatePretestBody } from '../lib/pretestValidate.js'
 import { validatePosttestBody } from '../lib/posttestValidate.js'
-import { SURVEY_KIND_PRETEST, SURVEY_KIND_POSTTEST, isPretestEnabled, isLearnerSurveySubmissionEnabled } from '../lib/surveyConfig.js'
+import { validatePosttestBody as validatePosttest2Body } from '../lib/posttest2Validate.js'
+import { SURVEY_KIND_PRETEST, SURVEY_KIND_POSTTEST, SURVEY_KIND_POSTTEST2, isPretestEnabled, isLearnerSurveySubmissionEnabled } from '../lib/surveyConfig.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -423,6 +424,102 @@ router.post('/posttest', async (req, res) => {
     return res.status(201).json(jsonSafe({ ok: true }))
   } catch (err) {
     console.error('[me/posttest POST]', err)
+    return res.status(500).json({
+      code: 'SERVER_ERROR',
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /api/me/posttest2
+ * Học viên: đã nộp POSTTEST2 hay chưa.
+ */
+router.get('/posttest2', async (req, res) => {
+  try {
+    const enabled = isLearnerSurveySubmissionEnabled(SURVEY_KIND_POSTTEST2)
+    if (!enabled) {
+      return res.status(200).json(jsonSafe({ applicable: false, completed: true, enabled: false }))
+    }
+    if (req.auth.userRole !== 'student') {
+      return res.status(200).json(jsonSafe({ applicable: false, completed: true }))
+    }
+    const row = await prisma.surveyResponse.findFirst({
+      where: { userId: req.auth.userId, surveyKind: SURVEY_KIND_POSTTEST2 },
+      select: { createdAt: true },
+    })
+    return res.status(200).json(
+      jsonSafe({
+        applicable: true,
+        completed: !!row,
+        enabled: true,
+        submittedAt: row?.createdAt ? row.createdAt.toISOString() : null,
+      })
+    )
+  } catch (err) {
+    console.error('[me/posttest2 GET]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * POST /api/me/posttest2
+ * Lưu khảo sát POSTTEST2 (Section A, B, C).
+ */
+router.post('/posttest2', async (req, res) => {
+  try {
+    if (!isLearnerSurveySubmissionEnabled(SURVEY_KIND_POSTTEST2)) {
+      return res.status(403).json({
+        code: 'POSTTEST2_DISABLED',
+        error: 'POSTTEST2 is disabled on this server',
+      })
+    }
+    if (req.auth.userRole !== 'student') {
+      return res.status(403).json({
+        code: 'POSTTEST2_LEARNER_ONLY',
+        error: 'Only learners submit the POSTTEST2',
+      })
+    }
+
+    const errCode = validatePosttest2Body(req.body)
+    if (errCode) {
+      return res.status(400).json({
+        code: 'POSTTEST2_VALIDATION',
+        error: 'Invalid POSTTEST2 payload',
+        detail: errCode,
+      })
+    }
+
+    const { sectionA, sectionB, sectionC } = req.body
+
+    await prisma.surveyResponse.upsert({
+      where: {
+        userId_surveyKind: {
+          userId: req.auth.userId,
+          surveyKind: SURVEY_KIND_POSTTEST2,
+        },
+      },
+      create: {
+        userId: req.auth.userId,
+        surveyKind: SURVEY_KIND_POSTTEST2,
+        sectionA,
+        sectionB,
+        sectionC,
+      },
+      update: {
+        sectionA,
+        sectionB,
+        sectionC,
+      },
+    })
+
+    return res.status(201).json(jsonSafe({ ok: true }))
+  } catch (err) {
+    console.error('[me/posttest2 POST]', err)
     return res.status(500).json({
       code: 'SERVER_ERROR',
       error: 'Lỗi máy chủ',

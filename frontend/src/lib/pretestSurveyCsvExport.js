@@ -32,14 +32,15 @@ function cellC(sectionC, i) {
 const TOPIC_IDS = PRETEST_TOPICS.map((t) => t.id)
 
 /**
- * Xuất CSV một lần (PRETEST schema: section A/B/C như pretestValidate).
- * @param {{ rows: Array<object>, filenamePrefix?: string }} opts
+ * Xuất CSV một lần (PRETEST/POSTTEST schema: section A/B/C như pretestValidate).
+ * @param {{ rows: Array<object>, filenamePrefix?: string, activeKind?: string }} opts
  */
-export function downloadPretestSurveyCsv({ rows, filenamePrefix = 'pretest-submissions' }) {
+export function downloadPretestSurveyCsv({ rows, filenamePrefix = 'pretest-submissions', activeKind }) {
   const baseHeaders = ['mssv', 'fullname', 'username', 'class_id']
   const aHeaders = SURVEY_SECTION_A_KEYS.map((k) => `sectionA_${k}`)
+  const qCount = activeKind === 'POSTTEST2' ? 15 : 10
   const bHeaders = TOPIC_IDS.flatMap((tid) =>
-    Array.from({ length: 10 }, (_, j) => `sectionB_${tid}_q${j + 1}`)
+    Array.from({ length: qCount }, (_, j) => `sectionB_${tid}_q${j + 1}`)
   )
   const cHeaders = Array.from({ length: 15 }, (_, j) => `sectionC_c${j + 1}`)
   const headers = [...baseHeaders, ...aHeaders, ...bHeaders, ...cHeaders]
@@ -58,7 +59,7 @@ export function downloadPretestSurveyCsv({ rows, filenamePrefix = 'pretest-submi
     }
     const b = row?.sectionB
     for (const tid of TOPIC_IDS) {
-      for (let qi = 1; qi <= 10; qi++) {
+      for (let qi = 1; qi <= qCount; qi++) {
         cells.push(csvEscape(cellB(b, tid, `q${qi}`)))
       }
     }

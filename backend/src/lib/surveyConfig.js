@@ -6,15 +6,17 @@
 
 export const SURVEY_KIND_PRETEST = 'PRETEST'
 export const SURVEY_KIND_POSTTEST = 'POSTTEST'
+export const SURVEY_KIND_POSTTEST2 = 'POSTTEST2'
 
 /** Các loại hiển thị trên trang admin (POSTTEST luôn có tab để theo dõi sau này). */
-export const ADMIN_SURVEY_KINDS = [SURVEY_KIND_PRETEST, SURVEY_KIND_POSTTEST]
+export const ADMIN_SURVEY_KINDS = [SURVEY_KIND_PRETEST, SURVEY_KIND_POSTTEST, SURVEY_KIND_POSTTEST2]
 
 export function normalizeSurveyKind(raw) {
   if (raw == null) return null
   const s = String(raw).trim().toUpperCase()
   if (s === 'PRETEST') return SURVEY_KIND_PRETEST
   if (s === 'POSTTEST' || s === 'POST-TEST') return SURVEY_KIND_POSTTEST
+  if (s === 'POSTTEST2' || s === 'POST-TEST2') return SURVEY_KIND_POSTTEST2
   return null
 }
 
@@ -36,9 +38,15 @@ export function isPosttestEnabled() {
   return parseEnvOnOff(process.env.SURVEY_POSTTEST_ENABLED, true)
 }
 
+/** Gate POST /api/me/posttest2. Mặc định bật khi biến không đặt. */
+export function isPosttest2Enabled() {
+  return parseEnvOnOff(process.env.SURVEY_POSTTEST2_ENABLED, true)
+}
+
 /** Học viên có được POST /api/me/... nộp bài cho loại này chưa */
 export function isLearnerSurveySubmissionEnabled(kind) {
   if (kind === SURVEY_KIND_PRETEST) return isPretestEnabled()
   if (kind === SURVEY_KIND_POSTTEST) return isPosttestEnabled()
+  if (kind === SURVEY_KIND_POSTTEST2) return isPosttest2Enabled()
   return false
 }

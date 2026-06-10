@@ -24,8 +24,10 @@ import { API_BASE } from '../../config/api'
 // Imports cho dữ liệu Pretest & Posttest
 import { getSectionBQuestions as getPretestB } from '../../data/pretest/sectionB'
 import { getSectionBQuestions as getPosttestB } from '../../data/posttest/sectionB'
+import { getSectionBQuestions as getPosttest2B } from '../../data/posttest2/sectionBQuestions'
 import { SECTION_C_ITEMS as PRETEST_SEC_C } from '../../data/pretest/sectionCItems'
 import { SECTION_C_ITEMS as POSTTEST_SEC_C } from '../../data/posttest/sectionCItems'
+import { SECTION_C_ITEMS as POSTTEST2_SEC_C } from '../../data/posttest2/sectionCItems'
 import { PRETEST_TOPICS } from '../../data/pretest/pretestTopics'
 
 const TABS = [
@@ -36,6 +38,7 @@ const TABS = [
   { id: 'final', label: 'Final Submission', type: 'zip' },
   { id: 'pretest', label: 'Pre-test', type: 'survey' },
   { id: 'posttest', label: 'Post-test', type: 'survey' },
+  { id: 'posttest2', label: 'Post-test 2', type: 'survey' },
 ]
 
 const SECTION_A_LABELS = {
@@ -71,12 +74,14 @@ export default function GradingWorkspacePage() {
   const [submissions, setSubmissions] = useState({})
   const [pretest, setPretest] = useState(null)
   const [posttest, setPosttest] = useState(null)
+  const [posttest2, setPosttest2] = useState(null)
   const [gradingInfo, setGradingInfo] = useState(null)
 
   const [scores, setScores] = useState({})
   const [comments, setComments] = useState({})
   const [pretestQScores, setPretestQScores] = useState({})
   const [posttestQScores, setPosttestQScores] = useState({})
+  const [posttest2QScores, setPosttest2QScores] = useState({})
 
   // States for previewing files
   const [fileBlob, setFileBlob] = useState(null)
@@ -99,6 +104,7 @@ export default function GradingWorkspacePage() {
           setSubmissions(data.submissions || {})
           setPretest(data.pretest || null)
           setPosttest(data.posttest || null)
+          setPosttest2(data.posttest2 || null)
 
           const initScores = data.grading?.scores || {}
           const initComments = data.grading?.comments || {}
@@ -114,6 +120,7 @@ export default function GradingWorkspacePage() {
           setComments(initComments)
           setPretestQScores(initScores.pretest_q || {})
           setPosttestQScores(initScores.posttest_q || {})
+          setPosttest2QScores(initScores.posttest2_q || {})
           setGradingInfo(data.grading || null)
         }
       })
@@ -250,7 +257,7 @@ export default function GradingWorkspacePage() {
   }, [fileBlob, activeTab, submissions])
 
   const totalScore = useMemo(() => {
-    const keys = ['sub1', 'sub2', 'sub3', 'sub4', 'final', 'pretest', 'posttest']
+    const keys = ['sub1', 'sub2', 'sub3', 'sub4', 'final', 'pretest', 'posttest', 'posttest2']
     let sum = 0
     let count = 0
     for (const k of keys) {
@@ -272,6 +279,7 @@ export default function GradingWorkspacePage() {
         ...scores,
         pretest_q: pretestQScores,
         posttest_q: posttestQScores,
+        posttest2_q: posttest2QScores,
       }
       const payload = { scores: fullScores, comments, totalScore }
 
@@ -306,11 +314,12 @@ export default function GradingWorkspacePage() {
 
   // Danh sách các mục khảo sát để hiển thị theo từng câu chuẩn LMS
   const surveyItems = useMemo(() => {
-    if (activeTab !== 'pretest' && activeTab !== 'posttest') return []
-    const s = activeTab === 'pretest' ? pretest : posttest
+    if (activeTab !== 'pretest' && activeTab !== 'posttest' && activeTab !== 'posttest2') return []
+    const s = activeTab === 'pretest' ? pretest : activeTab === 'posttest' ? posttest : posttest2
     if (!s) return []
 
     const isPretest = activeTab === 'pretest'
+    const isPosttest = activeTab === 'posttest'
     const items = []
 
     // 1. Section A
@@ -339,7 +348,7 @@ export default function GradingWorkspacePage() {
     if (t1) {
       const tObj = PRETEST_TOPICS.find((t) => t.id === t1)
       const tName = tObj ? tObj.title.vi : t1
-      const qs1 = isPretest ? getPretestB(t1) : getPosttestB(t1)
+      const qs1 = isPretest ? getPretestB(t1) : isPosttest ? getPosttestB(t1) : getPosttest2B(t1)
       const answersB = s.sectionB?.[t1] || {}
 
       qs1.forEach((q, qIdx) => {
@@ -368,7 +377,7 @@ export default function GradingWorkspacePage() {
     if (t2) {
       const tObj = PRETEST_TOPICS.find((t) => t.id === t2)
       const tName = tObj ? tObj.title.vi : t2
-      const qs2 = isPretest ? getPretestB(t2) : getPosttestB(t2)
+      const qs2 = isPretest ? getPretestB(t2) : isPosttest ? getPosttestB(t2) : getPosttest2B(t2)
       const answersB = s.sectionB?.[t2] || {}
 
       qs2.forEach((q, qIdx) => {
@@ -394,7 +403,7 @@ export default function GradingWorkspacePage() {
 
     // 4. Section C
     const secC = s.sectionC || {}
-    const cList = isPretest ? PRETEST_SEC_C : POSTTEST_SEC_C
+    const cList = isPretest ? PRETEST_SEC_C : isPosttest ? POSTTEST_SEC_C : POSTTEST2_SEC_C
     cList.forEach((ci, idx) => {
       const cKey = `c${idx + 1}`
       const val = secC[cKey]
@@ -418,17 +427,20 @@ export default function GradingWorkspacePage() {
     })
 
     return items
-  }, [activeTab, pretest, posttest])
+  }, [activeTab, pretest, posttest, posttest2])
 
   const handleQuestionScoreChange = (tabId, qId, scoreVal) => {
     const isPre = tabId === 'pretest'
-    const currentQ = isPre ? pretestQScores : posttestQScores
+    const isPost = tabId === 'posttest'
+    const currentQ = isPre ? pretestQScores : isPost ? posttestQScores : posttest2QScores
     const nextQ = { ...currentQ, [qId]: parseFloat(scoreVal) || 0 }
 
     if (isPre) {
       setPretestQScores(nextQ)
-    } else {
+    } else if (isPost) {
       setPosttestQScores(nextQ)
+    } else {
+      setPosttest2QScores(nextQ)
     }
 
     let sum = 0
@@ -443,8 +455,9 @@ export default function GradingWorkspacePage() {
 
   const autoGradeMCQ = (tabId) => {
     const isPre = tabId === 'pretest'
+    const isPost = tabId === 'posttest'
     const items = surveyItems
-    const currentQ = isPre ? pretestQScores : posttestQScores
+    const currentQ = isPre ? pretestQScores : isPost ? posttestQScores : posttest2QScores
     const nextQ = { ...currentQ }
 
     let sum = 0
@@ -468,15 +481,17 @@ export default function GradingWorkspacePage() {
 
     if (isPre) {
       setPretestQScores(nextQ)
-    } else {
+    } else if (isPost) {
       setPosttestQScores(nextQ)
+    } else {
+      setPosttest2QScores(nextQ)
     }
 
     const totalSurveyScore = parseFloat(Math.min(10, sum).toFixed(2))
     setScores((prev) => ({ ...prev, [tabId]: totalSurveyScore }))
     setMessage({
       type: 'success',
-      text: `⚡ Đã tự động chấm 0.5đ cho các câu trắc nghiệm đúng trong ${tabId === 'pretest' ? 'Pre-test' : 'Post-test'}!`,
+      text: `⚡ Đã tự động chấm 0.5đ cho các câu trắc nghiệm đúng trong ${tabId === 'pretest' ? 'Pre-test' : tabId === 'posttest' ? 'Post-test' : 'Post-test 2'}!`,
     })
     setTimeout(() => setMessage(null), 3000)
   }
@@ -748,8 +763,8 @@ export default function GradingWorkspacePage() {
       )
     }
 
-    if (activeTab === 'pretest' || activeTab === 'posttest') {
-      const s = activeTab === 'pretest' ? pretest : posttest
+    if (activeTab === 'pretest' || activeTab === 'posttest' || activeTab === 'posttest2') {
+      const s = activeTab === 'pretest' ? pretest : activeTab === 'posttest' ? posttest : posttest2
 
       if (!s || surveyItems.length === 0) {
         return (
@@ -760,7 +775,7 @@ export default function GradingWorkspacePage() {
             <div>
               <h3 className="text-lg font-bold text-slate-800 dark:text-white">Không có dữ liệu khảo sát</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md">
-                Học viên chưa hoàn thành bài khảo sát {activeTab === 'pretest' ? 'Pre-test' : 'Post-test'}.
+                Học viên chưa hoàn thành bài khảo sát {activeTab === 'pretest' ? 'Pre-test' : activeTab === 'posttest' ? 'Post-test' : 'Post-test 2'}.
               </p>
             </div>
           </div>
@@ -775,13 +790,13 @@ export default function GradingWorkspacePage() {
           <div className="p-6 bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 text-white rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center md:text-left">
               <span className="px-3.5 py-1 bg-white/10 rounded-full text-xs font-bold uppercase tracking-wider text-indigo-200 border border-white/10">
-                ⚡ Bảng điểm Khảo sát ({activeTab === 'pretest' ? 'Pre-test' : 'Post-test'})
+                ⚡ Bảng điểm Khảo sát ({activeTab === 'pretest' ? 'Pre-test' : activeTab === 'posttest' ? 'Post-test' : 'Post-test 2'})
               </span>
               <h3 className="text-xl font-extrabold text-white">
                 Tổng điểm bài khảo sát: <span className="text-amber-400 text-2xl font-black">{scores[activeTab] ?? 0}</span> <span className="text-indigo-200 text-base font-medium">/ 10.0</span>
               </h3>
               <p className="text-xs text-indigo-200 max-w-md leading-relaxed">
-                Điểm tổng kết được cộng dồn từ 20 câu hỏi kiến thức chuyên môn (Phần B1 & B2). Mỗi câu tối đa 0.5 điểm. Nút tự động chấm bên phải sẽ tự động chấm điểm cho toàn bộ các câu trắc nghiệm (MCQ) dựa trên đáp án chuẩn có sẵn.
+                Điểm tổng kết được cộng dồn từ {activeTab === 'posttest2' ? 30 : 20} câu hỏi kiến thức chuyên môn (Phần B1 & B2). Mỗi câu tối đa 0.5 điểm. Nút tự động chấm bên phải sẽ tự động chấm điểm cho toàn bộ các câu trắc nghiệm (MCQ) dựa trên đáp án chuẩn có sẵn.
               </p>
             </div>
 
@@ -808,7 +823,7 @@ export default function GradingWorkspacePage() {
           {/* Nhận xét chung bài khảo sát */}
           <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm">
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 block">
-              Nhận xét chung bài khảo sát {activeTab === 'pretest' ? 'Pre-test' : 'Post-test'}:
+              Nhận xét chung bài khảo sát {activeTab === 'pretest' ? 'Pre-test' : activeTab === 'posttest' ? 'Post-test' : 'Post-test 2'}:
             </label>
             <div className="relative">
               <MessageSquare className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
@@ -971,7 +986,7 @@ export default function GradingWorkspacePage() {
                     { label: '⚠️ Một phần (0.25đ)', value: 0.25, activeClass: 'bg-amber-500 text-slate-950 border-amber-500 shadow-md shadow-amber-500/30 font-extrabold' },
                     { label: '✅ Đúng (0.5đ)', value: 0.5, activeClass: 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/30' },
                   ].map((opt) => {
-                    const currentQScore = (activeTab === 'pretest' ? pretestQScores : posttestQScores)[activeItem.id] ?? 0
+                    const currentQScore = (activeTab === 'pretest' ? pretestQScores : activeTab === 'posttest' ? posttestQScores : posttest2QScores)[activeItem.id] ?? 0
                     const isSelected = currentQScore === opt.value
                     return (
                       <button
@@ -1095,7 +1110,9 @@ export default function GradingWorkspacePage() {
                   ? !!submissions[t.id]
                   : t.id === 'pretest'
                   ? !!pretest
-                  : !!posttest
+                  : t.id === 'posttest'
+                  ? !!posttest
+                  : !!posttest2
 
               return (
                 <button
@@ -1152,7 +1169,7 @@ export default function GradingWorkspacePage() {
                 const isCurrentTab = activeTab === tab.id
                 const hasSub = tab.id.startsWith('sub') || tab.id === 'final'
                   ? !!submissions[tab.id]
-                  : tab.id === 'pretest' ? !!pretest : !!posttest
+                  : tab.id === 'pretest' ? !!pretest : tab.id === 'posttest' ? !!posttest : !!posttest2
 
                 const sub = submissions[tab.id]
                 const score = scores[tab.id] ?? 0

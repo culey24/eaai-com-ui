@@ -369,11 +369,14 @@ router.get('/learner/:learnerId', async (req, res) => {
 
     let pretest = null
     let posttest = null
+    let posttest2 = null
     for (const s of surveys) {
       if (s.surveyKind === 'PRETEST') {
         pretest = { id: String(s.id), sectionA: s.sectionA, sectionB: s.sectionB, sectionC: s.sectionC, createdAt: s.createdAt.toISOString() }
       } else if (s.surveyKind === 'POSTTEST') {
         posttest = { id: String(s.id), sectionA: s.sectionA, sectionB: s.sectionB, sectionC: s.sectionC, createdAt: s.createdAt.toISOString() }
+      } else if (s.surveyKind === 'POSTTEST2') {
+        posttest2 = { id: String(s.id), sectionA: s.sectionA, sectionB: s.sectionB, sectionC: s.sectionC, createdAt: s.createdAt.toISOString() }
       }
     }
 
@@ -404,6 +407,7 @@ router.get('/learner/:learnerId', async (req, res) => {
         submissions,
         pretest,
         posttest,
+        posttest2,
         grading,
       })
     )

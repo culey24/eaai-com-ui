@@ -1,10 +1,11 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, FileText, Upload, CheckCircle, Pencil, Trash2, Calendar } from 'lucide-react'
+import { ArrowLeft, FileText, Upload, CheckCircle, Pencil, Trash2, Calendar, ClipboardList } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { useJournal } from '../context/JournalContext'
 import { useAuth } from '../context/AuthContext'
 import PosttestModal from '../components/posttest/PosttestModal'
+import Posttest2Modal from '../components/posttest/Posttest2Modal'
 import { ROLES } from '../constants/roles'
 import { API_BASE } from '../config/api'
 
@@ -15,7 +16,7 @@ function periodIdForApi(submissionId) {
 }
 
 export default function JournalUploadPage() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const {
     getActiveSubmission,
     getSubmissionsStartedForLearner,
@@ -32,7 +33,9 @@ export default function JournalUploadPage() {
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const [posttestStatus, setPosttestStatus] = useState(null) // { completed: boolean }
+  const [posttest2Status, setPosttest2Status] = useState(null) // { completed: boolean }
   const [showPosttest, setShowPosttest] = useState(false)
+  const [showPosttest2, setShowPosttest2] = useState(false)
 
   const userId = user?.stableId || (user?.name ? `reg-${user.name}` : user?.id)
   const activeSub = getActiveSubmission()
@@ -44,6 +47,7 @@ export default function JournalUploadPage() {
   const currentEntry = activeSub ? getJournalForUserAndSubmission(userId, activeSub.id) : null
 
   const needsPosttest = activeSub?.requirePosttest && posttestStatus?.completed === false
+  const needsPosttest2 = activeSub?.requirePosttest2 && posttest2Status?.completed === false
 
   const refreshPosttest = useCallback(() => {
     if (apiToken && user?.role === ROLES.LEARNER) {
@@ -56,9 +60,21 @@ export default function JournalUploadPage() {
     }
   }, [apiToken, user?.role])
 
+  const refreshPosttest2 = useCallback(() => {
+    if (apiToken && user?.role === ROLES.LEARNER) {
+      fetch(`${API_BASE}/api/me/posttest2`, {
+        headers: { Authorization: `Bearer ${apiToken}` },
+      })
+        .then((r) => r.json())
+        .then((data) => setPosttest2Status(data))
+        .catch(() => {})
+    }
+  }, [apiToken, user?.role])
+
   useEffect(() => {
     refreshPosttest()
-  }, [refreshPosttest])
+    refreshPosttest2()
+  }, [refreshPosttest, refreshPosttest2])
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0]
@@ -70,6 +86,13 @@ export default function JournalUploadPage() {
 
     if (needsPosttest) {
       setShowPosttest(true)
+      e.target.value = ''
+      setUploading(false)
+      return
+    }
+
+    if (needsPosttest2) {
+      setShowPosttest2(true)
       e.target.value = ''
       setUploading(false)
       return
@@ -187,79 +210,193 @@ export default function JournalUploadPage() {
               </div>
 
               {/* Upload / Edit / Delete zone */}
-              <div
-                onClick={() => !currentEntry && fileInputRef.current?.click()}
-                className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all ${
-                  currentEntry ? 'cursor-default' : 'cursor-pointer'
-                } ${
-                  uploading
-                    ? 'border-primary/50 bg-primary/5 pointer-events-none'
-                    : 'border-slate-200 dark:border-slate-600 hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10'
-                }`}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx,.txt,.md,.csv,.zip"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <input
-                  ref={editInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx,.txt,.md,.csv,.zip"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                {uploadSuccess ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <CheckCircle className="w-12 h-12 text-green-500" />
-                    <p className="font-medium text-slate-800 dark:text-white">{t('journal.uploadSuccess')}</p>
-                  </div>
-                ) : uploading ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-12 h-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                    <p className="text-slate-600 dark:text-slate-400">{t('common.loading')}</p>
-                  </div>
-                ) : currentEntry ? (
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600">
-                      <FileText className="w-8 h-8 text-primary flex-shrink-0" />
-                      <div className="text-left">
-                        <p className="font-medium text-slate-800 dark:text-white">{currentEntry.fileName}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {t('journal.uploadedAt')}: {formatDate(currentEntry.uploadedAt)} • {formatSize(currentEntry.fileSize)}
+              {activeSub?.isPosttest || activeSub?.isPosttest2 ? (
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-8 shadow-sm">
+                  {activeSub.isPosttest ? (
+                    posttestStatus?.completed ? (
+                      <div className="flex flex-col items-center gap-4 py-4">
+                        <CheckCircle className="w-16 h-16 text-green-500 animate-pulse" />
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-white text-center">
+                          {lang === 'vi' 
+                            ? 'Bạn đã hoàn thành khảo sát Post-test 1 cho đợt này. Cảm ơn bạn!' 
+                            : 'You have completed the Post-test 1 survey for this period. Thank you!'}
+                        </h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+                          {lang === 'vi'
+                            ? 'Bạn có thể xem lại kết quả hoặc chỉnh sửa bài làm bất kỳ lúc nào ở danh sách khảo sát bên dưới.'
+                            : 'You can review or edit your response at any time in the surveys list below.'}
                         </p>
                       </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-4 py-4">
+                        <ClipboardList className="w-16 h-16 text-primary animate-bounce" />
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-white text-center">
+                          {lang === 'vi' 
+                            ? 'Đây là đợt khảo sát Post-test 1' 
+                            : 'This is a Post-test 1 survey period'}
+                        </h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 text-center max-w-md">
+                          {lang === 'vi'
+                            ? 'Đợt này chỉ yêu cầu thực hiện khảo sát Post-test 1 và không cần nộp bất kỳ tệp báo cáo nào.'
+                            : 'This period only requires the completion of the Post-test 1 survey. No report upload is needed.'}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowPosttest(true)}
+                          className="mt-2 px-8 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/95 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                        >
+                          <FileText className="w-5 h-5" />
+                          {lang === 'vi' ? 'Làm bài Khảo sát' : 'Take Survey'}
+                        </button>
+                      </div>
+                    )
+                  ) : posttest2Status?.completed ? (
+                    <div className="flex flex-col items-center gap-4 py-4">
+                      <CheckCircle className="w-16 h-16 text-green-500 animate-pulse" />
+                      <h3 className="text-lg font-semibold text-slate-800 dark:text-white text-center">
+                        {lang === 'vi' 
+                          ? 'Bạn đã hoàn thành khảo sát Post-test 2 cho đợt này. Cảm ơn bạn!' 
+                          : 'You have completed the Post-test 2 survey for this period. Thank you!'}
+                      </h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+                        {lang === 'vi'
+                          ? 'Bạn có thể xem lại kết quả hoặc chỉnh sửa bài làm bất kỳ lúc nào ở danh sách khảo sát bên dưới.'
+                          : 'You can review or edit your response at any time in the surveys list below.'}
+                      </p>
                     </div>
-                    <div className="flex gap-3">
+                  ) : (
+                    <div className="flex flex-col items-center gap-4 py-4">
+                      <ClipboardList className="w-16 h-16 text-primary animate-bounce" />
+                      <h3 className="text-lg font-semibold text-slate-800 dark:text-white text-center">
+                        {lang === 'vi' 
+                          ? 'Đây là đợt khảo sát Post-test 2' 
+                          : 'This is a Post-test 2 survey period'}
+                      </h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 text-center max-w-md">
+                        {lang === 'vi'
+                          ? 'Đợt này chỉ yêu cầu thực hiện khảo sát Post-test 2 và không cần nộp bất kỳ tệp báo cáo nào.'
+                          : 'This period only requires the completion of the Post-test 2 survey. No report upload is needed.'}
+                      </p>
                       <button
                         type="button"
-                        onClick={handleEditClick}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90"
+                        onClick={() => setShowPosttest2(true)}
+                        className="mt-2 px-8 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/95 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
                       >
-                        <Pencil className="w-4 h-4" />
-                        {t('journal.editFile')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleDelete}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        {t('journal.deleteFile')}
+                        <FileText className="w-5 h-5" />
+                        {lang === 'vi' ? 'Làm bài Khảo sát 2' : 'Take Survey 2'}
                       </button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-3">
-                    <Upload className="w-12 h-12 text-slate-400" />
-                    <p className="font-medium text-slate-800 dark:text-white">{t('journal.upload')}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('journal.dragDrop')}</p>
-                    <p className="text-xs text-slate-400">PDF, DOC, DOCX, TXT, MD, ZIP (Max 100MB)</p>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : (
+                <div
+                  onClick={() => !currentEntry && !needsPosttest && !needsPosttest2 && fileInputRef.current?.click()}
+                  className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all ${
+                    currentEntry || needsPosttest || needsPosttest2 ? 'cursor-default' : 'cursor-pointer'
+                  } ${
+                    uploading
+                      ? 'border-primary/50 bg-primary/5 pointer-events-none'
+                      : 'border-slate-200 dark:border-slate-600 hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10'
+                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.txt,.md,.csv,.zip"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <input
+                    ref={editInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.txt,.md,.csv,.zip"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  {uploadSuccess ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <CheckCircle className="w-12 h-12 text-green-500" />
+                      <p className="font-medium text-slate-800 dark:text-white">{t('journal.uploadSuccess')}</p>
+                    </div>
+                  ) : uploading ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-12 h-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                      <p className="text-slate-600 dark:text-slate-400">{t('common.loading')}</p>
+                    </div>
+                  ) : needsPosttest ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <FileText className="w-12 h-12 text-purple-500" />
+                      <p className="font-semibold text-slate-800 dark:text-white">
+                        {lang === 'vi' ? 'Bạn cần hoàn thành Khảo sát cuối khóa (Post-test) trước khi nộp bài' : 'You need to complete the Post-course Survey (Post-test) before submitting'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowPosttest(true)
+                        }}
+                        className="px-6 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary/95 transition-all shadow-md hover:shadow-lg"
+                      >
+                        {lang === 'vi' ? 'Làm bài Khảo sát' : 'Complete Survey'}
+                      </button>
+                    </div>
+                  ) : needsPosttest2 ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <FileText className="w-12 h-12 text-purple-500" />
+                      <p className="font-semibold text-slate-800 dark:text-white">
+                        {lang === 'vi' ? 'Bạn cần hoàn thành Khảo sát Post-test 2 trước khi nộp bài' : 'You need to complete the Post-test 2 Survey before submitting'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowPosttest2(true)
+                        }}
+                        className="px-6 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary/95 transition-all shadow-md hover:shadow-lg"
+                      >
+                        {lang === 'vi' ? 'Làm bài Khảo sát 2' : 'Complete Survey 2'}
+                      </button>
+                    </div>
+                  ) : currentEntry ? (
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600">
+                        <FileText className="w-8 h-8 text-primary flex-shrink-0" />
+                        <div className="text-left">
+                          <p className="font-medium text-slate-800 dark:text-white">{currentEntry.fileName}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {t('journal.uploadedAt')}: {formatDate(currentEntry.uploadedAt)} • {formatSize(currentEntry.fileSize)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={handleEditClick}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90"
+                        >
+                          <Pencil className="w-4 h-4" />
+                          {t('journal.editFile')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleDelete}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {t('journal.deleteFile')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <Upload className="w-12 h-12 text-slate-400" />
+                      <p className="font-medium text-slate-800 dark:text-white">{t('journal.upload')}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{t('journal.dragDrop')}</p>
+                      <p className="text-xs text-slate-400">PDF, DOC, DOCX, TXT, MD, ZIP (Max 100MB)</p>
+                    </div>
+                  )}
+                </div>
+              )}
               {uploadError && (
                 <p className="text-sm text-red-600 dark:text-red-400" role="alert">
                   {uploadError}
@@ -270,6 +407,75 @@ export default function JournalUploadPage() {
             <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 p-8 text-center">
               <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
               <p className="text-slate-600 dark:text-slate-400">{t('journal.noActiveSubmission')}</p>
+            </div>
+          )}
+
+          {/* Surveys Section (independent from submission) */}
+          {(posttestStatus?.enabled || posttest2Status?.enabled) && (
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 space-y-4">
+              <h2 className="font-semibold text-slate-800 dark:text-white flex items-center gap-2 text-base">
+                <ClipboardList className="w-5 h-5 text-primary" />
+                {lang === 'vi' ? 'Khảo sát học phần' : 'Course Surveys'}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {lang === 'vi' 
+                  ? 'Hoàn thành các khảo sát dưới đây để giúp cải thiện chất lượng học tập.' 
+                  : 'Complete the surveys below to help improve course quality.'}
+              </p>
+              <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                {posttestStatus?.enabled && (
+                  <div className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="font-medium text-sm text-slate-800 dark:text-white">
+                        {lang === 'vi' ? 'Khảo sát cuối khóa (Post-test 1)' : 'Post-course Survey (Post-test 1)'}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {posttestStatus.completed 
+                          ? (lang === 'vi' ? 'Đã hoàn thành' : 'Completed') 
+                          : (lang === 'vi' ? 'Chưa hoàn thành' : 'Pending')}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowPosttest(true)}
+                      className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                        posttestStatus.completed
+                          ? 'border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                          : 'bg-primary text-white hover:bg-primary/95 shadow-sm'
+                      }`}
+                    >
+                      {posttestStatus.completed 
+                        ? (lang === 'vi' ? 'Xem lại / Làm lại' : 'Review / Retake') 
+                        : (lang === 'vi' ? 'Làm bài' : 'Start')}
+                    </button>
+                  </div>
+                )}
+                {posttest2Status?.enabled && (
+                  <div className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="font-medium text-sm text-slate-800 dark:text-white">
+                        {lang === 'vi' ? 'Khảo sát cuối khóa 2 (Post-test 2)' : 'Post-course Survey 2 (Post-test 2)'}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {posttest2Status.completed 
+                          ? (lang === 'vi' ? 'Đã hoàn thành' : 'Completed') 
+                          : (lang === 'vi' ? 'Chưa hoàn thành' : 'Pending')}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowPosttest2(true)}
+                      className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                        posttest2Status.completed
+                          ? 'border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                          : 'bg-primary text-white hover:bg-primary/95 shadow-sm'
+                      }`}
+                    >
+                      {posttest2Status.completed 
+                        ? (lang === 'vi' ? 'Xem lại / Làm lại' : 'Review / Retake') 
+                        : (lang === 'vi' ? 'Làm bài' : 'Start')}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -329,6 +535,15 @@ export default function JournalUploadPage() {
             refreshPosttest()
           }}
           onCancel={() => setShowPosttest(false)}
+        />
+      )}
+      {showPosttest2 && (
+        <Posttest2Modal
+          onComplete={() => {
+            setShowPosttest2(false)
+            refreshPosttest2()
+          }}
+          onCancel={() => setShowPosttest2(false)}
         />
       )}
     </div>

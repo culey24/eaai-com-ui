@@ -213,7 +213,10 @@ CREATE TABLE IF NOT EXISTS stats_analytics_exclusions (
 
   const JOURNAL_PERIODS_POSTTEST_PATCHES = [
     `ALTER TABLE journal_periods ADD COLUMN IF NOT EXISTS require_posttest BOOLEAN NOT NULL DEFAULT false`,
+    `ALTER TABLE journal_periods ADD COLUMN IF NOT EXISTS require_posttest2 BOOLEAN NOT NULL DEFAULT false`,
     `ALTER TABLE journal_periods ADD COLUMN IF NOT EXISTS is_end_of_course BOOLEAN NOT NULL DEFAULT false`,
+    `ALTER TABLE journal_periods ADD COLUMN IF NOT EXISTS is_posttest BOOLEAN NOT NULL DEFAULT false`,
+    `ALTER TABLE journal_periods ADD COLUMN IF NOT EXISTS is_posttest2 BOOLEAN NOT NULL DEFAULT false`,
   ]
 
   for (const sql of JOURNAL_PERIODS_POSTTEST_PATCHES) {

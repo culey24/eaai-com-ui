@@ -4,7 +4,7 @@ import { ArrowLeft, ClipboardList, Download } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
-import { ADMIN_SURVEY_TABS, SURVEY_KIND_PRETEST, SURVEY_KIND_POSTTEST } from '../../constants/surveyKinds'
+import { ADMIN_SURVEY_TABS, SURVEY_KIND_PRETEST, SURVEY_KIND_POSTTEST, SURVEY_KIND_POSTTEST2 } from '../../constants/surveyKinds'
 import { ROLES } from '../../constants/roles'
 import { aggregateSurveySubmissions, SURVEY_SECTION_A_KEYS } from '../../lib/surveyAggregate'
 import { PRETEST_TOPICS } from '../../data/pretest/pretestTopics'
@@ -14,9 +14,11 @@ import { downloadPretestSurveyCsv } from '../../lib/pretestSurveyCsvExport'
 import { POSTTEST_TOPICS } from '../../data/posttest/posttestTopics'
 import { SECTION_C_ITEMS as POSTTEST_SECTION_C_ITEMS } from '../../data/posttest/sectionCItems'
 import { getSectionBQuestions as getPosttestSectionBQuestions } from '../../data/posttest/sectionB'
+import { getSectionBQuestions as getPosttest2SectionBQuestions } from '../../data/posttest2/sectionBQuestions'
+import { SECTION_C_ITEMS as POSTTEST2_SECTION_C_ITEMS } from '../../data/posttest2/sectionCItems'
 
 function topicLabel(id, lang, kind) {
-  const list = kind === SURVEY_KIND_POSTTEST ? POSTTEST_TOPICS : PRETEST_TOPICS
+  const list = (kind === SURVEY_KIND_POSTTEST || kind === SURVEY_KIND_POSTTEST2) ? POSTTEST_TOPICS : PRETEST_TOPICS
   const x = list.find((p) => p.id === id)
   if (!x) return id
   return lang === 'vi' ? x.title.vi : x.title.en
@@ -95,21 +97,29 @@ export default function AdminSurveyResultsPage() {
     if (rows.length === 0) return
     try {
       const prefix =
-        activeKind === SURVEY_KIND_POSTTEST ? 'posttest-submissions' : 'pretest-submissions'
-      downloadPretestSurveyCsv({ rows, filenamePrefix: prefix })
+        activeKind === SURVEY_KIND_POSTTEST2
+          ? 'posttest2-submissions'
+          : activeKind === SURVEY_KIND_POSTTEST
+            ? 'posttest-submissions'
+            : 'pretest-submissions'
+      downloadPretestSurveyCsv({ rows, filenamePrefix: prefix, activeKind })
     } catch (e) {
       window.alert(e instanceof Error ? e.message : String(e))
     }
   }
 
   const exportCsvLabel =
-    activeKind === SURVEY_KIND_POSTTEST
-      ? t('admin.surveys.exportCsvPosttest')
-      : t('admin.surveys.exportCsvPretest')
+    activeKind === SURVEY_KIND_POSTTEST2
+      ? t('admin.surveys.exportCsvPosttest2')
+      : activeKind === SURVEY_KIND_POSTTEST
+        ? t('admin.surveys.exportCsvPosttest')
+        : t('admin.surveys.exportCsvPretest')
   const exportCsvTitle =
-    activeKind === SURVEY_KIND_POSTTEST
-      ? t('admin.surveys.exportCsvTitlePosttest')
-      : t('admin.surveys.exportCsvTitlePretest')
+    activeKind === SURVEY_KIND_POSTTEST2
+      ? t('admin.surveys.exportCsvTitlePosttest2')
+      : activeKind === SURVEY_KIND_POSTTEST
+        ? t('admin.surveys.exportCsvTitlePosttest')
+        : t('admin.surveys.exportCsvTitlePretest')
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden">
@@ -232,9 +242,11 @@ export default function AdminSurveyResultsPage() {
                   .sort()
                   .map((topicId) => {
                     const qs =
-                      activeKind === SURVEY_KIND_POSTTEST
-                        ? getPosttestSectionBQuestions(topicId)
-                        : getSectionBQuestions(topicId)
+                      activeKind === SURVEY_KIND_POSTTEST2
+                        ? getPosttest2SectionBQuestions(topicId)
+                        : activeKind === SURVEY_KIND_POSTTEST
+                          ? getPosttestSectionBQuestions(topicId)
+                          : getSectionBQuestions(topicId)
                     const topicStats = stats.sectionB[topicId]
                     return (
                       <div
@@ -245,7 +257,10 @@ export default function AdminSurveyResultsPage() {
                           {topicLabel(topicId, lang, activeKind)}
                         </h3>
                         <div className="space-y-6">
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                          {(activeKind === SURVEY_KIND_POSTTEST2
+                            ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+                            : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                          ).map((num) => {
                             const qk = `q${num}`
                             const dist = topicStats?.[qk] || {}
                             const qMeta = qs[num - 1]
@@ -271,9 +286,13 @@ export default function AdminSurveyResultsPage() {
             <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 p-6">
               <h2 className="text-lg font-semibold text-primary mb-4">{t('admin.surveys.stats.sectionC')}</h2>
               <div className="space-y-6">
-                {(activeKind === SURVEY_KIND_POSTTEST ? POSTTEST_SECTION_C_ITEMS : SECTION_C_ITEMS).map(
-                  (item, idx) => {
-                    const ck = `c${idx + 1}`
+                {(activeKind === SURVEY_KIND_POSTTEST2
+                  ? POSTTEST2_SECTION_C_ITEMS
+                  : activeKind === SURVEY_KIND_POSTTEST
+                    ? POSTTEST_SECTION_C_ITEMS
+                    : SECTION_C_ITEMS
+                ).map((item, idx) => {
+                  const ck = `c${idx + 1}`
                   const distRaw = stats.sectionC[ck] || {}
                   const dist = Object.fromEntries(
                     [1, 2, 3, 4, 5].map((n) => [

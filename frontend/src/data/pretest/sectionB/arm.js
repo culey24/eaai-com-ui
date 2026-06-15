@@ -8,7 +8,8 @@ export const associationRulesMining = [
     'Độ đo nào đo tần suất một tập mục xuất hiện trong toàn bộ tập dữ liệu?',
     { en: 'Confidence', vi: 'Confidence' },
     { en: 'Support', vi: 'Support' },
-    { en: 'Lift', vi: 'Lift' }
+    { en: 'Lift', vi: 'Lift' },
+    'B'
   ),
   mcq3(
     'Remembering',
@@ -16,7 +17,8 @@ export const associationRulesMining = [
     'Thuật toán Apriori chủ yếu được dùng để:',
     { en: 'Clustering similar data points', vi: 'Gom cụm các điểm dữ liệu tương tự' },
     { en: 'Finding frequent itemsets', vi: 'Tìm các tập mục thường xuyên (frequent itemsets)' },
-    { en: 'Dimensionality reduction', vi: 'Giảm chiều dữ liệu' }
+    { en: 'Dimensionality reduction', vi: 'Giảm chiều dữ liệu' },
+    'B'
   ),
   mcq3(
     'Understanding',
@@ -30,18 +32,20 @@ export const associationRulesMining = [
       en: 'If an itemset is frequent, its supersets must also be frequent.',
       vi: 'Nếu một tập mục là frequent thì mọi tập cha cũng phải frequent.',
     },
-    { en: 'Only large item sets can be frequent.', vi: 'Chỉ các tập mục lớn mới có thể frequent.' }
+    { en: 'Only large item sets can be frequent.', vi: 'Chỉ các tập mục lớn mới có thể frequent.' },
+    'A'
   ),
   mcq3(
     'Understanding',
     'If a rule {A} → {B} has a Lift > 1, it implies that:',
     'Nếu luật {A} → {B} có Lift > 1, điều đó gợi ý rằng:',
-    { en: 'A and B are independent.', vi: 'A và B độc lập.' },
+    { en: 'A and B are independent.', vi: 'A and B độc lập.' },
     {
       en: 'The presence of A increases the likelihood of B being present.',
       vi: 'Sự xuất hiện của A làm tăng khả năng B xuất hiện.',
     },
-    { en: 'A and B are negatively correlated.', vi: 'A và B tương quan âm.' }
+    { en: 'A and B are negatively correlated.', vi: 'A và B tương quan âm.' },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -49,7 +53,8 @@ export const associationRulesMining = [
     'Trong 200 giao dịch, Coke có trong 100, Chips trong 80, cả hai cùng lúc trong 40. Độ Confidence của {Coke} → {Chips} là:',
     { en: '0.2', vi: '0,2' },
     { en: '0.4', vi: '0,4' },
-    { en: '0.5', vi: '0,5' }
+    { en: '0.5', vi: '0,5' },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -57,7 +62,8 @@ export const associationRulesMining = [
     'Với cùng dữ liệu, Support của tập {Coke, Chips} là:',
     { en: '20%', vi: '20%' },
     { en: '40%', vi: '40%' },
-    { en: '50%', vi: '50%' }
+    { en: '50%', vi: '50%' },
+    'A'
   ),
   mcq3(
     'Analyzing',
@@ -68,7 +74,8 @@ export const associationRulesMining = [
       vi: 'Ít quét CSDL hơn và không sinh ứng viên tường minh.',
     },
     { en: 'It uses a simpler formula for Lift.', vi: 'Công thức Lift đơn giản hơn.' },
-    { en: 'It only processes numerical data.', vi: 'Chỉ xử lý dữ liệu số.' }
+    { en: 'It only processes numerical data.', vi: 'Chỉ xử lý dữ liệu số.' },
+    'A'
   ),
   mcq3(
     'Analyzing',
@@ -79,7 +86,8 @@ export const associationRulesMining = [
       en: 'It decreases the number of rules but increases their reliability.',
       vi: 'Số luật giảm nhưng đáng tin cậy hơn.',
     },
-    { en: 'It has no effect on the number of rules.', vi: 'Không ảnh hưởng số luật.' }
+    { en: 'It has no effect on the number of rules.', vi: 'Không ảnh hưởng số luật.' },
+    'B'
   ),
   mcq3(
     'Evaluating',
@@ -87,7 +95,8 @@ export const associationRulesMining = [
     'Quản lý muốn tìm liên kết mạnh mà không chỉ vì cả hai đều bán chạy. Ưu tiên độ đo nào?',
     { en: 'Support', vi: 'Support' },
     { en: 'Confidence', vi: 'Confidence' },
-    { en: 'Lift', vi: 'Lift' }
+    { en: 'Lift', vi: 'Lift' },
+    'C'
   ),
   txt(
     'Creating',

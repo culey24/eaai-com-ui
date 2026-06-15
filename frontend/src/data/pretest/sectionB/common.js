@@ -18,12 +18,16 @@ export function mcq(bloomEn, promptEn, promptVi, choices) {
 }
 
 /** choices: [{ key:'A', en, vi }, ...] */
-export function mcq3(bloomEn, promptEn, promptVi, a, b, c) {
-  return mcq(bloomEn, promptEn, promptVi, [
+export function mcq3(bloomEn, promptEn, promptVi, a, b, c, correctAnswer) {
+  const q = mcq(bloomEn, promptEn, promptVi, [
     { key: 'A', en: a.en, vi: a.vi },
     { key: 'B', en: b.en, vi: b.vi },
     { key: 'C', en: c.en, vi: c.vi },
   ])
+  if (correctAnswer) {
+    q.correctAnswer = correctAnswer
+  }
+  return q
 }
 
 export function txt(bloomEn, promptEn, promptVi, hintEn, hintVi) {

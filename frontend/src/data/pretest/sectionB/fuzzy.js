@@ -7,7 +7,8 @@ export const fuzzyLogic = [
     'Miền giá trị cơ bản cho độ thuộc của một tập mờ?',
     { en: 'Only 0 or 1', vi: 'Chỉ 0 hoặc 1' },
     { en: 'Any real number', vi: 'Bất kỳ số thực' },
-    { en: 'A value in [0, 1]', vi: 'Giá trị trong [0, 1]' }
+    { en: 'A value in [0, 1]', vi: 'Giá trị trong [0, 1]' },
+    'C'
   ),
   mcq3(
     'Remembering',
@@ -15,7 +16,8 @@ export const fuzzyLogic = [
     'Thành phần FIS nào chuyển đầu ra mờ thành một giá trị crisp?',
     { en: 'Fuzzifier', vi: 'Bộ mờ hóa' },
     { en: 'Inference Engine', vi: 'Cơ chế suy luận' },
-    { en: 'Defuzzifier', vi: 'Bộ khử mờ' }
+    { en: 'Defuzzifier', vi: 'Bộ khử mờ' },
+    'C'
   ),
   mcq3(
     'Understanding',
@@ -23,7 +25,8 @@ export const fuzzyLogic = [
     'Với toán tử Max chuẩn, độ thuộc của A ∪ B là:',
     { en: 'Min(μA(x), μB(x))', vi: 'Min(μA(x), μB(x))' },
     { en: 'Max(μA(x), μB(x))', vi: 'Max(μA(x), μB(x))' },
-    { en: '1 - μA(x)', vi: '1 - μA(x)' }
+    { en: '1 - μA(x)', vi: '1 - μA(x)' },
+    'B'
   ),
   mcq3(
     'Understanding',
@@ -37,7 +40,8 @@ export const fuzzyLogic = [
       en: 'Binary 0/1 fails to capture partial truth.',
       vi: 'Chỉ 0/1, không gắn được "độ thật một phần".',
     },
-    { en: 'It only works with discrete variables.', vi: 'Chỉ làm việc biến rời rạc.' }
+    { en: 'It only works with discrete variables.', vi: 'Chỉ làm việc biến rời rạc.' },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -45,7 +49,8 @@ export const fuzzyLogic = [
     'Luật AND dùng Min: cường độ kích hoạt là:',
     { en: '0.9', vi: '0,9' },
     { en: '0.5', vi: '0,5' },
-    { en: '0.7', vi: '0,7' }
+    { en: '0.7', vi: '0,7' },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -53,7 +58,8 @@ export const fuzzyLogic = [
     'Hàm thang: 50 km/h có μ=1,0; 70 km/h có μ=0,5. Phương pháp gán?',
     { en: 'Expert knowledge (Heuristics)', vi: 'Tri thức chuyên gia (heuristic)' },
     { en: 'Random Assignment', vi: 'Gán ngẫu nhiên' },
-    { en: 'Statistical Regression', vi: 'Hồi quy thống kê' }
+    { en: 'Statistical Regression', vi: 'Hồi quy thống kê' },
+    'A'
   ),
   mcq3(
     'Analyzing',
@@ -64,7 +70,8 @@ export const fuzzyLogic = [
       vi: 'Chúng định nghĩa cách hiểu đầu vào và ý nghĩa thuật ngữ ngôn ngữ.',
     },
     { en: 'They only affect defuzzification.', vi: 'Chỉ ảnh hưởng bước khử mờ.' },
-    { en: 'Chosen randomly as long as range is covered.', vi: 'Chọn ngẫu nhiên nếu phủ miền.' }
+    { en: 'Chosen randomly as long as range is covered.', vi: 'Chọn ngẫu nhiên nếu phủ miền.' },
+    'A'
   ),
   mcq3(
     'Analyzing',
@@ -78,7 +85,8 @@ export const fuzzyLogic = [
       en: 'Mamdani for classification only; Sugeno for control.',
       vi: 'Mamdani chỉ phân loại; Sugeno chỉ điều khiển.',
     },
-    { en: 'Mamdani faster; Sugeno more accurate.', vi: 'Mamdani nhanh hơn; Sugeno chính xác hơn.' }
+    { en: 'Mamdani faster; Sugeno more accurate.', vi: 'Mamdani nhanh hơn; Sugeno chính xác hơn.' },
+    'A'
   ),
   txt(
     'Evaluating',

@@ -13,7 +13,8 @@ export const logisticRegression = [
       en: 'Linear uses categorical inputs; Logistic continuous only.',
       vi: 'Tuyến tính chỉ đầu vào phân loại; Logistic chỉ liên tục.',
     },
-    { en: 'Both predict continuous Y.', vi: 'Cả hai đều dự đoán Y liên tục.' }
+    { en: 'Both predict continuous Y.', vi: 'Cả hai đều dự đoán Y liên tục.' },
+    'A'
   ),
   mcq3(
     'Remembering',
@@ -21,7 +22,8 @@ export const logisticRegression = [
     'Hàm ánh xạ đầu ra tuyến tính sang xác suất trong [0,1]?',
     { en: 'ReLU', vi: 'ReLU' },
     { en: 'Softmax', vi: 'Softmax' },
-    { en: 'Sigmoid', vi: 'Sigmoid' }
+    { en: 'Sigmoid', vi: 'Sigmoid' },
+    'C'
   ),
   mcq3(
     'Understanding',
@@ -32,7 +34,8 @@ export const logisticRegression = [
       en: 'To get valid probabilities in (0,1).',
       vi: 'Để có xác suất hợp lệ trong (0,1).',
     },
-    { en: 'To minimize MSE.', vi: 'Để tối thiểu MSE.' }
+    { en: 'To minimize MSE.', vi: 'Để tối thiểu MSE.' },
+    'B'
   ),
   mcq3(
     'Understanding',
@@ -40,7 +43,8 @@ export const logisticRegression = [
     'Công thức log-odds (logit) của xác suất thành công p?',
     { en: 'ln(p/(1-p))', vi: 'ln(p/(1-p))' },
     { en: 'p + (1-p)', vi: 'p + (1-p)' },
-    { en: '1/p', vi: '1/p' }
+    { en: '1/p', vi: '1/p' },
+    'A'
   ),
   mcq3(
     'Applying',
@@ -48,7 +52,8 @@ export const logisticRegression = [
     'Logit = 0 cho một khách. Xác suất lớp dương p?',
     { en: '0', vi: '0' },
     { en: '0.5', vi: '0,5' },
-    { en: '1', vi: '1' }
+    { en: '1', vi: '1' },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -56,7 +61,8 @@ export const logisticRegression = [
     'Hàm chi phí thường tối thiểu khi huấn luyện logistic?',
     { en: 'MSE', vi: 'MSE' },
     { en: 'R-squared', vi: 'R²' },
-    { en: 'Cross-Entropy / Log Loss', vi: 'Cross-entropy / log loss' }
+    { en: 'Cross-Entropy / Log Loss', vi: 'Cross-entropy / log loss' },
+    'C'
   ),
   mcq3(
     'Analyzing',
@@ -73,7 +79,8 @@ export const logisticRegression = [
     {
       en: 'One-unit increase in X increases log-odds by β.',
       vi: 'Tăng 1 đơn vị X làm log-odds tăng β.',
-    }
+    },
+    'C'
   ),
   mcq3(
     'Analyzing',
@@ -84,7 +91,8 @@ export const logisticRegression = [
       vi: 'Hệ số tiến tới vô cực (tách hoàn toàn).',
     },
     { en: 'Model converges immediately.', vi: 'Mô hình hội tụ ngay.' },
-    { en: 'Loss becomes zero and stops.', vi: 'Mất mát bằng 0 và dừng.' }
+    { en: 'Loss becomes zero and stops.', vi: 'Mất mát bằng 0 và dừng.' },
+    'B'
   ),
   txt(
     'Evaluating',

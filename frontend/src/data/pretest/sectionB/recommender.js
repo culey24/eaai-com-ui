@@ -7,7 +7,8 @@ export const recommenderSystem = [
     'Hệ gợi ý nào đề xuất mục tương tự những mục người dùng đã thích dựa trên đặc trưng mục?',
     { en: 'Collaborative Filtering', vi: 'Lọc cộng tác' },
     { en: 'Content-based Filtering', vi: 'Lọc theo nội dung' },
-    { en: 'Association Rules', vi: 'Luật kết hợp' }
+    { en: 'Association Rules', vi: 'Luật kết hợp' },
+    'B'
   ),
   mcq3(
     'Remembering',
@@ -15,7 +16,8 @@ export const recommenderSystem = [
     'Thuật ngữ khi hệ thống không gợi ý được cho người dùng mới vì thiếu lịch sử:',
     { en: 'Data Sparsity', vi: 'Data sparsity' },
     { en: 'Overfitting', vi: 'Overfitting' },
-    { en: 'Cold Start Problem', vi: 'Cold start' }
+    { en: 'Cold Start Problem', vi: 'Cold start' },
+    'C'
   ),
   mcq3(
     'Understanding',
@@ -29,7 +31,8 @@ export const recommenderSystem = [
       en: 'User-User only uses metadata; Item-Item only uses ratings.',
       vi: 'User-User chỉ dùng metadata; Item-Item chỉ dùng rating.',
     },
-    { en: 'There is no fundamental difference.', vi: 'Không khác cơ bản.' }
+    { en: 'There is no fundamental difference.', vi: 'Không khác cơ bản.' },
+    'A'
   ),
   mcq3(
     'Understanding',
@@ -43,7 +46,8 @@ export const recommenderSystem = [
     {
       en: 'To categorize users into fixed demographic groups.',
       vi: 'Phân nhóm người dùng theo nhóm nhân khẩu cố định.',
-    }
+    },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -51,7 +55,8 @@ export const recommenderSystem = [
     'Người dùng thích Inception và Interstellar (Sci-Fi, Nolan). Hệ content-based có khả năng gợi ý:',
     { en: 'A popular Romantic Comedy', vi: 'Một hài lãng mạn ăn khách' },
     { en: 'Tenet (Sci-Fi, Nolan)', vi: 'Tenet (Sci-Fi, Nolan)' },
-    { en: 'A random documentary', vi: 'Một phim tài liệu ngẫu nhiên' }
+    { en: 'A random documentary', vi: 'Một phim tài liệu ngẫu nhiên' },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -59,7 +64,8 @@ export const recommenderSystem = [
     'A và B có độ tương tự cosine cao. A cho Movie X điểm cao. Dự đoán cho B về X:',
     { en: 'A low rating', vi: 'Điểm thấp' },
     { en: 'A high rating', vi: 'Điểm cao' },
-    { en: 'No rating possible', vi: 'Không thể cho điểm' }
+    { en: 'No rating possible', vi: 'Không thể cho điểm' },
+    'B'
   ),
   mcq3(
     'Analyzing',
@@ -67,7 +73,8 @@ export const recommenderSystem = [
     'Rất nhiều mục nhưng mỗi user ít rating. Thách thức chính:',
     { en: 'Computational speed', vi: 'Tốc độ tính toán' },
     { en: 'Data Sparsity', vi: 'Dữ liệu thưa' },
-    { en: 'Hardware storage', vi: 'Lưu trữ phần cứng' }
+    { en: 'Hardware storage', vi: 'Lưu trữ phần cứng' },
+    'B'
   ),
   mcq3(
     'Analyzing',
@@ -75,7 +82,8 @@ export const recommenderSystem = [
     'Nếu mục tiêu Top-5 chỉ chứa mục liên quan, Precision hay Recall quan trọng hơn?',
     { en: 'Precision', vi: 'Precision' },
     { en: 'Recall', vi: 'Recall' },
-    { en: 'Both equally important', vi: 'Ngang nhau' }
+    { en: 'Both equally important', vi: 'Ngang nhau' },
+    'A'
   ),
   txt(
     'Evaluating',

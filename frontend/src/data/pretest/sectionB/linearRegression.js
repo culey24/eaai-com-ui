@@ -10,7 +10,8 @@ export const linearRegression = [
       en: 'Model relationship between one X and one Y with a straight line.',
       vi: 'Mô hình quan hệ một X và một Y bằng đường thẳng.',
     },
-    { en: 'Classify into discrete categories.', vi: 'Phân loại rời rạc.' }
+    { en: 'Classify into discrete categories.', vi: 'Phân loại rời rạc.' },
+    'B'
   ),
   mcq3(
     'Remembering',
@@ -18,7 +19,8 @@ export const linearRegression = [
     'Trong Y = β0 + β1X + ε, β1 là:',
     { en: 'Y-intercept', vi: 'Giao điểm trục Y' },
     { en: 'Slope of the regression line', vi: 'Hệ số dốc của đường hồi quy' },
-    { en: 'Residual error', vi: 'Sai số phần dư' }
+    { en: 'Residual error', vi: 'Sai số phần dư' },
+    'B'
   ),
   mcq3(
     'Understanding',
@@ -29,7 +31,8 @@ export const linearRegression = [
       en: '85% of variance in Y is explained by X.',
       vi: '85% phương sai của Y được giải thích bởi X.',
     },
-    { en: '85% chance of correct prediction.', vi: '85% xác suất dự đoán đúng.' }
+    { en: '85% chance of correct prediction.', vi: '85% xác suất dự đoán đúng.' },
+    'B'
   ),
   mcq3(
     'Understanding',
@@ -46,7 +49,8 @@ export const linearRegression = [
     {
       en: 'Multiple is only for non-linear relationships.',
       vi: 'Bội chỉ cho quan hệ phi tuyến.',
-    }
+    },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -54,7 +58,8 @@ export const linearRegression = [
     'Price = 50.000 + 100·SqFt. Giá dự đoán cho 2.000 SqFt?',
     { en: '$250,000', vi: '250.000 USD' },
     { en: '$200,000', vi: '200.000 USD' },
-    { en: '$150,000', vi: '150.000 USD' }
+    { en: '$150,000', vi: '150.000 USD' },
+    'A'
   ),
   mcq3(
     'Applying',
@@ -62,7 +67,8 @@ export const linearRegression = [
     'Hàm mất mát thường tối thiểu hóa khi huấn luyện hồi quy tuyến tính chuẩn?',
     { en: 'MAE', vi: 'MAE' },
     { en: 'Binary Cross-Entropy', vi: 'Binary cross-entropy' },
-    { en: 'Mean Squared Error (MSE)', vi: 'MSE' }
+    { en: 'Mean Squared Error (MSE)', vi: 'MSE' },
+    'C'
   ),
   mcq3(
     'Analyzing',
@@ -70,7 +76,8 @@ export const linearRegression = [
     'Phần dư vs giá trị khớp có hình parabol. Điều này cho thấy:',
     { en: 'Model is highly accurate.', vi: 'Mô hình rất chính xác.' },
     { en: 'Linearity assumption is violated.', vi: 'Giả định tuyến tính bị vi phạm.' },
-    { en: 'Data is perfectly correlated.', vi: 'Dữ liệu tương quan hoàn hảo.' }
+    { en: 'Data is perfectly correlated.', vi: 'Dữ liệu tương quan hoàn hảo.' },
+    'B'
   ),
   mcq3(
     'Analyzing',
@@ -87,7 +94,8 @@ export const linearRegression = [
     {
       en: 'Only a problem in simple regression; use R².',
       vi: 'Chỉ với hồi quy đơn; dùng R².',
-    }
+    },
+    'B'
   ),
   txt(
     'Evaluating',

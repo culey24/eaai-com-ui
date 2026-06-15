@@ -7,7 +7,8 @@ export const deepNeuralNetworks = [
     'Mạng nơ-ron sâu (DNN) là gì?',
     { en: 'A network with only one layer', vi: 'Chỉ một lớp' },
     { en: 'A neural network with multiple hidden layers', vi: 'Nhiều lớp ẩn' },
-    { en: 'A database system', vi: 'Hệ CSDL' }
+    { en: 'A database system', vi: 'Hệ CSDL' },
+    'B'
   ),
   mcq3(
     'Remembering',
@@ -15,7 +16,8 @@ export const deepNeuralNetworks = [
     'Vai trò hàm kích hoạt?',
     { en: 'Store data', vi: 'Lưu dữ liệu' },
     { en: 'Introduce non-linearity', vi: 'Đưa phi tuyến vào mô hình' },
-    { en: 'Reduce dataset size', vi: 'Giảm kích thước dữ liệu' }
+    { en: 'Reduce dataset size', vi: 'Giảm kích thước dữ liệu' },
+    'B'
   ),
   mcq3(
     'Understanding',
@@ -23,7 +25,8 @@ export const deepNeuralNetworks = [
     'Vì sao nhiều lớp ẩn hữu ích?',
     { en: 'They reduce computation', vi: 'Giảm tính toán' },
     { en: 'They help learn complex patterns', vi: 'Học mẫu phức tạp' },
-    { en: 'They remove need for data', vi: 'Không cần dữ liệu' }
+    { en: 'They remove need for data', vi: 'Không cần dữ liệu' },
+    'B'
   ),
   mcq3(
     'Understanding',
@@ -34,7 +37,8 @@ export const deepNeuralNetworks = [
       vi: 'Tốt trên huấn luyện, kém trên dữ liệu mới.',
     },
     { en: 'Cannot learn patterns', vi: 'Không học được mẫu' },
-    { en: 'Model too simple', vi: 'Mô hình quá đơn giản' }
+    { en: 'Model too simple', vi: 'Mô hình quá đơn giản' },
+    'A'
   ),
   mcq3(
     'Applying',
@@ -42,7 +46,8 @@ export const deepNeuralNetworks = [
     'Độ chính xác huấn luyện cao, kiểm định thấp. Nên làm gì?',
     { en: 'Increase overfitting', vi: 'Tăng overfitting' },
     { en: 'Apply regularization or dropout', vi: 'Chuẩn hóa / dropout' },
-    { en: 'Remove training data', vi: 'Xóa dữ liệu huấn luyện' }
+    { en: 'Remove training data', vi: 'Xóa dữ liệu huấn luyện' },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -50,7 +55,8 @@ export const deepNeuralNetworks = [
     'Mạng không học được mẫu phức tạp. Thay đổi nào có thể giúp?',
     { en: 'Reduce layers', vi: 'Giảm số lớp' },
     { en: 'Add more hidden layers or neurons', vi: 'Thêm lớp ẩn hoặc nơ-ron' },
-    { en: 'Remove activations', vi: 'Bỏ hàm kích hoạt' }
+    { en: 'Remove activations', vi: 'Bỏ hàm kích hoạt' },
+    'B'
   ),
   mcq3(
     'Analyzing',
@@ -61,7 +67,8 @@ export const deepNeuralNetworks = [
       vi: 'Có thể gradient triệt tiêu / bùng nổ.',
     },
     { en: 'Always faster', vi: 'Luôn nhanh hơn' },
-    { en: 'Accuracy always increases', vi: 'Độ chính xác luôn tăng' }
+    { en: 'Accuracy always increases', vi: 'Độ chính xác luôn tăng' },
+    'A'
   ),
   mcq3(
     'Analyzing',
@@ -69,7 +76,8 @@ export const deepNeuralNetworks = [
     'Vì sao chuẩn hóa đầu vào khi huấn luyện DNN?',
     { en: 'Increases randomness', vi: 'Tăng ngẫu nhiên' },
     { en: 'Stabilizes and speeds up training', vi: 'Ổn định và tăng tốc huấn luyện' },
-    { en: 'Removes labels', vi: 'Xóa nhãn' }
+    { en: 'Removes labels', vi: 'Xóa nhãn' },
+    'B'
   ),
   txt(
     'Evaluating',

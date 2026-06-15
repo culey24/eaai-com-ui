@@ -7,7 +7,8 @@ export const wordEmbedding = [
     'Word embedding là gì?',
     { en: 'Method to store images', vi: 'Cách lưu ảnh' },
     { en: 'Dense vector representation of words', vi: 'Vector dày đặc biểu diễn từ' },
-    { en: 'A database type', vi: 'Một loại CSDL' }
+    { en: 'A database type', vi: 'Một loại CSDL' },
+    'B'
   ),
   mcq3(
     'Remembering',
@@ -15,7 +16,8 @@ export const wordEmbedding = [
     'Mô hình nào thường dùng để học embedding từ?',
     { en: 'Decision Tree', vi: 'Cây quyết định' },
     { en: 'Word2Vec', vi: 'Word2Vec' },
-    { en: 'K-Means', vi: 'K-means' }
+    { en: 'K-Means', vi: 'K-means' },
+    'B'
   ),
   mcq3(
     'Understanding',
@@ -23,7 +25,8 @@ export const wordEmbedding = [
     'Hai từ có embedding gần nhau nghĩa là:',
     { en: 'They are identical', vi: 'Giống hệt' },
     { en: 'They have the same length', vi: 'Cùng độ dài' },
-    { en: 'They appear in similar contexts', vi: 'Xuất hiện trong ngữ cảnh tương tự' }
+    { en: 'They appear in similar contexts', vi: 'Xuất hiện trong ngữ cảnh tương tự' },
+    'C'
   ),
   mcq3(
     'Understanding',
@@ -40,7 +43,8 @@ export const wordEmbedding = [
     {
       en: 'Embeddings capture semantic relations; one-hot does not.',
       vi: 'Embedding giữ quan hệ ngữ nghĩa; one-hot không.',
-    }
+    },
+    'C'
   ),
   mcq3(
     'Applying',
@@ -48,7 +52,8 @@ export const wordEmbedding = [
     'Tìm từ gần nghĩa. Dùng gì?',
     { en: 'One-hot', vi: 'One-hot' },
     { en: 'Embeddings + cosine similarity', vi: 'Embedding + cosine' },
-    { en: 'Random vectors', vi: 'Vector ngẫu nhiên' }
+    { en: 'Random vectors', vi: 'Vector ngẫu nhiên' },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -62,7 +67,8 @@ export const wordEmbedding = [
       en: 'Predict context from target word',
       vi: 'Dự đoán ngữ cảnh từ từ mục tiêu',
     },
-    { en: 'Remove rare words', vi: 'Loại từ hiếm' }
+    { en: 'Remove rare words', vi: 'Loại từ hiếm' },
+    'B'
   ),
   mcq3(
     'Analyzing',
@@ -73,7 +79,8 @@ export const wordEmbedding = [
       vi: 'Giữ quan hệ ngữ nghĩa và cú pháp.',
     },
     { en: 'They reduce vocabulary size', vi: 'Giảm kích thước từ vựng' },
-    { en: 'Eliminate need for training', vi: 'Không cần huấn luyện' }
+    { en: 'Eliminate need for training', vi: 'Không cần huấn luyện' },
+    'A'
   ),
   mcq3(
     'Analyzing',
@@ -81,7 +88,8 @@ export const wordEmbedding = [
     'Một từ nhiều nghĩa (vd. bank) gây:',
     { en: 'Overfitting', vi: 'Overfitting' },
     { en: 'Polysemy problem', vi: 'Vấn đề đa nghĩa (polysemy)' },
-    { en: 'Vanishing gradient', vi: 'Gradient triệt tiêu' }
+    { en: 'Vanishing gradient', vi: 'Gradient triệt tiêu' },
+    'B'
   ),
   txt(
     'Evaluating',

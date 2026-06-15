@@ -7,7 +7,8 @@ export const latentDirichletAllocation = [
     'Mục đích chính của LDA (chủ đề tiềm ẩn)?',
     { en: 'Classify into predefined categories', vi: 'Phân loại theo nhãn cho trước' },
     { en: 'Discover hidden topics in documents', vi: 'Khám phá chủ đề ẩn trong văn bản' },
-    { en: 'Translate between languages', vi: 'Dịch ngôn ngữ' }
+    { en: 'Translate between languages', vi: 'Dịch ngôn ngữ' },
+    'B'
   ),
   mcq3(
     'Remembering',
@@ -15,7 +16,8 @@ export const latentDirichletAllocation = [
     'Trong LDA, “topic” là gì?',
     { en: 'A distribution over words', vi: 'Phân phối trên từ vựng' },
     { en: 'A single keyword', vi: 'Một từ khóa' },
-    { en: 'A cluster of documents only', vi: 'Chỉ cụm tài liệu' }
+    { en: 'A cluster of documents only', vi: 'Chỉ cụm tài liệu' },
+    'A'
   ),
   mcq3(
     'Understanding',
@@ -23,7 +25,8 @@ export const latentDirichletAllocation = [
     'LDA biểu diễn một văn bản như thế nào?',
     { en: 'As a single topic', vi: 'Một chủ đề duy nhất' },
     { en: 'As a mixture of multiple topics', vi: 'Hỗn hợp nhiều chủ đề' },
-    { en: 'As keywords only', vi: 'Chỉ danh sách từ khóa' }
+    { en: 'As keywords only', vi: 'Chỉ danh sách từ khóa' },
+    'B'
   ),
   mcq3(
     'Understanding',
@@ -31,7 +34,8 @@ export const latentDirichletAllocation = [
     'Vì sao LDA là học không giám sát?',
     { en: 'Requires labeled data', vi: 'Cần nhãn' },
     { en: 'Only structured data', vi: 'Chỉ dữ liệu có cấu trúc' },
-    { en: 'Learns patterns without labels', vi: 'Học mẫu không cần nhãn' }
+    { en: 'Learns patterns without labels', vi: 'Học mẫu không cần nhãn' },
+    'C'
   ),
   mcq3(
     'Applying',
@@ -39,7 +43,8 @@ export const latentDirichletAllocation = [
     'Áp LDA lên bài báo. Đầu ra kỳ vọng?',
     { en: 'Classification label per article', vi: 'Nhãn phân loại mỗi bài' },
     { en: 'Topics and their word distributions', vi: 'Các chủ đề và phân phối từ' },
-    { en: 'Sentiment score', vi: 'Điểm cảm xúc' }
+    { en: 'Sentiment score', vi: 'Điểm cảm xúc' },
+    'B'
   ),
   mcq3(
     'Applying',
@@ -50,7 +55,8 @@ export const latentDirichletAllocation = [
       en: 'Mostly words related to A but also some from B.',
       vi: 'Chủ yếu từ liên quan A nhưng cũng có phần B.',
     },
-    { en: 'Incorrectly modeled', vi: 'Mô hình sai' }
+    { en: 'Incorrectly modeled', vi: 'Mô hình sai' },
+    'B'
   ),
   mcq3(
     'Analyzing',
@@ -58,7 +64,8 @@ export const latentDirichletAllocation = [
     'Nếu số chủ đề K quá cao?',
     { en: 'Topics become fragmented and less meaningful', vi: 'Chủ đề vụn và ít ý nghĩa' },
     { en: 'Topics too general', vi: 'Chủ đề quá chung' },
-    { en: 'Model stops working', vi: 'Mô hình hỏng' }
+    { en: 'Model stops working', vi: 'Mô hình hỏng' },
+    'A'
   ),
   mcq3(
     'Analyzing',
@@ -66,7 +73,8 @@ export const latentDirichletAllocation = [
     'Vì sao loại stopword trước LDA?',
     { en: 'Only to save compute', vi: 'Chỉ để tiết kiệm tính toán' },
     { en: 'Improve topic quality by removing uninformative words', vi: 'Cải thiện chất lượng chủ đề' },
-    { en: 'Not necessary', vi: 'Không cần' }
+    { en: 'Not necessary', vi: 'Không cần' },
+    'B'
   ),
   txt(
     'Evaluating',

@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, UserCheck, CheckCircle2, Clock, Users, ArrowRight, RefreshCw, Filter, Shield } from 'lucide-react'
+import { Search, UserCheck, CheckCircle2, Clock, Users, ArrowRight, RefreshCw, Filter, Shield, Download } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import { ROLES } from '../../constants/roles'
+import { exportGradingResultsCsv } from '../../lib/gradingCsvExport'
+
 
 export default function SupporterGradingListPage() {
   const { apiToken, user } = useAuth()
@@ -14,6 +16,20 @@ export default function SupporterGradingListPage() {
   const [tab, setTab] = useState('my') // 'my' | 'all'
   const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'graded' | 'ungraded'
   const isAdmin = user?.role === ROLES.ADMIN
+  const [exporting, setExporting] = useState(false)
+
+  const handleExportCsv = async () => {
+    if (!apiToken) return
+    setExporting(true)
+    try {
+      await exportGradingResultsCsv({ apiToken })
+    } catch (err) {
+      console.error('[Export CSV grading results err]', err)
+      alert(err instanceof Error ? err.message : 'Có lỗi xảy ra khi xuất file CSV.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const fetchLearners = () => {
     if (!apiToken) return
@@ -92,6 +108,18 @@ export default function SupporterGradingListPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleExportCsv}
+              disabled={loading || exporting}
+              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-500/20 transition-all"
+            >
+              {exporting ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              <span>{exporting ? 'Đang xuất...' : 'Xuất CSV kết quả'}</span>
+            </button>
             <button
               onClick={fetchLearners}
               disabled={loading}

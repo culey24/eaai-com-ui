@@ -277,6 +277,74 @@ router.get('/learners', async (req, res) => {
 })
 
 /**
+ * GET /api/grading/export-data
+ * Lấy toàn bộ kết quả chấm điểm của tất cả học viên phục vụ xuất CSV
+ */
+router.get('/export-data', async (req, res) => {
+  try {
+    const isSupporter = isSupporterUserRole(req.auth.userRole)
+    const isAdmin = req.auth.userRole === 'admin'
+    if (!isSupporter && !isAdmin) {
+      return res.status(403).json({ error: 'Không có quyền truy cập' })
+    }
+
+    const students = await prisma.user.findMany({
+      where: { userRole: 'student' },
+      select: {
+        userId: true,
+        username: true,
+        fullname: true,
+        userClass: true,
+        studentSchoolId: true,
+      },
+      orderBy: [{ userClass: 'asc' }, { username: 'asc' }],
+    })
+
+    const gradings = await prisma.studentGrading.findMany({
+      select: {
+        learnerId: true,
+        supporterId: true,
+        totalScore: true,
+        scores: true,
+        comments: true,
+        gradedAt: true,
+        supporter: {
+          select: { username: true, fullname: true },
+        },
+      },
+    })
+
+    const gradingMap = new Map()
+    for (const g of gradings) {
+      gradingMap.set(g.learnerId, g)
+    }
+
+    const list = students.map((st) => {
+      const g = gradingMap.get(st.userId)
+      return {
+        userId: st.userId,
+        username: st.username,
+        fullname: st.fullname,
+        userClass: st.userClass,
+        studentSchoolId: st.studentSchoolId || '',
+        isGraded: g && g.totalScore != null,
+        totalScore: g ? g.totalScore : null,
+        scores: g ? g.scores : {},
+        comments: g ? g.comments : {},
+        gradedAt: g ? g.gradedAt.toISOString() : null,
+        supporterName: g?.supporter ? `${g.supporter.fullname} (${g.supporter.username})` : 'Chưa phân công',
+      }
+    })
+
+    return res.status(200).json(jsonSafe({ results: list }))
+  } catch (err) {
+    console.error('[grading GET /export-data]', err)
+    return res.status(500).json({ error: 'Lỗi máy chủ' })
+  }
+})
+
+
+/**
  * GET /api/grading/learner/:learnerId
  * Lấy toàn bộ bundle bài làm (Sub 1..4, Final, Pretest, Posttest) và kết quả chấm hiện tại
  */

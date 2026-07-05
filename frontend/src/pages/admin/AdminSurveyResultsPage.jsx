@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ClipboardList, Download } from 'lucide-react'
+import { ArrowLeft, ClipboardList, Download, Wand2 } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
@@ -62,6 +62,7 @@ export default function AdminSurveyResultsPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [generating, setGenerating] = useState(false)
 
   const fetchList = useCallback(async () => {
     if (!apiToken || user?.role !== ROLES.ADMIN) return
@@ -108,6 +109,29 @@ export default function AdminSurveyResultsPage() {
     }
   }
 
+  const handleGeneratePosttest2 = async () => {
+    if (!window.confirm('Tạo posttest2 random cho SV đã làm posttest1 nhưng chưa làm posttest2?')) return
+    setGenerating(true)
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/generate-posttest2`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        window.alert(data.error || data.message || `HTTP ${res.status}`)
+        return
+      }
+      window.alert(`Đã tạo ${data.created} posttest2 (bỏ qua ${data.skipped}).`)
+      if (data.created > 0) void fetchList()
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e))
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   const exportCsvLabel =
     activeKind === SURVEY_KIND_POSTTEST2
       ? t('admin.surveys.exportCsvPosttest2')
@@ -139,16 +163,29 @@ export default function AdminSurveyResultsPage() {
           </div>
         </div>
         {apiToken && user?.role === ROLES.ADMIN && !loading && !error && (
-          <button
-            type="button"
-            onClick={handleExportSurveyCsv}
-            disabled={rows.length === 0}
-            title={rows.length === 0 ? t('admin.surveys.exportCsvNoData') : exportCsvTitle}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Download className="w-4 h-4" />
-            {exportCsvLabel}
-          </button>
+          <div className="flex items-center gap-2">
+            {activeKind === SURVEY_KIND_POSTTEST2 && (
+              <button
+                type="button"
+                onClick={handleGeneratePosttest2}
+                disabled={generating}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-600 text-amber-700 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-800/40 text-sm font-medium shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Wand2 className="w-4 h-4" />
+                {generating ? 'Đang tạo...' : 'Tạo Posttest2'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleExportSurveyCsv}
+              disabled={rows.length === 0}
+              title={rows.length === 0 ? t('admin.surveys.exportCsvNoData') : exportCsvTitle}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              {exportCsvLabel}
+            </button>
+          </div>
         )}
       </div>
 

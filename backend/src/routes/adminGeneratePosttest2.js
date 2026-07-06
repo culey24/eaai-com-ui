@@ -195,4 +195,57 @@ router.post('/generate-posttest2', async (req, res) => {
   }
 })
 
+/**
+ * POST /api/admin/sync-posttest2-section-a
+ * Đồng bộ Section A của POSTTEST2 theo POSTTEST của từng sinh viên.
+ */
+router.post('/sync-posttest2-section-a', async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'admin') {
+      return res.status(403).json({ error: 'Chỉ admin' })
+    }
+
+    // Lấy danh sách tất cả POSTTEST2
+    const pt2Responses = await prisma.surveyResponse.findMany({
+      where: { surveyKind: 'POSTTEST2' },
+      select: { id: true, userId: true },
+    })
+
+    if (pt2Responses.length === 0) {
+      return res.json({ updated: 0, message: 'Không có POSTTEST2 nào để đồng bộ' })
+    }
+
+    const userIds = pt2Responses.map(r => r.userId)
+
+    // Lấy POSTTEST (posttest1) tương ứng của các user này
+    const pt1Responses = await prisma.surveyResponse.findMany({
+      where: {
+        userId: { in: userIds },
+        surveyKind: 'POSTTEST',
+      },
+      select: { userId: true, sectionA: true },
+    })
+
+    const pt1Map = Object.fromEntries(pt1Responses.map(r => [r.userId, r.sectionA]))
+
+    let updated = 0
+    for (const pt2 of pt2Responses) {
+      const pt1SectionA = pt1Map[pt2.userId]
+      if (pt1SectionA) {
+        await prisma.surveyResponse.update({
+          where: { id: pt2.id },
+          data: { sectionA: pt1SectionA },
+        })
+        updated++
+      }
+    }
+
+    return res.json({ updated, total: pt2Responses.length })
+  } catch (err) {
+    console.error('[admin sync-posttest2-section-a]', err)
+    return res.status(500).json({ error: 'Lỗi máy chủ', message: err instanceof Error ? err.message : String(err) })
+  }
+})
+
 export default router
+

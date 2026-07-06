@@ -6,23 +6,23 @@ const router = Router()
 router.use(authMiddleware)
 
 // ── Question data (posttest1 answer keys) ────────────────────────────────────
-import { associationRulesMining as pt1Arm } from '../../../frontend/src/data/posttest/sectionB/arm.js'
-import { recommenderSystem as pt1Rec } from '../../../frontend/src/data/posttest/sectionB/recommender.js'
-import { fuzzyLogic as pt1Fuzzy } from '../../../frontend/src/data/posttest/sectionB/fuzzy.js'
-import { linearRegression as pt1LinReg } from '../../../frontend/src/data/posttest/sectionB/linearRegression.js'
-import { logisticRegression as pt1LogReg } from '../../../frontend/src/data/posttest/sectionB/logisticRegression.js'
-import { latentDirichletAllocation as pt1Lda } from '../../../frontend/src/data/posttest/sectionB/lda.js'
-import { deepNeuralNetworks as pt1Dnn } from '../../../frontend/src/data/posttest/sectionB/dnn.js'
-import { wordEmbedding as pt1We } from '../../../frontend/src/data/posttest/sectionB/wordEmbedding.js'
+import { associationRulesMining as pt1Arm } from '../data/posttest/sectionB/arm.js'
+import { recommenderSystem as pt1Rec } from '../data/posttest/sectionB/recommender.js'
+import { fuzzyLogic as pt1Fuzzy } from '../data/posttest/sectionB/fuzzy.js'
+import { linearRegression as pt1LinReg } from '../data/posttest/sectionB/linearRegression.js'
+import { logisticRegression as pt1LogReg } from '../data/posttest/sectionB/logisticRegression.js'
+import { latentDirichletAllocation as pt1Lda } from '../data/posttest/sectionB/lda.js'
+import { deepNeuralNetworks as pt1Dnn } from '../data/posttest/sectionB/dnn.js'
+import { wordEmbedding as pt1We } from '../data/posttest/sectionB/wordEmbedding.js'
 
-import { associationRulesMining as pt2Arm } from '../../../frontend/src/data/posttest2/sectionB/arm.js'
-import { recommenderSystem as pt2Rec } from '../../../frontend/src/data/posttest2/sectionB/recommender.js'
-import { fuzzyLogic as pt2Fuzzy } from '../../../frontend/src/data/posttest2/sectionB/fuzzy.js'
-import { linearRegression as pt2LinReg } from '../../../frontend/src/data/posttest2/sectionB/linearRegression.js'
-import { logisticRegression as pt2LogReg } from '../../../frontend/src/data/posttest2/sectionB/logisticRegression.js'
-import { latentDirichletAllocation as pt2Lda } from '../../../frontend/src/data/posttest2/sectionB/lda.js'
-import { deepNeuralNetworks as pt2Dnn } from '../../../frontend/src/data/posttest2/sectionB/dnn.js'
-import { wordEmbedding as pt2We } from '../../../frontend/src/data/posttest2/sectionB/wordEmbedding.js'
+import { associationRulesMining as pt2Arm } from '../data/posttest2/sectionB/arm.js'
+import { recommenderSystem as pt2Rec } from '../data/posttest2/sectionB/recommender.js'
+import { fuzzyLogic as pt2Fuzzy } from '../data/posttest2/sectionB/fuzzy.js'
+import { linearRegression as pt2LinReg } from '../data/posttest2/sectionB/linearRegression.js'
+import { logisticRegression as pt2LogReg } from '../data/posttest2/sectionB/logisticRegression.js'
+import { latentDirichletAllocation as pt2Lda } from '../data/posttest2/sectionB/lda.js'
+import { deepNeuralNetworks as pt2Dnn } from '../data/posttest2/sectionB/dnn.js'
+import { wordEmbedding as pt2We } from '../data/posttest2/sectionB/wordEmbedding.js'
 
 const TOPIC_QUESTIONS = {
   association_rules_mining:      { pt1: pt1Arm, pt2: pt2Arm },

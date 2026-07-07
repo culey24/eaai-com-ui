@@ -102,37 +102,68 @@ export default function MessageItem({
         {(message.content || message.fileName) &&
           (message.content ? (
             message.role === 'assistant' ? (
-              <div className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-                {formatAgentChatMarkdown(message.content).map((node, i) => {
-                  if (node && typeof node === 'object' && node.type === 'pdf-suggest') {
-                    return (
-                      <button
-                        key={node.key || i}
-                        type="button"
-                        onClick={() => onPdfClick?.(node.filename, node.title)}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 my-1 mx-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-colors text-sm font-medium"
-                      >
-                        <FileText className="w-4 h-4" />
-                        {node.title}
-                      </button>
-                    )
-                  }
-                  if (node && typeof node === 'object' && node.type === 'web-suggest') {
-                    return (
-                      <a
-                        key={node.key || i}
-                        href={node.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-3 py-1.5 my-1 mx-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 transition-colors text-sm font-medium no-underline"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        {node.title}
-                      </a>
-                    )
-                  }
-                  return node
-                })}
+              <div className="flex flex-col">
+                {(() => {
+                  const nodes = formatAgentChatMarkdown(message.content);
+                  const citations = nodes.filter(
+                    (n) => n && typeof n === 'object' && (n.type === 'pdf-suggest' || n.type === 'web-suggest')
+                  );
+                  const contentNodes = nodes.filter(
+                    (n) => !(n && typeof n === 'object' && (n.type === 'pdf-suggest' || n.type === 'web-suggest'))
+                  );
+
+                  return (
+                    <>
+                      {citations.length > 0 && (
+                        <div className="mb-3 flex flex-col gap-2 bg-slate-50/50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/50">
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Tài liệu tham khảo</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {citations.map((node, i) => {
+                              if (node.type === 'pdf-suggest') {
+                                return (
+                                  <button
+                                    key={node.key || i}
+                                    type="button"
+                                    onClick={() => onPdfClick?.(node.filename, node.title)}
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all shadow-sm group text-left"
+                                  >
+                                    <FileText className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors flex-shrink-0" />
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors line-clamp-1 max-w-[200px]">
+                                      {node.title}
+                                    </span>
+                                  </button>
+                                )
+                              }
+                              if (node.type === 'web-suggest') {
+                                return (
+                                  <a
+                                    key={node.key || i}
+                                    href={node.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500/50 hover:bg-emerald-500/5 hover:text-emerald-600 transition-all shadow-sm group text-left no-underline"
+                                  >
+                                    <ExternalLink className="w-4 h-4 text-emerald-500/60 group-hover:text-emerald-600 transition-colors flex-shrink-0" />
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-emerald-600 transition-colors line-clamp-1 max-w-[200px]">
+                                      {node.title}
+                                    </span>
+                                  </a>
+                                )
+                              }
+                              return null
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      <div className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                        {contentNodes}
+                      </div>
+                    </>
+                  )
+                })()}
               </div>
             ) : (
               <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">

@@ -238,8 +238,10 @@ export default function ChatWindow({
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900">
-      {/* Chat header */}
+    <div className="flex h-full w-full bg-white dark:bg-slate-900 overflow-hidden">
+      {/* Left: Chat Container */}
+      <div className="flex-1 flex flex-col min-w-0 h-full transition-all duration-300">
+        {/* Chat header */}
       <div className="flex-shrink-0 px-8 py-5 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/50 flex items-center justify-between">
         <h2 className="font-semibold text-slate-800 dark:text-white text-lg tracking-tight">
           {channelLabel || t('chat.selectChannel')}
@@ -392,13 +394,42 @@ export default function ChatWindow({
               : t('chat.inputPlaceholder')
         }
       />
+      </div>
 
-      <PdfViewerModal
-        isOpen={pdfModal.isOpen}
-        onClose={() => setPdfModal({ ...pdfModal, isOpen: false })}
-        pdfUrl={pdfModal.url}
-        title={pdfModal.title}
-      />
+      {/* Right: Document Viewer */}
+      {pdfModal.isOpen && (
+        <div className="w-[38%] max-w-[500px] min-w-[320px] p-4 pl-0 flex flex-col z-20 animate-in slide-in-from-right-8 duration-300">
+          <div className="flex-1 flex flex-col rounded-3xl border border-slate-200/80 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl shadow-[-10px_10px_40px_-10px_rgba(0,0,0,0.12)] overflow-hidden">
+            <div className="flex-shrink-0 px-5 py-4 border-b border-slate-100/80 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <ExternalLink className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-[15px] text-slate-800 dark:text-white truncate tracking-tight">{pdfModal.title}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Tài liệu tham khảo</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPdfModal({ isOpen: false, url: '', title: '' })}
+                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all flex-shrink-0 ml-2 active:scale-95"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 relative bg-slate-50/50 dark:bg-slate-900/50 p-3">
+              <div className="w-full h-full rounded-2xl overflow-hidden border border-slate-200/60 dark:border-slate-700/60 bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-900/5">
+                <iframe
+                  src={pdfModal.url}
+                  className="w-full h-full border-none"
+                  title={pdfModal.title}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

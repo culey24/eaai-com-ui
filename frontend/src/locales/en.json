@@ -90,7 +90,27 @@
     "downloadAttachmentFailed": "Could not download the attachment.",
     "technicalSupportNotice": "If there is any technical problem, please email us immediately at",
     "thinking": "Thinking…",
-    "scrollToLatest": "Scroll to latest message"
+    "scrollToLatest": "Scroll to latest message",
+    "referenceMaterials": "Reference materials",
+    "learningMaterial": "Learning material",
+    "attachFile": "Attach file",
+    "removeFile": "Remove file"
+  },
+  "quiz": {
+    "badge": "Mini-Quiz",
+    "loadingTitle": "AI is analyzing your knowledge...",
+    "loadingSubtitle": "Designing a practice exercise just for you",
+    "subtitle": "Review Mini-Quiz",
+    "questionLabel": "Question {num}",
+    "correctTitle": "Absolutely correct!",
+    "correctDesc": "Binary Cross-Entropy measures the distance between two probability distributions, making it ideal for binary predictions via the Sigmoid function.",
+    "suggestedMaterials": "Suggested review materials",
+    "suggestedDocTitle": "Lecture 4: Loss Functions.pdf",
+    "suggestedDocPages": "Pages 15 – 22",
+    "sampleQuestion": "In binary classification, which loss function is most commonly used to measure the error between predicted labels and actual labels?",
+    "suggestSubtitle": "Test your knowledge right away",
+    "cta": "Take quiz",
+    "create": "Create Mini-Quiz"
   },
   "report": {
     "title": "Report",
@@ -110,7 +130,9 @@
       "technical": "Technical error",
       "wrong_info": "Incorrect information",
       "other": "Other"
-    }
+    },
+    "close": "Close",
+    "detailPlaceholder": "Describe the issue in more detail..."
   },
   "settings": {
     "title": "Settings",

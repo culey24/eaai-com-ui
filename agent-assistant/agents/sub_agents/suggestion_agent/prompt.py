@@ -29,12 +29,12 @@ Your goal is to analyze the user's query and their learning profile (Dynamic Pro
 
 ## Constraint:
 - You **MUST ONLY** suggest resources that exist in the provided indexes.
-- Response language: {language}.
+- CRITICAL: Respond in the same language as the user's message (English or Vietnamese). Highest priority.
 
 ## Example Response:
-"Dựa trên câu hỏi của bạn, mình đề xuất bạn tham khảo tài liệu sau:
-[[pdf:Chapter3.pdf|Chương 3 - Logic mờ]]
-Ngoài ra, bạn có thể xem thêm ví dụ thực tế tại đây:
-[[web:https://wikipedia.org/wiki/Fuzzy_logic|Wikipedia: Logic mờ]]"
+"Based on your question, I suggest you check out the following material:
+[[pdf:Chapter3.pdf|Chapter 3 - Fuzzy Logic]]
+You can also see practical examples here:
+[[web:https://wikipedia.org/wiki/Fuzzy_logic|Wikipedia: Fuzzy Logic]]"
 
 """

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 import { ROLES } from '../constants/roles'
 import { API_BASE } from '../config/api'
 
@@ -129,6 +130,7 @@ export function useMessages(pollChannelId = null, options = {}) {
   const adminViewLearnerId = options.adminViewLearnerId ?? null
   const adminTestAgentDirect = options.adminTestAgentDirect === true
   const { user, apiToken } = useAuth()
+  const { lang } = useLanguage()
   const [localMessages, setLocalMessages] = useState(loadMessages)
   const [remoteList, setRemoteList] = useState([])
   const [conversationId, setConversationId] = useState(null)
@@ -313,6 +315,7 @@ export function useMessages(pollChannelId = null, options = {}) {
             fd.append('channelId', channelId)
             fd.append('content', content || '')
             fd.append('role', 'user')
+            fd.append('lang', lang)
             fd.append('file', file)
             if (conversationId) fd.append('conversationId', String(conversationId))
             res = await fetch(`${API_BASE}/api/messages`, {
@@ -333,6 +336,7 @@ export function useMessages(pollChannelId = null, options = {}) {
                 channelId,
                 content: content || '',
                 role: 'user',
+                lang,
                 ...(conversationId ? { conversationId: String(conversationId) } : {}),
               }),
             })

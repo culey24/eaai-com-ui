@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useJournal } from '../../context/JournalContext'
+import { useLanguage } from '../../context/LanguageContext'
 import { API_BASE } from '../../config/api'
 
 const SLOTS = [
@@ -30,6 +31,7 @@ const SLOTS = [
 ]
 
 export default function AdminGradingConfigPage() {
+  const { lang } = useLanguage()
   const { apiToken } = useAuth()
   const { submissions } = useJournal()
 
@@ -331,7 +333,7 @@ export default function AdminGradingConfigPage() {
                       <option value="">-- Không chọn (Để trống) --</option>
                       {submissions.map((sub) => (
                         <option key={sub.id} value={sub.id}>
-                          {sub.title} ({new Date(sub.startsAt).toLocaleDateString('vi-VN')} - {new Date(sub.endsAt).toLocaleDateString('vi-VN')})
+                          {sub.title} ({new Date(sub.startsAt).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')} - {new Date(sub.endsAt).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')})
                         </option>
                       ))}
                     </select>

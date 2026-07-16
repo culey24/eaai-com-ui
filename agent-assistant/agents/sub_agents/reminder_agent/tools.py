@@ -50,13 +50,19 @@ def _session_user_id(tool_context: ToolContext) -> Optional[str]:
     return None
 
 
-async def set_reminder(reminder_iso: str, message: str, tool_context: ToolContext) -> str:
+async def set_reminder(reminder_iso: str, message: str, language: Optional[str] = None, tool_context: Optional[ToolContext] = None) -> str:
     """
     Lưu nhắc việc lên backend cho đúng user đang chat. reminder_iso: ISO 8601 (vd. 2026-04-05T08:00:00+07:00).
+
+    Args:
+        reminder_iso: Thời gian nhắc việc dạng ISO 8601.
+        message: Nội dung nhắc việc.
+        language: Ngôn ngữ hiển thị kết quả ('en' cho tiếng Anh, 'vi' cho tiếng Việt). Nếu không truyền, mặc định theo ngôn ngữ phiên chat.
     """
-    user_id = _session_user_id(tool_context)
+    user_id = _session_user_id(tool_context) if tool_context else None
+    lang = language or (tool_context.state.get("language") if tool_context else "en") or "en"
     if not user_id:
-        return _SESSION_USER_MISSING
+        return _SESSION_USER_MISSING if lang == "vi" else "User account not identified in chat session (missing valid user_id). Please log in again or send a new message from the app."
     try:
         path = f'/users/{user_id}/reminders'
         r = requests.post(
@@ -73,7 +79,7 @@ async def set_reminder(reminder_iso: str, message: str, tool_context: ToolContex
             'set_reminder', method='POST', path=path, user_id=user_id, status_code=r.status_code
         )
         if r.status_code == 201:
-            return 'Đã lưu nhắc việc thành công.'
+            return 'Đã lưu nhắc việc thành công.' if lang == "vi" else 'Reminder set successfully.'
         if r.status_code == 400:
             try:
                 body = r.json()
@@ -83,6 +89,9 @@ async def set_reminder(reminder_iso: str, message: str, tool_context: ToolContex
             return (
                 'Lưu nhắc thất bại: máy chủ từ chối yêu cầu (400). '
                 f'Chi tiết: {err or r.text[:300]}'
+            ) if lang == "vi" else (
+                'Failed to set reminder: server rejected the request (400). '
+                f'Details: {err or r.text[:300]}'
             )
         if r.status_code == 404:
             try:
@@ -95,18 +104,26 @@ async def set_reminder(reminder_iso: str, message: str, tool_context: ToolContex
                     'Lưu nhắc thất bại: máy chủ không tìm thấy user này trong CSDL '
                     '(thường do BE_SERVER_BASE_URL của agent khác môi trường với app đăng nhập, '
                     'hoặc tài khoản chưa tồn tại trên DB đó). Kiểm tra biến môi trường backend của stack agent.'
+                ) if lang == "vi" else (
+                    'Failed to set reminder: user not found in the database. Please check configuration.'
                 )
-        return f'Lưu nhắc việc thất bại: {r.status_code} {r.text[:500]}'
+        return f'Lưu nhắc việc thất bại: {r.status_code} {r.text[:500]}' if lang == "vi" else f'Failed to set reminder: {r.status_code} {r.text[:500]}'
     except requests.RequestException as e:
         logger.error('set_reminder: %s', e)
-        return f'Lỗi kết nối: {e}'
+        return f'Lỗi kết nối: {e}' if lang == "vi" else f'Connection error: {e}'
 
 
-async def list_user_reminders(tool_context: ToolContext) -> str:
-    """Liệt kê nhắc việc đã đăng ký (sắp xếp theo thời gian) cho user đang chat."""
-    user_id = _session_user_id(tool_context)
+async def list_user_reminders(language: Optional[str] = None, tool_context: Optional[ToolContext] = None) -> str:
+    """
+    Liệt kê nhắc việc đã đăng ký (sắp xếp theo thời gian) cho user đang chat.
+
+    Args:
+        language: Ngôn ngữ hiển thị kết quả ('en' cho tiếng Anh, 'vi' cho tiếng Việt). Nếu không truyền, mặc định theo ngôn ngữ phiên chat.
+    """
+    user_id = _session_user_id(tool_context) if tool_context else None
+    lang = language or (tool_context.state.get("language") if tool_context else "en") or "en"
     if not user_id:
-        return _SESSION_USER_MISSING
+        return _SESSION_USER_MISSING if lang == "vi" else "User account not identified in chat session (missing valid user_id). Please log in again or send a new message from the app."
     try:
         path = f'/users/{user_id}/reminders'
         r = requests.get(
@@ -118,27 +135,31 @@ async def list_user_reminders(tool_context: ToolContext) -> str:
             'list_reminders', method='GET', path=path, user_id=user_id, status_code=r.status_code
         )
         if r.status_code != 200:
-            return f'Không đọc được danh sách: {r.status_code} {r.text[:300]}'
+            return f'Không đọc được danh sách: {r.status_code} {r.text[:300]}' if lang == "vi" else f'Could not retrieve reminder list: {r.status_code} {r.text[:300]}'
         reminders = r.json().get('reminders') or []
         if not reminders:
-            return 'Chưa có nhắc việc nào.'
+            return 'Chưa có nhắc việc nào.' if lang == "vi" else 'No reminders found.'
         lines = []
         for x in reminders:
             lines.append(f"- {x.get('reminder_at')}: {x.get('message')}")
         return '\n'.join(lines)
     except requests.RequestException as e:
         logger.error('list_user_reminders: %s', e)
-        return f'Lỗi kết nối: {e}'
+        return f'Lỗi kết nối: {e}' if lang == "vi" else f'Connection error: {e}'
 
 
-async def get_user_journal_status(tool_context: ToolContext) -> str:
+async def get_user_journal_status(language: Optional[str] = None, tool_context: Optional[ToolContext] = None) -> str:
     """
     Kiểm tra trạng thái nộp journal của user cho từng đợt đang diễn ra hoặc sắp tới.
     Trả về danh sách đợt kèm thông tin đã nộp hay chưa, ngày nộp và tên file (nếu có).
+
+    Args:
+        language: Ngôn ngữ hiển thị kết quả ('en' cho tiếng Anh, 'vi' cho tiếng Việt). Nếu không truyền, mặc định theo ngôn ngữ phiên chat.
     """
-    user_id = _session_user_id(tool_context)
+    user_id = _session_user_id(tool_context) if tool_context else None
+    lang = language or (tool_context.state.get("language") if tool_context else "en") or "en"
     if not user_id:
-        return _SESSION_USER_MISSING
+        return _SESSION_USER_MISSING if lang == "vi" else "User account not identified in chat session (missing valid user_id). Please log in again or send a new message from the app."
     try:
         path = f'/users/{user_id}/journal-status'
         r = requests.get(
@@ -161,17 +182,24 @@ async def get_user_journal_status(tool_context: ToolContext) -> str:
                         'Không đọc được trạng thái nộp bài: máy chủ không tìm thấy user trong CSDL '
                         '(thường do BE_SERVER_BASE_URL của agent trỏ khác môi trường với app đăng nhập, '
                         'hoặc tài khoản không tồn tại trên DB đó). Kiểm tra biến môi trường backend của agent.'
+                    ) if lang == "vi" else (
+                        'Could not retrieve submission status: user not found in the database. Please check configuration.'
                     )
-            return f'Không đọc được trạng thái journal: {r.status_code} {r.text[:300]}'
+            return f'Không đọc được trạng thái journal: {r.status_code} {r.text[:300]}' if lang == "vi" else f'Could not retrieve journal status: {r.status_code} {r.text[:300]}'
         statuses = r.json().get('journal_status') or []
         if not statuses:
-            return 'Hiện không có đợt nộp journal nào đang diễn ra hoặc sắp tới.'
+            return 'Hiện không có đợt nộp journal nào đang diễn ra hoặc sắp tới.' if lang == "vi" else 'There are no active or upcoming journal submission periods.'
         lines = []
         submitted_count = sum(1 for s in statuses if s.get('submitted'))
         not_submitted_count = len(statuses) - submitted_count
-        lines.append(
-            f'Tổng {len(statuses)} đợt nộp — đã nộp: {submitted_count}, chưa nộp: {not_submitted_count}.\n'
-        )
+        if lang == "vi":
+            lines.append(
+                f'Tổng {len(statuses)} đợt nộp — đã nộp: {submitted_count}, chưa nộp: {not_submitted_count}.\n'
+            )
+        else:
+            lines.append(
+                f'Total {len(statuses)} submission periods — submitted: {submitted_count}, pending: {not_submitted_count}.\n'
+            )
         for s in statuses:
             title = s.get('title') or s.get('period_id', '')
             ends = s.get('ends_at', '')
@@ -179,13 +207,19 @@ async def get_user_journal_status(tool_context: ToolContext) -> str:
                 submitted_at = s.get('submitted_at', '')
                 file_name = s.get('file_name') or ''
                 file_info = f' (file: {file_name})' if file_name else ''
-                lines.append(f'✓ [{title}] — Đã nộp lúc {submitted_at}{file_info}. Hạn: {ends}')
+                if lang == "vi":
+                    lines.append(f'✓ [{title}] — Đã nộp lúc {submitted_at}{file_info}. Hạn: {ends}')
+                else:
+                    lines.append(f'✓ [{title}] — Submitted at {submitted_at}{file_info}. Deadline: {ends}')
             else:
-                lines.append(f'✗ [{title}] — Chưa nộp. Hạn: {ends}')
+                if lang == "vi":
+                    lines.append(f'✗ [{title}] — Chưa nộp. Hạn: {ends}')
+                else:
+                    lines.append(f'✗ [{title}] — Not submitted yet. Deadline: {ends}')
         return '\n'.join(lines)
     except requests.RequestException as e:
         logger.error('get_user_journal_status: %s', e)
-        return f'Lỗi kết nối khi kiểm tra trạng thái journal: {e}'
+        return f'Lỗi kết nối khi kiểm tra trạng thái journal: {e}' if lang == "vi" else f'Connection error when checking journal status: {e}'
 
 
 _MAX_JOURNAL_CONTEXT_CHARS = 80_000
@@ -226,11 +260,15 @@ async def read_journal_submissions_content(tool_context: ToolContext) -> str:
         return f'Lỗi kết nối khi đọc journal đã nộp: {e}'
 
 
-async def get_active_journal_periods() -> str:
+async def get_active_journal_periods(language: Optional[str] = None, tool_context: Optional[ToolContext] = None) -> str:
     """
     Lấy danh sách các đợt nộp journal đang diễn ra hoặc sắp tới từ hệ thống.
     Dùng để thông báo cho người dùng về hạn nộp submission.
+
+    Args:
+        language: Ngôn ngữ hiển thị kết quả ('en' cho tiếng Anh, 'vi' cho tiếng Việt). Nếu không truyền, mặc định theo ngôn ngữ phiên chat.
     """
+    lang = language or (tool_context.state.get("language") if tool_context else "en") or "en"
     try:
         path = '/journal-periods'
         r = requests.get(
@@ -245,23 +283,32 @@ async def get_active_journal_periods() -> str:
             return (
                 f'Không lấy được danh sách đợt nộp từ máy chủ (HTTP {r.status_code}). '
                 f'Bạn có thể xem lịch đợt nộp trên trang Journal trong ứng dụng. Chi tiết: {r.text[:200]}'
+            ) if lang == "vi" else (
+                f'Could not retrieve submission periods from server (HTTP {r.status_code}). '
+                f'You can check the schedule on the Journal page in the app. Details: {r.text[:200]}'
             )
         periods = r.json().get('periods') or []
         if not periods:
-            return 'Hiện không có đợt nộp journal nào đang diễn ra hoặc sắp tới.'
+            return 'Hiện không có đợt nộp journal nào đang diễn ra hoặc sắp tới.' if lang == "vi" else 'There are no active or upcoming journal submission periods.'
         lines = []
         for p in periods:
             title = p.get('title') or p.get('period_id', '')
             desc = f" — {p['description']}" if p.get('description') else ''
             starts = p.get('starts_at', '')
             ends = p.get('ends_at', '')
-            lines.append(f"- [{title}]{desc}: bắt đầu {starts}, hạn nộp {ends}")
-        return 'Các đợt nộp journal hiện tại:\n' + '\n'.join(lines)
+            if lang == "vi":
+                lines.append(f"- [{title}]{desc}: bắt đầu {starts}, hạn nộp {ends}")
+            else:
+                lines.append(f"- [{title}]{desc}: starts {starts}, deadline {ends}")
+        return ('Các đợt nộp journal hiện tại:\n' if lang == "vi" else 'Current journal submission periods:\n') + '\n'.join(lines)
     except requests.RequestException as e:
         logger.error('get_active_journal_periods: %s', e)
         return (
             'Không kết nối được máy chủ để lấy danh sách đợt nộp. '
             f'Xem thử trang Journal trên ứng dụng. ({e})'
+        ) if lang == "vi" else (
+            'Could not connect to the server to retrieve submission periods. '
+            f'Please check the Journal page in the app. ({e})'
         )
 
 

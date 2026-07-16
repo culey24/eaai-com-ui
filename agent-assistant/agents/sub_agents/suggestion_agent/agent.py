@@ -48,9 +48,6 @@ def load_web_index():
 def init_session_state(callback_context: CallbackContext) -> None:
     if "dynamic_profile" not in callback_context.state:
         callback_context.state["dynamic_profile"] = []
-    if "language" not in callback_context.state:
-        callback_context.state["language"] = "vi"
-
 def create_agent(query: Optional[str] = None) -> Agent:
     pdf_index_data = load_pdf_index()
     web_index_data = load_web_index()
@@ -59,7 +56,6 @@ def create_agent(query: Optional[str] = None) -> Agent:
         dynamic_profile="{dynamic_profile}",
         pdf_index=pdf_index_data,
         web_index=web_index_data,
-        language="{language}"
     )
 
     if query:

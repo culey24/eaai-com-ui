@@ -156,16 +156,23 @@ function splitFencedCode(text) {
 
 function CodeBlock({ lang, content }) {
   return (
-    <pre
-      className="my-2 max-w-full rounded-xl border border-slate-200 bg-slate-100 p-3 text-left text-[13px] leading-relaxed text-slate-800 dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-100 overflow-x-auto font-mono whitespace-pre"
-    >
-      {lang ? (
-        <span className="mb-2 block font-sans text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          {lang}
-        </span>
-      ) : null}
-      <code>{content}</code>
-    </pre>
+    <div className="my-4 overflow-hidden rounded-xl border border-slate-200/60 dark:border-slate-700/50 bg-slate-50 dark:bg-[#0d1117] shadow-sm">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-100/50 dark:bg-slate-800/40 border-b border-slate-200/50 dark:border-slate-700/50">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-red-400/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]" />
+          <div className="w-3 h-3 rounded-full bg-amber-400/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]" />
+          <div className="w-3 h-3 rounded-full bg-green-400/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]" />
+        </div>
+        {lang && (
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            {lang}
+          </span>
+        )}
+      </div>
+      <pre className="p-4 overflow-x-auto text-left text-[13.5px] leading-relaxed text-slate-800 dark:text-slate-200 font-mono whitespace-pre">
+        <code>{content}</code>
+      </pre>
+    </div>
   )
 }
 
@@ -178,14 +185,16 @@ function splitSuggestions(text) {
   const out = []
   let i = 0
   const s = String(text)
-  // Combine PDF and Web regex for splitting
-  const SUGGEST_RE = /(\[\[(?:pdf|web):[^|]+\|[^\]]+\]\])/g
+  // Combine PDF, Web, and Quiz regex for splitting
+  const SUGGEST_RE = /(\[\[(?:pdf|web|quiz):[^|]+\|[^\]]+\]\]|\[\[quiz-loading\]\])/g
   const parts = s.split(SUGGEST_RE)
   
   parts.forEach((part) => {
     if (!part) return
     const pdfMatch = /^\[\[pdf:([^|]+)\|([^\]]+)\]\]$/.exec(part)
     const webMatch = /^\[\[web:([^|]+)\|([^\]]+)\]\]$/.exec(part)
+    const quizMatch = /^\[\[quiz:([^|]+)\|([^\]]+)\]\]$/.exec(part)
+    const quizLoadingMatch = /^\[\[quiz-loading\]\]$/.exec(part)
     
     if (pdfMatch) {
       out.push({
@@ -198,6 +207,16 @@ function splitSuggestions(text) {
         type: 'web-suggest',
         url: webMatch[1],
         title: webMatch[2],
+      })
+    } else if (quizMatch) {
+      out.push({
+        type: 'quiz-suggest',
+        id: quizMatch[1],
+        title: quizMatch[2],
+      })
+    } else if (quizLoadingMatch) {
+      out.push({
+        type: 'quiz-loading',
       })
     } else {
       out.push({ type: 'text', value: part })
@@ -276,14 +295,80 @@ function parseCodeAndRest(str, keyPrefix, codeClass) {
   return out
 }
 
+function parseBlocks(str, keyPrefix, codeClass) {
+  // Tách dòng bằng newline nhưng giữ nguyên format
+  const parts = str.split('\n')
+  const out = []
+  
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i]
+    const headerMatch = /^(#{1,6})\s+(.+)$/.exec(part)
+    const quoteMatch = /^>\s+(.+)$/.exec(part)
+    const listMatch = /^([*\-]|\d+\.)\s+(.+)$/.exec(part)
+
+    if (headerMatch) {
+      const level = headerMatch[1].length
+      const content = headerMatch[2]
+      const Tag = `h${level}`
+      let sizeClass = 'text-base font-semibold mt-3 mb-1'
+      if (level === 1) sizeClass = 'text-2xl font-bold mt-5 mb-3 text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-2'
+      else if (level === 2) sizeClass = 'text-xl font-bold mt-4 mb-2 text-slate-800 dark:text-slate-100'
+      else if (level === 3) sizeClass = 'text-lg font-semibold mt-3 mb-2 text-slate-800 dark:text-slate-100'
+
+      out.push(
+        <Tag key={kid(`${keyPrefix}h`)} className={sizeClass}>
+          {parseCodeAndRest(content, `${keyPrefix}hi${i}`, codeClass)}
+        </Tag>
+      )
+    } else if (quoteMatch) {
+      const content = quoteMatch[1]
+      out.push(
+        <blockquote key={kid(`${keyPrefix}bq`)} className="border-l-[3px] border-primary/40 bg-primary/5 pl-4 py-2 my-2 rounded-r-xl italic text-slate-700 dark:text-slate-300">
+          {parseCodeAndRest(content, `${keyPrefix}bqi${i}`, codeClass)}
+        </blockquote>
+      )
+    } else if (listMatch) {
+      const marker = listMatch[1]
+      const content = listMatch[2]
+      const isOrdered = marker.includes('.')
+      
+      out.push(
+        <div key={kid(`${keyPrefix}li`)} className="flex items-start gap-2.5 my-1.5 group">
+          <span className={`flex-shrink-0 font-medium select-none ${isOrdered ? 'text-slate-500 dark:text-slate-400 mt-0.5 text-sm' : 'text-primary mt-1'}`}>
+            {isOrdered ? marker : '•'}
+          </span>
+          <span className="flex-1 leading-relaxed">
+            {parseCodeAndRest(content, `${keyPrefix}lii${i}`, codeClass)}
+          </span>
+        </div>
+      )
+    } else if (part.trim() === '') {
+      // Empty line adds some vertical rhythm if we want, or just a br
+      out.push(<br key={kid(`${keyPrefix}br${i}`)} />)
+    } else {
+      out.push(
+        <div key={kid(`${keyPrefix}div${i}`)} className="my-1.5">
+          {parseCodeAndRest(part, `${keyPrefix}p${i}`, codeClass)}
+        </div>
+      )
+    }
+  }
+  return out
+}
+
 /**
- * Định dạng nhẹ cho phản hồi agent: **đậm**, *nghiêng*, `code`, ~~gạch~~
- * Khối code: ```lang\\n...\\n```
+ * Định dạng nhẹ cho phản hồi agent: **đậm**, *nghiêng*, `code`, ~~gạch~~, Header
+ * Khối code: ```lang\n...\n```
  * Công thức: `$...$` (inline), `$$...$$` (khối) — KaTeX/LaTeX.
- * Thứ tự: ``` fence ``` → tách công thức → tách gợi ý (PDF/Web) → trong mỗi đoạn văn: `code` → **bold** → ~~strike~~ → *italic*
+ * Thứ tự: ``` fence ``` → tách công thức → tách gợi ý (PDF/Web) → trong mỗi đoạn văn: Header → `code` → **bold** → ~~strike** → *italic*
  */
 export function formatAgentChatMarkdown(text) {
   if (text == null || text === '') return []
+  
+  // Clean up bullet lines that only contain suggestions to prevent empty bullets in UI
+  const BULLET_WITH_SUGGESTION_RE = /^[ \t]*([*\-+]|\d+\.)[ \t]*(?:.*?:)?[ \t]*(\[\[(?:pdf|web|quiz):[^|]+\|[^\]]+\]\])[ \t]*(?:\r?\n|$)/gm
+  text = text.replace(BULLET_WITH_SUGGESTION_RE, '$2\n')
+
   _keySeq = 0
   const codeClass =
     'px-1 py-0.5 rounded-md bg-slate-200/90 dark:bg-slate-600/90 font-mono text-[0.9em]'
@@ -308,9 +393,13 @@ export function formatAgentChatMarkdown(text) {
             out.push({ ...sSeg, key: kid('pdf') })
           } else if (sSeg.type === 'web-suggest') {
             out.push({ ...sSeg, key: kid('web') })
+          } else if (sSeg.type === 'quiz-suggest') {
+            out.push({ ...sSeg, key: kid('quiz') })
+          } else if (sSeg.type === 'quiz-loading') {
+            out.push({ ...sSeg, key: kid('quizload') })
           } else {
             // text segment -> parse formatting
-            out.push(...parseCodeAndRest(sSeg.value, 'md', codeClass))
+            out.push(...parseBlocks(sSeg.value, 'md', codeClass))
           }
         }
       }

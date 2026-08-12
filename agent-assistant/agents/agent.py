@@ -206,8 +206,24 @@ def init_session_state(callback_context: CallbackContext) -> None:
     if "dynamic_profile" not in callback_context.state:
         callback_context.state["dynamic_profile"] = []
 
-    if "language" not in callback_context.state:
-        callback_context.state["language"] = "vi"
+    # Fetch session language from chatbot server
+    inv_ctx = getattr(callback_context, '_invocation_context', None)
+    session_id = inv_ctx.session.id if inv_ctx and inv_ctx.session else None
+    
+    chatbot_port = os.getenv("CHATBOT_SERVER_PORT") or "8003"
+    chatbot_port = str(chatbot_port).strip().replace("\"", "").replace("'", "")
+    
+    lang = "en"
+    if session_id:
+        try:
+            r = requests.get(f"http://127.0.0.1:{chatbot_port}/session-language/{session_id}", timeout=2)
+            if r.status_code == 200:
+                lang = r.json().get("language", "en")
+        except Exception as e:
+            logger.warning("Failed to fetch session language from chatbot server: %s", e)
+    
+    callback_context.state["language"] = lang
+    logger.info("[debug agent.py] session_id=%s lang=%s", session_id, lang)
 
     # logger.info(f"Current State: {callback_context.state}")
 
@@ -230,7 +246,6 @@ def create_agent() -> Agent:
             current_attempt="{current_attempt}",
             static_profile="{static_profile}",
             dynamic_profile="{dynamic_profile}",
-            language="{language}",
         ),
         before_model_callback=setup_before_model_call,
         before_agent_callback=init_session_state,

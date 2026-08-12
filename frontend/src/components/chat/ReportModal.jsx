@@ -65,7 +65,7 @@ export default function ReportModal({ isOpen, onClose, channel, onSubmit }) {
             onClick={handleClose}
             disabled={submitted}
             className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors disabled:opacity-50"
-            aria-label="Đóng"
+            aria-label={t('report.close')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -122,7 +122,7 @@ export default function ReportModal({ isOpen, onClose, channel, onSubmit }) {
               <textarea
                 value={detail}
                 onChange={(e) => setDetail(e.target.value)}
-                placeholder="Mô tả thêm về vấn đề..."
+                placeholder={t('report.detailPlaceholder')}
                 rows={3}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/25 focus:border-primary outline-none resize-none text-sm"
               />

@@ -95,7 +95,7 @@ export default function AdminSurveyResultsPage() {
 
   const stats = useMemo(() => aggregateSurveySubmissions(rows), [rows])
 
-  const handleExportSurveyCsv = () => {
+  const handleExportSurveyCsv = async () => {
     if (rows.length === 0) return
     try {
       const prefix =
@@ -104,7 +104,26 @@ export default function AdminSurveyResultsPage() {
           : activeKind === SURVEY_KIND_POSTTEST
             ? 'posttest-submissions'
             : 'pretest-submissions'
-      downloadPretestSurveyCsv({ rows, filenamePrefix: prefix, activeKind })
+
+      // Điểm mentor đã chấm theo username (nguồn /api/grading/export-data)
+      let scoreMap = {}
+      try {
+        const res = await fetch(`${API_BASE}/api/grading/export-data`, {
+          headers: { Authorization: `Bearer ${apiToken}` },
+        })
+        const data = await res.json().catch(() => ({}))
+        if (res.ok && Array.isArray(data.results)) {
+          scoreMap = Object.fromEntries(
+            data.results
+              .filter((r) => r?.username && r?.scores)
+              .map((r) => [String(r.username).toLowerCase(), r.scores])
+          )
+        }
+      } catch {
+        scoreMap = {}
+      }
+
+      downloadPretestSurveyCsv({ rows, filenamePrefix: prefix, activeKind, scoreMap })
     } catch (e) {
       window.alert(e instanceof Error ? e.message : String(e))
     }

@@ -1,6 +1,6 @@
 import { useRef, useEffect, useLayoutEffect, useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageSquare, Flag, Loader2, ChevronDown, X, ExternalLink } from 'lucide-react'
+import { MessageSquare, Flag, Loader2, ChevronDown, X, ExternalLink, Brain, Sparkles, FileText, ArrowRight, ChevronLeft, RotateCcw } from 'lucide-react'
 import MessageItem from './MessageItem'
 import ChatInput from './ChatInput'
 import ReportModal from './ReportModal'
@@ -8,6 +8,53 @@ import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { ROLES } from '../../constants/roles'
 import { API_BASE } from '../../config/api'
+import { getSectionBQuestions } from '../../data/posttest/sectionB'
+
+const TOPIC_ID_MAP = {
+  'arm': 'association_rules_mining',
+  'association_rules_mining': 'association_rules_mining',
+  'recommender': 'recommender_system',
+  'recommender_system': 'recommender_system',
+  'fuzzy': 'fuzzy_logic',
+  'fuzzy_logic': 'fuzzy_logic',
+  'linear': 'linear_regression',
+  'linear_regression': 'linear_regression',
+  'logistic': 'logistic_regression',
+  'logistic_regression': 'logistic_regression',
+  'lda': 'latent_dirichlet_allocation',
+  'latent_dirichlet_allocation': 'latent_dirichlet_allocation',
+  'dnn': 'deep_neural_networks',
+  'deep_neural_networks': 'deep_neural_networks',
+  'wordembedding': 'word_embedding',
+  'word_embedding': 'word_embedding',
+}
+
+const QUIZ_TOPICS_MAP = {
+  association_rules_mining: {
+    pdfFile: 'Association Rules Mining.pdf',
+  },
+  recommender_system: {
+    pdfFile: 'RecommenderSystems-Shortened.pdf',
+  },
+  fuzzy_logic: {
+    pdfFile: 'Chapter3_PartII-Fuzzy.pdf',
+  },
+  linear_regression: {
+    pdfFile: '3-LinearRegression.pdf',
+  },
+  logistic_regression: {
+    pdfFile: '4-LogisticRegression.pdf',
+  },
+  latent_dirichlet_allocation: {
+    pdfFile: 'Latent-Dirichlet-Allocation.pdf',
+  },
+  deep_neural_networks: {
+    pdfFile: '2-DL-NLP.pdf',
+  },
+  word_embedding: {
+    pdfFile: '2-DL-NLP.pdf',
+  },
+}
 
 /** Supporter/internal-chat: sau khoảng này chưa có phản hồi → gợi ý hệ thống bận (học viên IS-2). */
 const IS3_BUSY_AFTER_MS = 45_000
@@ -22,6 +69,7 @@ function messagesEndSignature(msgs) {
 }
 
 function PdfViewerModal({ isOpen, onClose, pdfUrl, title }) {
+  const { t } = useLanguage()
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -33,7 +81,7 @@ function PdfViewerModal({ isOpen, onClose, pdfUrl, title }) {
             </div>
             <div>
               <h3 className="font-semibold text-slate-800 dark:text-white leading-tight">{title}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Tài liệu học tập</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('chat.learningMaterial')}</p>
             </div>
           </div>
           <button
@@ -71,7 +119,7 @@ export default function ChatWindow({
   /** Đang tải thread từ máy chủ (resolve + lần pull đầu) */
   threadLoading = false,
 }) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const { isProfileComplete, apiToken, user } = useAuth()
   const canSendChat = isProfileComplete()
   const channelLabel = customTitle ?? (channel?.labelKey ? t(channel.labelKey, { code: channel.code }) : channel?.label)
@@ -86,10 +134,86 @@ export default function ChatWindow({
   const [hasSupporterAssignment, setHasSupporterAssignment] = useState(null)
   
   const [pdfModal, setPdfModal] = useState({ isOpen: false, url: '', title: '' })
+  const [quizModal, setQuizModal] = useState({ isOpen: false, id: '', title: '' })
+
+  const [quizState, setQuizState] = useState({
+    currentIdx: 0,
+    answers: {},
+    isFinished: false
+  })
+
+  // Reset quiz state when quizModal.id changes
+  useEffect(() => {
+    setQuizState({
+      currentIdx: 0,
+      answers: {},
+      isFinished: false
+    })
+  }, [quizModal.id])
+
+  const questions = useMemo(() => {
+    if (!quizModal.id) return []
+    const topicKey = TOPIC_ID_MAP[quizModal.id] || quizModal.id
+    return getSectionBQuestions(topicKey)
+  }, [quizModal.id])
+
+  const handleChoiceSelect = (choiceKey) => {
+    if (quizState.answers[quizState.currentIdx] !== undefined) return
+    setQuizState(prev => ({
+      ...prev,
+      answers: {
+        ...prev.answers,
+        [prev.currentIdx]: choiceKey
+      }
+    }))
+  }
+
+  const handleNext = () => {
+    if (quizState.currentIdx < questions.length - 1) {
+      setQuizState(prev => ({
+        ...prev,
+        currentIdx: prev.currentIdx + 1
+      }))
+    } else {
+      setQuizState(prev => ({
+        ...prev,
+        isFinished: true
+      }))
+    }
+  }
+
+  const handlePrev = () => {
+    if (quizState.currentIdx > 0) {
+      setQuizState(prev => ({
+        ...prev,
+        currentIdx: prev.currentIdx - 1
+      }))
+    }
+  }
+
+  const handleRestartQuiz = () => {
+    setQuizState({
+      currentIdx: 0,
+      answers: {},
+      isFinished: false
+    })
+  }
 
   const handlePdfClick = (filename, title) => {
     const url = `${API_BASE}/api/docs/slides/${encodeURIComponent(filename)}`
+    setQuizModal({ isOpen: false, id: '', title: '' })
     setPdfModal({ isOpen: true, url, title })
+  }
+
+  const handleQuizClick = (id, title, contextContent = '') => {
+    if (id === 'gen-1') {
+      const contextPrefix = contextContent ? `Based on the following content:\n"""\n${contextContent}\n"""\n\n` : '';
+      const promptText = `${contextPrefix}Please create a multiple-choice review question (mini-quiz) for the above lesson content, using the suggest tag format [[quiz:topic_id|Quiz Title]] if it matches the lesson topics. ALWAYS respond in English.`;
+      handleSend(promptText);
+      return;
+    }
+    setPdfModal({ isOpen: false, url: '', title: '' })
+    setQuizModal({ isOpen: true, id, title })
   }
 
   const internalMask =
@@ -238,8 +362,10 @@ export default function ChatWindow({
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900">
-      {/* Chat header */}
+    <div className="flex h-full w-full bg-white dark:bg-slate-900 overflow-hidden">
+      {/* Left: Chat Container */}
+      <div className="flex-1 flex flex-col min-w-0 h-full transition-all duration-300">
+        {/* Chat header */}
       <div className="flex-shrink-0 px-8 py-5 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/50 flex items-center justify-between">
         <h2 className="font-semibold text-slate-800 dark:text-white text-lg tracking-tight">
           {channelLabel || t('chat.selectChannel')}
@@ -265,11 +391,18 @@ export default function ChatWindow({
       />
 
       {/* Messages: không kéo đáy mỗi poll nếu user đã kéo lên; nút mũi tên xuống khi có tin mới */}
-      <div className="flex-1 min-h-0 flex flex-col relative">
+      <div className="flex-1 min-h-0 flex flex-col relative overflow-hidden">
+        {/* Glowing Orbs Background */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+          <div className="absolute top-[-10%] left-[-5%] w-96 h-96 bg-primary/20 dark:bg-primary/10 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[100px] opacity-70 animate-blob" />
+          <div className="absolute top-[20%] right-[-5%] w-96 h-96 bg-indigo-500/20 dark:bg-indigo-500/10 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[100px] opacity-70 animate-blob animation-delay-2000" />
+          <div className="absolute bottom-[-10%] left-[20%] w-96 h-96 bg-sky-500/20 dark:bg-sky-500/10 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[100px] opacity-70 animate-blob animation-delay-4000" />
+        </div>
+
         <div
           ref={scrollRef}
           onScroll={handleMessagesScroll}
-          className="flex-1 min-h-0 overflow-y-auto p-8 pb-4 space-y-6 bg-slate-50/30 dark:bg-slate-800/30 scrollbar-thin relative"
+          className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8 pb-4 space-y-6 bg-gradient-to-b from-white/40 via-slate-50/40 to-slate-100/40 dark:from-slate-900/60 dark:via-slate-900/60 dark:to-slate-950/60 backdrop-blur-[2px] scrollbar-thin relative z-10"
         >
         {threadLoading && channel ? (
           <div
@@ -325,6 +458,7 @@ export default function ChatWindow({
                   conversationId={remoteConversationId}
                   apiToken={apiToken}
                   onPdfClick={handlePdfClick}
+                  onQuizClick={handleQuizClick}
                 />
               ))}
               {showIs3BusyHint && (
@@ -392,13 +526,372 @@ export default function ChatWindow({
               : t('chat.inputPlaceholder')
         }
       />
+      </div>
 
-      <PdfViewerModal
-        isOpen={pdfModal.isOpen}
-        onClose={() => setPdfModal({ ...pdfModal, isOpen: false })}
-        pdfUrl={pdfModal.url}
-        title={pdfModal.title}
-      />
+      {/* Right: Document Viewer */}
+      {pdfModal.isOpen && (
+        <div className="w-[38%] max-w-[500px] min-w-[320px] p-4 pl-0 flex flex-col z-20 animate-in slide-in-from-right-8 duration-300">
+          <div className="flex-1 flex flex-col rounded-3xl border border-slate-200/80 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl shadow-[-10px_10px_40px_-10px_rgba(0,0,0,0.12)] overflow-hidden">
+            <div className="flex-shrink-0 px-5 py-4 border-b border-slate-100/80 dark:border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <ExternalLink className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-[15px] text-slate-800 dark:text-white truncate tracking-tight">{pdfModal.title}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('chat.referenceMaterials')}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPdfModal({ isOpen: false, url: '', title: '' })}
+                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all flex-shrink-0 ml-2 active:scale-95"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 relative bg-slate-50/50 dark:bg-slate-900/50 p-3">
+              <div className="w-full h-full rounded-2xl overflow-hidden border border-slate-200/60 dark:border-slate-700/60 bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-900/5">
+                <iframe
+                  src={pdfModal.url}
+                  className="w-full h-full border-none"
+                  title={pdfModal.title}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Right: Quiz Viewer */}
+      {quizModal.isOpen && (
+        <div className="w-[38%] max-w-[500px] min-w-[320px] p-4 pl-0 flex flex-col z-20 animate-in slide-in-from-right-8 duration-300">
+          <div className="flex-1 flex flex-col rounded-3xl border border-slate-200/80 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl shadow-[-10px_10px_40px_-10px_rgba(0,0,0,0.12)] overflow-hidden">
+            <div className="flex-shrink-0 px-5 py-4 border-b border-slate-100/80 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Brain className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-[15px] text-slate-800 dark:text-white truncate tracking-tight">{quizModal.title}</h3>
+                  <p className="text-xs text-indigo-500 dark:text-indigo-400 font-medium">{t('quiz.subtitle')}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuizModal({ isOpen: false, id: '', title: '' })}
+                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all flex-shrink-0 ml-2 active:scale-95"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-900/50 p-6 scrollbar-thin">
+              {questions.length === 0 ? (
+                <div className="text-center py-8">
+                  <Brain className="w-12 h-12 text-slate-300 mx-auto mb-3 animate-pulse" />
+                  <p className="text-sm text-slate-500 font-medium">
+                    {lang === 'vi' ? 'Không tìm thấy câu hỏi cho chủ đề này.' : 'No questions found for this topic.'}
+                  </p>
+                </div>
+              ) : quizState.isFinished ? (
+                <div className="space-y-6">
+                  <div className="text-center py-6 bg-gradient-to-br from-indigo-50 to-indigo-100/30 dark:from-indigo-950/20 dark:to-slate-900/20 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/30 p-6">
+                    <Sparkles className="w-10 h-10 text-indigo-500 mx-auto mb-2" />
+                    <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                      {lang === 'vi' ? 'Hoàn thành bài Quiz!' : 'Quiz Completed!'}
+                    </h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      {lang === 'vi' ? 'Kết quả làm bài của bạn' : 'Your practice results'}
+                    </p>
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      {(() => {
+                        const correctCount = Object.entries(quizState.answers).reduce((acc, [idx, choice]) => {
+                          return acc + (questions[idx]?.answer === choice ? 1 : 0);
+                        }, 0);
+                        const pct = Math.round((correctCount / questions.length) * 100);
+                        return (
+                          <div>
+                            <div className="text-3xl font-black text-indigo-600 dark:text-indigo-400">
+                              {correctCount} / {questions.length}
+                            </div>
+                            <div className="text-xs font-semibold text-indigo-500 dark:text-indigo-400 mt-0.5">
+                              {pct}% {lang === 'vi' ? 'chính xác' : 'correct'}
+                            </div>
+                            <p className="text-xs text-slate-650 dark:text-slate-300 mt-3 max-w-[280px] mx-auto leading-relaxed">
+                              {pct >= 80 
+                                ? (lang === 'vi' ? 'Tuyệt vời! Bạn nắm rất vững kiến thức phần này.' : 'Excellent job! You have a solid understanding of this topic.')
+                                : pct >= 50
+                                ? (lang === 'vi' ? 'Khá tốt! Hãy đọc lại tài liệu để lấp các lỗ hổng kiến thức.' : 'Good effort! Try reviewing the materials to fill in any gaps.')
+                                : (lang === 'vi' ? 'Cố gắng lên! Bạn nên ôn tập lại kỹ hơn các bài giảng gợi ý.' : 'Keep practicing! Reviewing the suggested reading will help improve.')
+                              }
+                            </p>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      {lang === 'vi' ? 'Chi tiết đáp án' : 'Answer Key'}
+                    </h5>
+                    <div className="grid grid-cols-5 gap-2">
+                      {questions.map((q, idx) => {
+                        const ans = quizState.answers[idx];
+                        const isCorrect = q.answer === ans;
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => setQuizState(prev => ({ ...prev, currentIdx: idx, isFinished: false }))}
+                            className={`p-2.5 rounded-xl border text-center font-bold text-sm transition-all active:scale-95 ${
+                              isCorrect 
+                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+                                : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+                            }`}
+                          >
+                            {idx + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-700/60 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleRestartQuiz}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm shadow-sm hover:bg-slate-50 dark:hover:bg-slate-750 active:scale-95 transition-all"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      {lang === 'vi' ? 'Làm lại Quiz' : 'Restart Quiz'}
+                    </button>
+                  </div>
+
+                  {(() => {
+                    const topicKey = TOPIC_ID_MAP[quizModal.id] || quizModal.id;
+                    const material = QUIZ_TOPICS_MAP[topicKey];
+                    if (!material) return null;
+                    return (
+                      <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/60">
+                        <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                          <FileText className="w-4 h-4" /> {t('quiz.suggestedMaterials')}
+                        </h4>
+                        <button 
+                          onClick={() => handlePdfClick(material.pdfFile, t(`quiz.materials.${topicKey}.title`))}
+                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary/50 transition-colors text-left group shadow-sm"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-primary transition-colors">
+                              {t(`quiz.materials.${topicKey}.title`)}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {t(`quiz.materials.${topicKey}.pages`)}
+                            </p>
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Progress Header */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
+                      {lang === 'vi' 
+                        ? `Câu hỏi ${quizState.currentIdx + 1} / ${questions.length}` 
+                        : `Question ${quizState.currentIdx + 1} of ${questions.length}`
+                      }
+                    </span>
+                    <div className="flex gap-1">
+                      {questions.map((_, idx) => {
+                        const ans = quizState.answers[idx];
+                        const isCurrent = idx === quizState.currentIdx;
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`w-2 h-2 rounded-full transition-all ${
+                              isCurrent 
+                                ? 'bg-indigo-600 scale-125' 
+                                : ans !== undefined 
+                                ? 'bg-indigo-300 dark:bg-indigo-800' 
+                                : 'bg-slate-200 dark:bg-slate-700'
+                            }`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Question Prompt */}
+                  <div>
+                    <h4 className="text-base font-bold text-slate-800 dark:text-slate-100 leading-snug">
+                      {lang === 'vi' 
+                        ? questions[quizState.currentIdx]?.prompt.vi 
+                        : questions[quizState.currentIdx]?.prompt.en
+                      }
+                    </h4>
+                  </div>
+                  
+                  {/* Choices list */}
+                  <div className="space-y-3">
+                    {(() => {
+                      const q = questions[quizState.currentIdx];
+                      const userAnswer = quizState.answers[quizState.currentIdx];
+                      const isAnswered = userAnswer !== undefined;
+                      return q?.choices.map((opt) => {
+                        const isSelected = userAnswer === opt.key;
+                        const isCorrect = opt.key === q.answer;
+                        
+                        let btnStyle = 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700';
+                        let badgeStyle = 'border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400';
+                        let textStyle = 'text-slate-700 dark:text-slate-300';
+                        
+                        if (isAnswered) {
+                          if (isCorrect) {
+                            btnStyle = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]';
+                            badgeStyle = 'bg-emerald-500 border-emerald-500 text-white';
+                            textStyle = 'text-emerald-700 dark:text-emerald-400 font-semibold';
+                          } else if (isSelected) {
+                            btnStyle = 'border-rose-500 bg-rose-50 dark:bg-rose-500/10 shadow-[0_0_15px_rgba(239,68,68,0.15)]';
+                            badgeStyle = 'bg-rose-500 border-rose-500 text-white';
+                            textStyle = 'text-rose-700 dark:text-rose-400 font-semibold';
+                          } else {
+                            btnStyle = 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 opacity-50 cursor-default';
+                          }
+                        }
+                        
+                        return (
+                          <button 
+                            key={opt.key} 
+                            disabled={isAnswered}
+                            onClick={() => handleChoiceSelect(opt.key)}
+                            className={`w-full text-left p-4 rounded-xl border transition-all ${btnStyle}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center border text-xs font-bold ${badgeStyle}`}>
+                                {opt.key}
+                              </div>
+                              <span className={`text-[15px] ${textStyle}`}>
+                                {lang === 'vi' ? opt.vi : opt.en}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
+
+                  {/* Feedback Explanation */}
+                  {(() => {
+                    const q = questions[quizState.currentIdx];
+                    const userAnswer = quizState.answers[quizState.currentIdx];
+                    if (userAnswer === undefined) return null;
+                    const isCorrect = userAnswer === q.answer;
+                    return (
+                      <div className="mt-4 text-[14px] bg-slate-100/80 dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-start gap-2.5">
+                          {isCorrect ? (
+                            <>
+                              <Sparkles className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="font-bold text-slate-800 dark:text-slate-200">
+                                  {lang === 'vi' ? 'Hoàn toàn chính xác!' : 'Absolutely correct!'}
+                                </p>
+                                <p className="mt-1 text-slate-600 dark:text-slate-350 leading-relaxed">
+                                  {lang === 'vi' 
+                                    ? `"${q.choices.find(c => c.key === q.answer)?.vi}" là đáp án chính xác.`
+                                    : `"${q.choices.find(c => c.key === q.answer)?.en}" is the correct answer.`
+                                  }
+                                </p>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <X className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="font-bold text-slate-800 dark:text-slate-200">
+                                  {lang === 'vi' ? 'Chưa chính xác' : 'Incorrect'}
+                                </p>
+                                <p className="mt-1 text-slate-600 dark:text-slate-350 leading-relaxed">
+                                  {lang === 'vi'
+                                    ? `Đáp án đúng là ${q.answer}: "${q.choices.find(c => c.key === q.answer)?.vi}".`
+                                    : `The correct answer is ${q.answer}: "${q.choices.find(c => c.key === q.answer)?.en}".`
+                                  }
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Navigation Footer */}
+                  {quizState.answers[quizState.currentIdx] !== undefined && (
+                    <div className="flex items-center justify-between gap-4 mt-6 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
+                      <button
+                        type="button"
+                        onClick={handlePrev}
+                        disabled={quizState.currentIdx === 0}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-slate-600 dark:text-slate-305 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        {lang === 'vi' ? 'Câu trước' : 'Previous'}
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={handleNext}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 transition-all shadow-md shadow-indigo-500/10"
+                      >
+                        {quizState.currentIdx === questions.length - 1 
+                          ? (lang === 'vi' ? 'Hoàn thành' : 'Finish')
+                          : (lang === 'vi' ? 'Câu tiếp theo' : 'Next Question')
+                        }
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {(() => {
+                    const topicKey = TOPIC_ID_MAP[quizModal.id] || quizModal.id;
+                    const material = QUIZ_TOPICS_MAP[topicKey];
+                    if (!material) return null;
+                    return (
+                      <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/60">
+                        <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                          <FileText className="w-4 h-4" /> {t('quiz.suggestedMaterials')}
+                        </h4>
+                        <button 
+                          onClick={() => handlePdfClick(material.pdfFile, t(`quiz.materials.${topicKey}.title`))}
+                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary/50 transition-colors text-left group shadow-sm"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-primary transition-colors">
+                              {t(`quiz.materials.${topicKey}.title`)}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {t(`quiz.materials.${topicKey}.pages`)}
+                            </p>
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

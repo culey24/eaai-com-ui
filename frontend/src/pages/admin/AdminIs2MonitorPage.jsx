@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 
 export default function AdminIs2MonitorPage() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const { apiToken } = useAuth()
   const [learners, setLearners] = useState([])
   const [loading, setLoading] = useState(true)
@@ -99,7 +99,7 @@ export default function AdminIs2MonitorPage() {
         </h1>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-mono text-sm">
           <Clock className="w-4 h-4" />
-          {now.toLocaleTimeString('vi-VN')}
+          {now.toLocaleTimeString(lang === 'vi' ? 'vi-VN' : 'en-US')}
         </div>
         <div className="flex-1 max-w-xs relative ml-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

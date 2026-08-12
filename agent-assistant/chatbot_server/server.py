@@ -3,6 +3,7 @@ import json
 import shutil
 import time
 import asyncio
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Any, Dict, Tuple, List
@@ -13,6 +14,7 @@ import requests
 import httpx
 import pandas as pd
 from dotenv import load_dotenv
+from collections import defaultdict
 from pydantic import BaseModel, Field
 
 from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Form, Query
@@ -63,6 +65,17 @@ def _requests_post_retry_connect(url: str, **kwargs):
                 )
                 time.sleep(delay_s)
     raise last_err
+
+
+_VI_CHARS_RE = re.compile(r'[à-ýÀ-ÝđĐ]')
+
+def _detect_language(text: str) -> str:
+    """Detect ngôn ngữ tin nhắn dựa trên tỉ lệ ký tự có dấu tiếng Việt."""
+    if not text:
+        return "en"
+    vi_count = len(_VI_CHARS_RE.findall(text))
+    non_space = sum(1 for c in text if not c.isspace())
+    return "vi" if non_space > 0 and vi_count / non_space > 0.02 else "en"
 
 
 def _is_adk_session_not_found_response(response: requests.Response) -> bool:
@@ -164,6 +177,9 @@ app.add_middleware(
 )
 
 executor = ThreadPoolExecutor()
+
+# Lưu ngôn ngữ ưa thích theo session_id (dùng cho các agent đọc khi khởi tạo)
+_session_languages: Dict[str, str] = {}
 
 
 # =============================================================================================== #
@@ -312,7 +328,9 @@ async def health_check():
 
 
 @app.post("/users/{user_id}/sessions")
-async def create_session(user_id: str, app_name: str = APP_NAME):
+async def create_session(user_id: str, request: Request, app_name: str = APP_NAME):
+    body = await request.json()
+    language = (body.get("language") or "en").strip().lower()
     session_id = await db_save_session(user_id)
 
     if not session_id:
@@ -321,8 +339,14 @@ async def create_session(user_id: str, app_name: str = APP_NAME):
             content={"error": "Failed to create session in backend (BE).", "user_id": user_id},
         )
 
+    _session_languages[session_id] = language
+
     url = f"{AGENT_SERVER}/apps/{app_name}/users/{user_id}/sessions/{session_id}"
-    response = await asyncio.to_thread(_requests_post_retry_connect, url, timeout=60)
+    response = await asyncio.to_thread(
+        _requests_post_retry_connect, url,
+        json={"state": {"language": language}},
+        timeout=60,
+    )
 
     if response.status_code == 200:
         return JSONResponse(
@@ -331,6 +355,7 @@ async def create_session(user_id: str, app_name: str = APP_NAME):
                 "message": "Successfully created session on AGENT SERVER.",
                 "user_id": user_id,
                 "session_id": session_id,
+                "language": language,
                 "adk_registered": True,
             },
         )
@@ -463,11 +488,17 @@ async def delete_session(user_id: str, session_id: str, app_name: str = APP_NAME
     agent_url = f"{AGENT_SERVER}/apps/{app_name}/users/{user_id}/sessions/{session_id}"
     response = requests.delete(agent_url, timeout=60)
 
-    if response.status_code == 200: 
+    if response.status_code == 200:
+        _session_languages.pop(session_id, None)
         if await db_update_session_status(session_id, "deactive"):
             return JSONResponse(status_code=200, content={"status": "Session deactivated"})
 
     return JSONResponse(status_code=500, content={"status": "Failed to delete session"})
+
+
+@app.get("/session-language/{session_id}")
+def get_session_language(session_id: str):
+    return {"language": _session_languages.get(session_id, "en")}
 
 
 @app.post("/chat-with-agent")
@@ -476,6 +507,13 @@ async def run_agent(request: Request):
     user_id = request_data.get("user_id")
     session_id = request_data.get("session_id")
     message = request_data.get("message")
+    language = (request_data.get("language") or _detect_language(message or "")).strip().lower()
+    logger.info("[debug server.py] received language=%s detected=%s message=%.80s", request_data.get("language"), language, message or "")
+
+    # Lưu ngôn ngữ cho session này (agents sẽ đọc qua HTTP)
+    if session_id:
+        _session_languages[session_id] = language
+
     payload = {
         "app_name": APP_NAME,
         "user_id": user_id,

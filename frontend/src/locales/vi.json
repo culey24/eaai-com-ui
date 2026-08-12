@@ -88,9 +88,63 @@
     "attachedFileOnly": "Đã đính kèm file",
     "downloadAttachment": "Tải xuống",
     "downloadAttachmentFailed": "Không tải được file đính kèm.",
-    "technicalSupportNotice": "If there is any technical problem, please email us immediately at",
+    "technicalSupportNotice": "Nếu có bất kỳ vấn đề kỹ thuật nào, vui lòng gửi email ngay cho chúng tôi tại",
     "thinking": "Đang suy nghĩ…",
-    "scrollToLatest": "Xuống tin nhắn mới nhất"
+    "scrollToLatest": "Xuống tin nhắn mới nhất",
+    "referenceMaterials": "Tài liệu tham khảo",
+    "learningMaterial": "Tài liệu học tập",
+    "attachFile": "Đính kèm file",
+    "removeFile": "Xóa file"
+  },
+  "quiz": {
+    "badge": "Mini-Quiz",
+    "loadingTitle": "AI đang phân tích kiến thức...",
+    "loadingSubtitle": "Đang thiết kế bài tập thực hành riêng cho bạn",
+    "subtitle": "Mini-Quiz ôn tập",
+    "questionLabel": "Câu {num}",
+    "correctTitle": "Chính xác tuyệt đối!",
+    "correctDesc": "Binary Cross-Entropy đo khoảng cách giữa hai phân phối xác suất, rất phù hợp cho dự đoán nhị phân thông qua hàm Sigmoid.",
+    "suggestedMaterials": "Tài liệu gợi ý ôn tập",
+    "suggestedDocTitle": "Bài giảng 4: Loss Functions.pdf",
+    "suggestedDocPages": "Trang 15 – 22",
+    "sampleQuestion": "Trong bài toán phân loại nhị phân (Binary Classification), hàm mất mát (Loss Function) nào thường được sử dụng nhiều nhất để đo lường sai số giữa nhãn dự đoán và nhãn thực tế?",
+    "suggestSubtitle": "Kiểm tra ngay kiến thức vừa học",
+    "cta": "Làm bài",
+    "create": "Tạo Mini-Quiz",
+    "materials": {
+      "association_rules_mining": {
+        "title": "Khai thác luật kết hợp.pdf",
+        "pages": "Trang gợi ý: 1 – 15"
+      },
+      "recommender_system": {
+        "title": "Hệ gợi ý (Rút gọn).pdf",
+        "pages": "Trang gợi ý: 10 – 25"
+      },
+      "fuzzy_logic": {
+        "title": "Logic mờ.pdf",
+        "pages": "Trang gợi ý: 1 – 12"
+      },
+      "linear_regression": {
+        "title": "Hồi quy tuyến tính.pdf",
+        "pages": "Trang gợi ý: 5 – 18"
+      },
+      "logistic_regression": {
+        "title": "Hồi quy logistic.pdf",
+        "pages": "Trang gợi ý: 1 – 15"
+      },
+      "latent_dirichlet_allocation": {
+        "title": "LDA.pdf",
+        "pages": "Trang gợi ý: 1 – 20"
+      },
+      "deep_neural_networks": {
+        "title": "Mạng nơ-ron sâu.pdf",
+        "pages": "Trang gợi ý: 1 – 25"
+      },
+      "word_embedding": {
+        "title": "Nhúng từ.pdf",
+        "pages": "Trang gợi ý: 26 – 45"
+      }
+    }
   },
   "report": {
     "title": "Báo cáo",
@@ -110,7 +164,9 @@
       "technical": "Lỗi kỹ thuật",
       "wrong_info": "Sai thông tin",
       "other": "Khác"
-    }
+    },
+    "close": "Đóng",
+    "detailPlaceholder": "Mô tả thêm về vấn đề..."
   },
   "settings": {
     "title": "Cài đặt",

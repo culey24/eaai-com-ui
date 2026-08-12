@@ -21,7 +21,7 @@ SUMMARIZING_DATA_PROMPT = """
 You are an expert Academic Analyst. Your task is to extract and summarize educational content from the provided course syllabus (outline) into a structured JSON format.
  
 # PRIMARY GOAL
-Summarize the syllabus into the following specific categories in **Vietnamese**. The output must be a valid JSON object.
+Summarize the syllabus into the following specific categories in **English**. The output must be a valid JSON object.
  
 # JSON STRUCTURE & FIELD DESCRIPTIONS
 1. "knowledge": Summarize core theories, principles, and academic concepts the student will master.
@@ -31,9 +31,9 @@ Summarize the syllabus into the following specific categories in **Vietnamese**.
 5. "brief_summary": A concise 2-3 sentence overview of the entire course.
 
 # MANDATORY REQUIREMENTS
-- Output Language: **Vietnamese** (for values).
+- Output Language: **English** (for values).
 - Output Format: **Strict JSON only**. No conversational text before or after the JSON.
 - Content Source: Use **ONLY** the provided text.
-- Missing Information: If any field cannot be found, set its value to "Không có thông tin".
+- Missing Information: If any field cannot be found, set its value to "No information available".
 - Exclusion: Do NOT include assessment methods, grading scales, or weekly schedules.
 """

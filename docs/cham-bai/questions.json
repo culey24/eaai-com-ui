@@ -1,0 +1,1608 @@
+{
+  "pretest": {
+    "sectionB": {
+      "association_rules_mining": [
+        {
+          "id": "q1",
+          "text": "Which metric measures how frequently an itemset appears in the entire dataset?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q2",
+          "text": "The Apriori algorithm is primarily used for:",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q3",
+          "text": "What does the Apriori Principle state about itemsets?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q4",
+          "text": "If a rule {A} → {B} has a Lift > 1, it implies that:",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q5",
+          "text": "In 200 transactions, \"Coke\" appears in 100, \"Chips\" in 80, both together in 40. Confidence of {Coke} → {Chips} is:",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q6",
+          "text": "With the same data, Support for itemset {Coke, Chips} is:",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q7",
+          "text": "Why does FP-Growth typically perform faster than Apriori on large datasets?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q8",
+          "text": "If you increase the minimum confidence threshold, how does it affect discovered rules?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q9",
+          "text": "A retail manager wants associations that are strong beyond both being popular. Which metric should they prioritize?",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q10",
+          "text": "For pharmacy market-basket analysis, how would you modify traditional ARM to prioritize \"Critical Drug Interactions\" over \"Frequent Purchases\"?",
+          "correctAnswer": ""
+        }
+      ],
+      "recommender_system": [
+        {
+          "id": "q1",
+          "text": "Which recommender suggests items similar to those a user liked based on item features?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q2",
+          "text": "Term for when the system cannot recommend to a new user due to lack of history?",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q3",
+          "text": "How does User-User Collaborative Filtering differ from Item-Item Collaborative Filtering?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q4",
+          "text": "Why is Matrix Factorization used in Recommender Systems?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q5",
+          "text": "User likes Inception (Sci-Fi, Nolan) and Interstellar (Sci-Fi, Nolan). A content-based system will most likely recommend:",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q6",
+          "text": "Users A and B have high cosine similarity. A rates Movie X highly. What is likely predicted for B on X?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q7",
+          "text": "Millions of items but few ratings per user. The most significant challenge is:",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q8",
+          "text": "If the goal is that the Top-5 list contains only relevant items, which is more important: Precision or Recall?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q9",
+          "text": "Evaluate ethical implications of a filter bubble in news recommendations on information diversity.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Propose a hybrid recommender architecture that combines CF and content-based filtering to mitigate cold start for new items.",
+          "correctAnswer": ""
+        }
+      ],
+      "fuzzy_logic": [
+        {
+          "id": "q1",
+          "text": "Essential range for the degree of membership in a fuzzy set?",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q2",
+          "text": "Which FIS component turns fuzzy output into a single crisp value?",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q3",
+          "text": "For standard fuzzy Max operator, membership of A ∪ B is:",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q4",
+          "text": "Primary limitation of Boolean (crisp) logic for concepts like \"Hot\" or \"Fast\"?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q5",
+          "text": "IF Pressure High (μ=0.9) AND Temperature Low (μ=0.5) THEN Valve Closed. Min-AND firing strength is:",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q6",
+          "text": "Trapezoid MF: 50 km/h → μ=1.0, 70 km/h → μ=0.5. Method used?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q7",
+          "text": "Why is choice and shape of membership functions critical in fuzzy control?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q8",
+          "text": "Fundamental difference between Mamdani and Sugeno FIS outputs?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q9",
+          "text": "Compare sharp-threshold vs fuzzy control for chemical mixing: which yields smoother actions and why?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Propose one linguistic rule for a room thermostat using Room Temperature (Cold/Perfect/Hot) and Change Rate (Falling/Stable/Rising).",
+          "correctAnswer": ""
+        }
+      ],
+      "linear_regression": [
+        {
+          "id": "q1",
+          "text": "Primary goal of Simple Linear Regression?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q2",
+          "text": "In Y = β0 + β1X + ε, β1 represents:",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q3",
+          "text": "Meaning of R² = 0.85?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q4",
+          "text": "Difference between Simple and Multiple Linear Regression?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q5",
+          "text": "Price = 50,000 + 100·SqFt. Predicted price for 2,000 SqFt?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q6",
+          "text": "Most common loss minimized for standard linear regression training?",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q7",
+          "text": "Residuals vs fitted values show a parabolic pattern. What does it indicate?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q8",
+          "text": "Why check multicollinearity in Multiple LR? Common measure?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q9",
+          "text": "Trade-off: high-degree polynomial (perfect train fit) vs simple linear for future prediction—which generalizes better and why?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Propose a feature transform (e.g., log) when X–Y is exponential; explain for linear regression.",
+          "correctAnswer": ""
+        }
+      ],
+      "logistic_regression": [
+        {
+          "id": "q1",
+          "text": "Primary difference: Linear vs Logistic Regression for Y?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q2",
+          "text": "Function mapping linear output to probability in [0,1]?",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q3",
+          "text": "Why Sigmoid instead of raw linear Y = β0 + β1X + ε in Logistic Regression?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q4",
+          "text": "Formula for log-odds (logit) of success p?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q5",
+          "text": "Logit = 0 for a customer. Probability p of positive class?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q6",
+          "text": "Typical cost minimized when training Logistic Regression?",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q7",
+          "text": "Interpret coefficient β in Logistic Regression.",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q8",
+          "text": "Perfect linear separability: why can unregularized Logistic Regression have numerical issues?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q9",
+          "text": "Machine failure prediction: prioritize Precision (few false alarms) or Recall (catch failures)? Why?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Propose how to extend binary Logistic Regression to 3+ mutually exclusive classes.",
+          "correctAnswer": ""
+        }
+      ],
+      "latent_dirichlet_allocation": [
+        {
+          "id": "q1",
+          "text": "Primary purpose of Latent Dirichlet Allocation (LDA)?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q2",
+          "text": "In LDA, what is a “topic”?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q3",
+          "text": "How does LDA represent a document?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q4",
+          "text": "Why is LDA unsupervised?",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q5",
+          "text": "Apply LDA to news articles. Expected output?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q6",
+          "text": "Document: 70% Topic A, 30% Topic B. What does it imply?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q7",
+          "text": "If number of topics K is too high?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q8",
+          "text": "Why remove stopwords before LDA?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q9",
+          "text": "LDA topics have overlapping, unclear keywords. What might be wrong?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Propose one real-world application of LDA and how it helps.",
+          "correctAnswer": ""
+        }
+      ],
+      "deep_neural_networks": [
+        {
+          "id": "q1",
+          "text": "What is a Deep Neural Network (DNN)?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q2",
+          "text": "Role of an activation function?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q3",
+          "text": "Why are multiple hidden layers useful?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q4",
+          "text": "What is overfitting in DNNs?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q5",
+          "text": "High train accuracy, low validation accuracy. What to do?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q6",
+          "text": "Network cannot learn complex patterns. Change that might help?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q7",
+          "text": "Very deep network without normalization techniques?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q8",
+          "text": "Why normalize inputs for DNN training?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q9",
+          "text": "Model does poorly on both training and validation. What does it suggest?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Propose one real-world DNN application and usefulness.",
+          "correctAnswer": ""
+        }
+      ],
+      "word_embedding": [
+        {
+          "id": "q1",
+          "text": "What is a word embedding?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q2",
+          "text": "Which model is commonly used to learn word embeddings?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q3",
+          "text": "If two words have similar embeddings, it means:",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q4",
+          "text": "Main difference: one-hot vs word embeddings?",
+          "correctAnswer": "C"
+        },
+        {
+          "id": "q5",
+          "text": "Find words with similar meanings. What to use?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q6",
+          "text": "In Word2Vec, goal of Skip-gram?",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q7",
+          "text": "Why do embeddings often beat one-hot in NLP?",
+          "correctAnswer": "A"
+        },
+        {
+          "id": "q8",
+          "text": "Same word multiple meanings (e.g. “bank”) causes:",
+          "correctAnswer": "B"
+        },
+        {
+          "id": "q9",
+          "text": "Embeddings give poor similarity. Possible reasons?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Propose one embedding application and how it improves performance.",
+          "correctAnswer": ""
+        }
+      ]
+    },
+    "sectionC": [
+      {
+        "id": "c1",
+        "text": "I believe that AI can help me understand difficult concepts faster."
+      },
+      {
+        "id": "c2",
+        "text": "I think that using AI helps me save a significant amount of study time."
+      },
+      {
+        "id": "c3",
+        "text": "I find AI effective at summarizing lengthy or complex technical documents."
+      },
+      {
+        "id": "c4",
+        "text": "I believe mastering AI tools is a mandatory skill for my future tech career."
+      },
+      {
+        "id": "c5",
+        "text": "I am generally confident in the accuracy of technical explanations from AI."
+      },
+      {
+        "id": "c6",
+        "text": "I feel comfortable relying on algorithmic logic and code generated by AI."
+      },
+      {
+        "id": "c7",
+        "text": "I trust AI as a reliable resource when exploring new technical topics."
+      },
+      {
+        "id": "c8",
+        "text": "I feel confident using AI as a supportive tool for self-study."
+      },
+      {
+        "id": "c9",
+        "text": "I know how to craft effective prompts for high-quality AI responses."
+      },
+      {
+        "id": "c10",
+        "text": "I can refine my queries if the first AI response is unsatisfactory."
+      },
+      {
+        "id": "c11",
+        "text": "I feel comfortable using AI to troubleshoot or debug technical coursework."
+      },
+      {
+        "id": "c12",
+        "text": "I can identify when an AI-generated answer is unreliable or inconsistent."
+      },
+      {
+        "id": "c13",
+        "text": "Learners should verify AI answers against official textbooks or sources."
+      },
+      {
+        "id": "c14",
+        "text": "I am aware AI may sound convincing while being incorrect."
+      },
+      {
+        "id": "c15",
+        "text": "I am ready to use AI as learning support for the Intelligent Systems (IS) course."
+      }
+    ]
+  },
+  "posttest": {
+    "sectionB": {
+      "association_rules_mining": [
+        {
+          "id": "q1",
+          "text": "According to the formal definition of an association rule X -> Y, which condition must be met regarding the relationship between set X and set Y?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "In the apriori_gen procedure, what is the specific condition for joining two (k-1)-itemsets (L1 and L2) to create a candidate k-itemset?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why does the Apriori algorithm perform a \"Prune step\" by checking if all (k-1)-subsets of a candidate are frequent?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "The ARM problem is decomposed into two sub-problems. What is the primary focus of the first sub-problem?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "Given L2 = { {I1, I2}, {I1, I3}, {I1, I5}, {I2, I3} }. During the generation of C3, which candidate is generated by the Join step but then Pruned?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "Calculate the Confidence of the rule {I1, I3} -> {I2} based on typical transaction data.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "If the minimum support (minSup) is significantly decreased, how does it affect the computational complexity of the Apriori algorithm?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "Compare the Support of a rule X -> Y and the Support of its antecedent itemset X. Which statement is always true?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "A retail manager discovers a rule with high Confidence but very low Support. How should they evaluate this result?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "How would you modify the has_infrequent_subset procedure to find \"Closed Itemsets\"?",
+          "correctAnswer": ""
+        }
+      ],
+      "recommender_system": [
+        {
+          "id": "q1",
+          "text": "Which accuracy metric is specifically noted for placing a higher emphasis on larger deviations between predicted and actual ratings?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "In the context of Content-based Filtering, what does the Inverse Document Frequency (IDF) aim to achieve?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why is Item-based Collaborative Filtering (I2I) often preferred over User-based (U2U) in large-scale commercial systems like Amazon?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "From the \"Recommendation Perspective,\" what is the primary goal of suggesting items from the \"Long Tail\"?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "If a keyword i appears in every single document in a collection, what will its TF-IDF weight be?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "In User-based CF, why do we add the weighted difference of neighbors' ratings to the user's own average rating?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "What is the fundamental disadvantage of using the \"Memory-based\" approach in a real-world system with millions of customers?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "How does \"Recursive Collaborative Filtering\" address the challenge of sparse datasets?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "A researcher finds very high RMSE but excellent user satisfaction. Why might this happen?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "In a Constraint-based system, what is the purpose of calculating \"Minimal Diagnoses\"?",
+          "correctAnswer": ""
+        }
+      ],
+      "fuzzy_logic": [
+        {
+          "id": "q1",
+          "text": "What is the term for a mathematical function used in Fuzzy Logic to define the degree of truth of a statement, mapping input values to the interval [0, 1]?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "The Mamdani-type Fuzzy Inference System typically uses which operator for the implication step?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why is the Center of Gravity (Centroid) method generally considered the most robust defuzzification technique?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "Explain the consequence of using the Bounded Sum as the S-norm (OR operator) compared to the standard Max operator.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "If output sets are aggregated using Max, and Rule 1 firing strength is 0.7, Rule 2 is 0.9, what is the height of combined fuzzy set?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "Calculate the membership values for intersection A ∩ B using standard Min operator for sets A={(1,0.2), (2,0.8), (3,0.5)} and B={(1,0.6), (2,0.3), (3,0.9)}.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "If input variables and linguistic terms increase, what is the primary consequence concerning the rule base?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "Which system is generally faster for real-time control, Mamdani or Sugeno?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "Evaluate the trade-off when selecting a narrow versus a wide Membership Function for \"High\" temperature.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Design a fuzzy rule linking highly certain input state with moderately conservative output action.",
+          "correctAnswer": ""
+        }
+      ],
+      "linear_regression": [
+        {
+          "id": "q1",
+          "text": "What is the primary goal of Simple Linear Regression?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "In the equation Y = β0 + β1X + ϵ, what does ϵ represent?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "What is the fundamental difference between Simple and Multiple Linear Regression?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "Explain the meaning of an R-squared value of 0.85 in a model.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "Model Price = 50,000 + 100 * SqFt. If a house is 2,000 SqFt, what is the predicted price?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "Which loss function is most commonly minimized using Ordinary Least Squares (OLS)?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "If you observe a parabolic shape in residual plot, what does it indicate?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "Why check for multicollinearity in Multiple Linear Regression?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "High-degree polynomial versus simple linear model for future prediction: which generalize better?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Propose a transformation for X when the relationship is exponential.",
+          "correctAnswer": ""
+        }
+      ],
+      "logistic_regression": [
+        {
+          "id": "q1",
+          "text": "What is the primary difference between Linear and Logistic Regression regarding the dependent variable (Y)?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "Which function is applied in Logistic Regression to map the output into a probability range between 0 and 1?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why does Logistic Regression use the Sigmoid function instead of directly using the linear equation?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "In Logistic Regression, what is the formula for the log-odds (logit)?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "If a Logistic Regression model provides a log-odds value of 0, what is the probability (p)?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "Which cost function is typically minimized for Logistic Regression?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "How should a coefficient β be interpreted in Logistic Regression?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "If data points are perfectly separated by a linear boundary, what happens to unregularized coefficients?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "In predicting machine failure, which metric should be prioritized?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "How to adapt Binary Logistic Regression for three or more mutually exclusive classes?",
+          "correctAnswer": ""
+        }
+      ],
+      "latent_dirichlet_allocation": [
+        {
+          "id": "q1",
+          "text": "In Latent Dirichlet Allocation (LDA), what does each topic represent?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "What is the role of the Dirichlet distribution in LDA?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why is LDA considered a generative probabilistic model?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "What is the key assumption LDA makes about documents?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "If a document has topic distribution θ = [0.7 Sports, 0.3 Politics], what does this imply?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "During Gibbs Sampling in LDA, what is iteratively updated?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "What happens if the number of topics K is too large?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "What is a primary ethical concern when using LDA on private messages without consent?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "Which factor is most critical from an ethical standpoint when deploying LDA for user profiling?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "How would you modify an LDA-based system to address privacy concerns?",
+          "correctAnswer": ""
+        }
+      ],
+      "deep_neural_networks": [
+        {
+          "id": "q1",
+          "text": "What defines a deep neural network?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "Which activation function is widely used in modern DNNs?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why are non-linear activation functions important?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "What is the purpose of backpropagation?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "What is computed before activation in a neuron?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "What happens if learning rate is too high?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "What is the vanishing gradient problem?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "A DNN shows lower acceptance rates for a specific demographic. What is the likely issue?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "A highly accurate DNN cannot explain its decisions. What is the main concern?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "How would you improve fairness in a DNN used for loan approval?",
+          "correctAnswer": ""
+        }
+      ],
+      "word_embedding": [
+        {
+          "id": "q1",
+          "text": "What is the purpose of Word Embedding?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "Which model is commonly used to learn embeddings?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why are embeddings better than one-hot vectors?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "What is the difference between CBOW and Skip-gram?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "\"king - man + woman ≈ ?\"",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "If two words share similar contexts, what happens?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "What is a limitation of Word2Vec?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "A Word2Vec model learns associations like \"doctor → male\" and \"nurse → female\". What does this indicate?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "Why is bias in word embeddings problematic in real-world applications?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "How would you mitigate bias in word embeddings?",
+          "correctAnswer": ""
+        }
+      ]
+    },
+    "sectionC": [
+      {
+        "id": "c1",
+        "text": "AI tools help me clarify complex technical concepts more effectively."
+      },
+      {
+        "id": "c2",
+        "text": "AI is a valuable assistant for summarizing and connecting different parts of the lesson."
+      },
+      {
+        "id": "c3",
+        "text": "I feel more capable of solving technical exercises when I have AI support."
+      },
+      {
+        "id": "c4",
+        "text": "I am confident in my ability to explore new technical topics with AI as a guide."
+      },
+      {
+        "id": "c5",
+        "text": "I proactively verify AI-generated information against official textbooks or slides."
+      },
+      {
+        "id": "c6",
+        "text": "I can identify if an AI's technical explanation is illogical or incorrect."
+      },
+      {
+        "id": "c7",
+        "text": "I use AI to get hints or ideas rather than just asking for the final answer."
+      },
+      {
+        "id": "c8",
+        "text": "I prioritize my own logical reasoning over the solutions suggested by AI."
+      },
+      {
+        "id": "c9",
+        "text": "I trust AI's support, but I take full responsibility for the accuracy of my work."
+      },
+      {
+        "id": "c10",
+        "text": "I am ready to apply this AI-supported learning style to my future studies."
+      }
+    ]
+  },
+  "posttest2": {
+    "sectionB": {
+      "association_rules_mining": [
+        {
+          "id": "q1",
+          "text": "Which evaluation metric represents the proportion of the total transactions in the database that contain both itemset X and itemset Y simultaneously?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "According to the downward-closure property of support (the Apriori Principle), if an itemset is found to be infrequent (below minSup), what can be strictly concluded about all of its supersets?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why does the Apriori algorithm perform a specific \"Prune step\" during candidate generation (Apriori-gen) by checking the frequency of all (k-1)-subsets of a candidate k-itemset?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "The Association Rules Mining problem is traditionally decomposed into two distinct sub-problems. What is the primary focus and computational bottleneck handled in the first sub-problem?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "Given a database of 500 grocery transactions. If \"Milk\" appears in 300 transactions, \"Bread\" appears in 200 transactions, and both \"Milk\" and \"Bread\" appear together in 150 transactions, calculate the exact Confidence of the association rule: {Milk} -> {Bread}.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "Utilizing the same database details from Question 5 (500 total transactions, 150 co-occurrences of Milk and Bread), what is the exact Support value for the itemset {Milk, Bread}?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "What is the fundamental structural reason why the FP-Growth algorithm typically runs significantly faster than the Apriori algorithm on large-scale, highly dense transactional datasets?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "Consider a frequent itemset X and its subset Y. Compare the Support value of X and the Support value of Y. Which statement is mathematically always true?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "A data analyst discovers an association rule that possesses an exceptionally high Confidence level of 95% but a Lift value of 0.82. How should the team critically evaluate the operational value of this rule?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Suppose you are adapting the traditional association rules mining workflow for a medical safety system where discovering \"Closed Itemsets\" (itemsets where no immediate superset has the same support count) is required to reduce rule redundancy. How would you modify the candidate evaluation procedure?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q11",
+          "text": "An engineer runs the Apriori algorithm on the \"Interaction Matrix & Order Logs\" database to find items frequently co-purchased by citizens in a single order. Suppose the minimum support threshold is set to 2% and minimum confidence is set to 60%. The system discovers the following rule: {Fast Food} -> {Soft Drink} [Support = 3%, Confidence = 75%]. Which of the following statements is the most accurate interpretation of this result?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q12",
+          "text": "During peak rainy hours, traffic density surges and delivery delays occur frequently. The data team wants to mine association rules where the consequent (Y) is strictly fixed as the item {Delivery Delay} to find environmental factors leading to this state. If they significantly decrease the minimum support threshold (minSup) to capture rare extreme weather events, how will this modification affect the computational complexity of the Apriori algorithm?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q13",
+          "text": "The operational team compares two association rules generated from the order history logs: Rule 1: {Fried Chicken} -> {French Fries} [Support = 10%, Confidence = 70%, Lift = 1.2], Rule 2: {Burger} -> {Napkins} [Support = 5%, Confidence = 85%, Lift = 0.95]. How should the team evaluate these two rules for a cross-selling campaign on the app?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q14",
+          "text": "To optimize space in a regional satellite depot, engineers want to discover \"Closed Itemsets\" from the parcel transaction logs (itemsets where no immediate superset has the exact same support count). How should they mathematically evaluate a candidate itemset C to confirm it qualifies as a Closed Itemset?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q15",
+          "text": "The traditional Apriori algorithm suffers from extreme performance bottlenecks when mining large-scale logistics data due to generating millions of candidate itemsets. You are tasked with designing a modified framework that eliminates candidate generation entirely and only scans the database twice by compressing the transactional transaction logs into a frequent-pattern tree structure. Which algorithmic paradigm should you choose to build this framework?",
+          "correctAnswer": ""
+        }
+      ],
+      "recommender_system": [
+        {
+          "id": "q1",
+          "text": "Which accuracy metric calculates the square root of the average of squared differences between predicted ratings and actual user ratings, thereby placing a heavier penalty on larger prediction errors?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "In Content-based Filtering systems, what is the primary mathematical purpose of integrating the Inverse Document Frequency (IDF) component into TF-IDF term weighting?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why is Item-based Collaborative Filtering often preferred over User-based Collaborative Filtering in massive commercial web systems (like Amazon or Netflix)?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "From a strategic product perspective, what is the core benefit of designing a recommender engine that successfully suggests niche, obscure items located in the \"Long Tail\" of the distribution?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "Suppose a user profile vector and an item feature vector are represented in a binary space. If the dot product of these two vectors yields a high value, what does this mathematically imply in a Content-based Filtering framework?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "In a Memory-based Collaborative Filtering setup, User A and User B have a high Pearson Correlation Coefficient of 0.88. If User A highly rates a newly released item with 5 stars, what rating is the system most likely to predict for User B regarding this identical item?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "What is the fundamental scalable disadvantage of using a pure \"Memory-based\" (Neighborhood) Collaborative Filtering approach in a production system containing millions of active users and items?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "How does the \"Recursive Collaborative Filtering\" approach attempt to mitigate the intense challenge of data sparsity within a highly sparse rating matrix?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "An AI researcher evaluates a new music recommendation system and notes that while the raw offline validation accuracy (RMSE) is poor, live A/B testing yields extremely high user satisfaction and click-through rates. How can you explain this outcome?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Imagine you are designing a Hybrid Recommender System architecture specifically tailored to eliminate the \"New User Cold Start\" problem while maintaining high scalability. Propose the most robust combination of methodologies.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q11",
+          "text": "Project Eco-Routing deploys a food delivery feature on its platform. A user named Bob frequently orders high-calorie \"Burgers\" and \"Pizzas\" from vendors located within a 2-kilometer radius. If the platform utilizes a Content-based Filtering approach, which item is the system most likely to recommend to Bob next?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q12",
+          "text": "The platform expands its services to a brand-new residential district. A newly registered restaurant has just uploaded its menu, but no users have ordered from it or rated its items yet. Which specific challenge of Recommender Systems is occurring here, and what is the best strategy to mitigate it using the available data?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q13",
+          "text": "In User-based Collaborative Filtering, when predicting a rating for an active user on a target restaurant, the system calculates the similarity between users. Why is it a standard practice to subtract a user's average rating from their actual rating (creating a mean-centered rating) before calculating the weighted prediction score?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q14",
+          "text": "During a sudden torrential downpour, the system must recommend optimized emergency shelter or rest points for the human couriers (shippers) to protect them from flooding. You have two recommendation engines available: Model X: High Precision (When it recommends a shelter, it is guaranteed to be safe and open, but it leaves out many nearby available shelters). Model Y: High Recall (It lists every single potentially available shelter in the area, but accidentally includes some locations that are already flooded or closed). Given that couriers are actively driving in dangerous conditions with depleting phone batteries and cannot afford to travel to a closed location, which metric should you prioritize?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q15",
+          "text": "To scale up the system to handle tens of millions of customers and items, the memory-based Collaborative Filtering approach becomes computationally impossible at run-time. Propose a model-based recommendation architecture that maps both users and items into a shared, lower-dimensional latent factor space (e.g., of size K) to predict missing ratings via dot products, and specify the primary mathematical technique used.",
+          "correctAnswer": ""
+        }
+      ],
+      "fuzzy_logic": [
+        {
+          "id": "q1",
+          "text": "What is the term for a mathematical function used in Fuzzy Logic to define the degree of truth of a statement, mapping input values to the interval [0, 1]?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "The Mamdani-type Fuzzy Inference System typically uses which operator for the implication step (applying the rule strength to the output fuzzy set)?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why is the Center of Gravity (Centroid) method generally considered the most robust defuzzification technique?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "Explain the consequence of using the Bounded Sum (A ⊕ B = min(1, μA(x) + μB(x))) as the S-norm (OR operator) compared to the standard Max operator.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "A system has two rules contributing to the output 'Strong Wind': Rule 1 firing strength is 0.7, and Rule 2 firing strength is 0.9. If the output sets are aggregated using the standard Max (Union) operator, what is the height of the combined fuzzy set 'Strong Wind'?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "Given a fuzzy set A = { (1, 0.2), (2, 0.8), (3, 0.5) } and a fuzzy set B = { (1, 0.6), (2, 0.3), (3, 0.9) }. Calculate the membership values for the intersection A ∩ B using the standard Min operator.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "In a complex control system, if the number of input variables and the number of linguistic terms per variable both increase, what is the primary consequence concerning the rule base?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "Compare a Mamdani FIS that uses the Min operator for implication and the Center of Gravity (COG) for defuzzification versus a Sugeno FIS using weighted average. Which system is generally faster for real-time control, and why?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "Evaluate the critical trade-off when selecting a narrow (steep slope) versus a wide (gentle slope) Membership Function for the linguistic term \"High\" in a temperature controller.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Design a fuzzy rule that addresses the concept of hedging or uncertainty by linking a highly certain input state with a moderately conservative output action. Use the linguistic variables: Input_Certainty (Very_High, Moderate) and Output_Action (Aggressive, Cautious, Neutral).",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q11",
+          "text": "The Eco-Routing system utilizes human courier reports labeled \"heavily congested\" or \"clear\" (Data Source 2). Which Fuzzy Logic component is responsible for taking a precise, real-time traffic density sensor reading (e.g., 45 cars/km) and converting it into a degree of membership for the linguistic term \"Heavily Congested\"?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q12",
+          "text": "Two control rules contribute to the AEV's desired 'Minimum Speed' state: Rule 1 (Battery is Low) has a derived strength of 0.6, and Rule 2 (Motor Temp is High) has a derived strength of 0.9. If the output fuzzy sets are aggregated (combined) using the standard fuzzy Max operator, what is the height (degree of membership) of the resulting combined fuzzy set 'Minimum Speed'?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q13",
+          "text": "The Project Eco-Routing team is choosing between a standard Crisp controller (fixed thresholds) and a Fuzzy Logic controller for the AEV’s motor speed. If the control input (e.g., motor temperature) constantly crosses a sharp, fixed threshold, what is the major drawback of the Crisp Logic system compared to the Fuzzy system?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q14",
+          "text": "In Project Eco-Routing, the engineer uses a narrow (steep slope) Membership Function for the linguistic term \"Battery is Low.\" What is the primary consequence of using a narrow Membership Function on the sensitivity and stability of the AEV's control system?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q15",
+          "text": "Propose a Mamdani-type fuzzy rule for Project Eco-Routing designed to optimize the AEV's operational safety and resource management under worst-case scenarios, using the linguistic inputs: Traffic (High, Low) and Battery (Low, Adequate).",
+          "correctAnswer": ""
+        }
+      ],
+      "linear_regression": [
+        {
+          "id": "q1",
+          "text": "What is the primary goal of Simple Linear Regression?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "In the linear regression equation Y = b0 + b1*X + e, what does b1 represent?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "What is the fundamental difference between Simple Linear Regression and Multiple Linear Regression?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "Explain the meaning of a coefficient of determination (R2) value of 0.85 in a model.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "A model predicts house price (Y) based on square footage (X) with the equation Price = 50,000 + 100 * SqFt. If a house is 2,000 SqFt, what is the predicted price?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "Which loss function is most commonly minimized during the training of a standard Linear Regression model using the Ordinary Least Squares (OLS) method?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "When performing residual analysis, if you observe a distinct pattern (e.g., a parabolic shape) in the plot of residuals versus fitted values, what does this indicate about the linear regression model?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "Why is it crucial to check for multicollinearity in Multiple Linear Regression, and what statistical measure is often used to detect it?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "Evaluate the trade-off between using a high-degree polynomial regression model (which perfectly fits the training data) versus a simple linear regression model for future prediction. Which model is generally preferred for generalization, and why?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Propose a hypothetical feature transformation (e.g., squaring, logging) for the independent variable X in a dataset where the relationship between X and Y is initially exponential, and briefly explain why this transformation is necessary for Linear Regression.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q11",
+          "text": "The Eco-Routing system estimates the Estimated Time of Arrival (ETA, in minutes, Y) based on Distance (km, X) using the Simple Linear Regression model: Y = 3 + 1.8 * X. If an AEV has a distance of 15 km to cover, what is the predicted ETA?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q12",
+          "text": "A Multiple Linear Regression (MLR) model predicts the AEV's Energy Consumption (Y, kWh) based on Motor Temperature (X1) and Average Speed (X2). If the coefficient beta 1 (for Motor Temperature) is 0.05, assuming all other factors remain constant, what is the statistical meaning of this finding?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q13",
+          "text": "Eco-Routing engineers observe that two input variables for the prediction model (Delay Time X1 and Traffic Level X2, both derived from the IoT Sensor Grid) are nearly perfectly correlated (r > 0.95). What severe statistical problem occurs when running Multiple Linear Regression (MLR) with these two variables?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q14",
+          "text": "An MLR model predicting customer satisfaction (Y, scale 1-5) has a very high Coefficient of Determination (R2 = 0.92). However, upon inspecting the Residual Plot, the residual points form a distinct U-shape (parabolic pattern). Which evaluation is correct?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q15",
+          "text": "Data from the IoT Sensor Grid shows that the relationship between Distance Traveled (X) and Remaining Battery Capacity (Y) is non-linear, where the rate of battery depletion slows down as distance increases (diminishing returns). To enable the use of standard Linear Regression, propose a common transformation for the independent variable X.",
+          "correctAnswer": ""
+        }
+      ],
+      "logistic_regression": [
+        {
+          "id": "q1",
+          "text": "What is the primary difference between Linear Regression and Logistic Regression regarding the dependent variable (Y)?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "Which function is applied in Logistic Regression to map the output of the linear equation into a probability range between 0 and 1?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why does Logistic Regression use the Sigmoid function instead of directly using the linear equation Y = b0 + b1*X + e?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "In Logistic Regression, the log-odds (logit) is defined as the logarithm of the ratio of the probability of success (p) to the probability of failure (1 - p). What is the formula for the log-odds?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "A Logistic Regression model provides a log-odds (logit) value of 0 for a specific customer. What is the calculated probability (p) that this customer belongs to the positive class?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "Which mathematical function is typically minimized as the cost function (loss function) when training a Logistic Regression model?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "How should a coefficient beta be interpreted in Logistic Regression?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "In a classification dataset, if the data points are perfectly separated by a linear boundary, why might training a standard (unregularized) Logistic Regression model lead to numerical issues?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "For a system designed to predict whether a manufacturing machine will fail (positive class) or run normally (negative class), which metric should be prioritized and why?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Propose a specific architecture or method to adapt a Binary Logistic Regression model for a problem with three or more mutually exclusive classes (e.g., predicting Low, Medium, or High risk levels).",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q11",
+          "text": "The Eco-Routing system predicts the probability of an AEV motor 'Overheating' (Y=1) based on real-time data from the IoT Sensor Grid. If the Logistic Regression model outputs a log-odds (logit) value of -0.8 for the current motor status, calculate the approximate probability (p) of the AEV motor overheating.",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q12",
+          "text": "A Logistic Regression model predicts the likelihood of a human courier receiving a 'Low Satisfaction Score' (Y=1) based on several factors, including 'Route Distance' (X). If the coefficient for Route Distance is beta = 0.25 (positive), how should this coefficient be interpreted in terms of the risk?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q13",
+          "text": "The Eco-Routing system is required to predict the binary outcome 'Package Damaged' (Yes/No) based on AEV velocity and road conditions. Why is Logistic Regression, which uses the Sigmoid function, the appropriate choice over standard Linear Regression for this classification task?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q14",
+          "text": "The system uses Logistic Regression to predict 'Immediate AEV Failure' (Y=1) based on motor diagnostics. Given that the cost of a False Negative (failing to predict a failure that leads to a crash) is extremely high, which evaluation metric should the engineering team prioritize when setting the classification probability threshold?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q15",
+          "text": "The logistics team wants to extend the predictive capability to classify delivery outcomes into three mutually exclusive levels: 'On Time,' 'Minor Delay,' and 'Major Delay.' What is the required architectural modification to adapt the framework from Binary Logistic Regression to handle this multi-class classification task?",
+          "correctAnswer": ""
+        }
+      ],
+      "latent_dirichlet_allocation": [
+        {
+          "id": "q1",
+          "text": "In LDA, what do the hyperparameters alpha and beta represent?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "Which sampling method is most commonly used for inference in LDA?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why is LDA considered a generative probabilistic model?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "What is the main difference between LDA and pLSA?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "If a document has topic distribution theta = [0.6, 0.3, 0.1], what does this mean?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "What happens when the number of topics (K) is set too high in LDA?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "Which of the following is a major limitation of LDA?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "What is a key ethical concern when using LDA on private user messages?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "When is LDA most suitable for a task?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Which technique is most effective to improve privacy in an LDA-based user profiling system?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q11",
+          "text": "The data team applies LDA on the \"Customer Feedback & Call Center Logs\" (unstructured text data) to discover hidden topics in customer complaints. After training a 5-topic LDA model, one topic shows high probability words: delay, rain, traffic, late, flooded. Which of the following is the most accurate interpretation?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q12",
+          "text": "When running LDA on tens of thousands of customer reviews, the team notices that increasing the number of topics (K) from 5 to 20 causes the average coherence score to rise initially then drop sharply after K=12. What does this phenomenon indicate?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q13",
+          "text": "The team compares two topics generated by LDA from courier call logs: Topic A: battery, low, recharge, warning, stop (high probability); Topic B: friendly, fast, polite, helpful, smile (high probability). How should the team evaluate these two topics for operational improvement?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q14",
+          "text": "The engineering team wants to use LDA topic distributions as features for predicting customer satisfaction (1-5 stars). They notice that documents with high proportion in the \"Damaged Package\" topic consistently receive low satisfaction scores. Which statement is correct?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q15",
+          "text": "The current LDA model treats each customer review as a single document. However, delivery feedback contains multiple aspects (courier behavior, package condition, timing, etc.). Propose an improved modeling approach using LDA principles to better capture these multiple aspects.",
+          "correctAnswer": ""
+        }
+      ],
+      "deep_neural_networks": [
+        {
+          "id": "q1",
+          "text": "What is the main benefit of using Residual Connections in deep networks?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "Which activation function is most commonly used in modern deep neural networks?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "Why is Batch Normalization commonly used?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "What does the vanishing gradient problem cause?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "What should you do first if you observe exploding gradients?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "If your DNN is severely overfitting, which technique is most effective?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "Why have Transformers largely replaced RNNs in many tasks?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "What is the main risk when a DNN is used for hiring decisions?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "What is the biggest concern with highly accurate but black-box DNNs in healthcare?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Which approach is best to reduce gender bias in a DNN for loan approval?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q11",
+          "text": "The team builds a Deep Neural Network to predict customer satisfaction score (1-5) using features from multiple data sources (order history, IoT telemetry, and text sentiment). This is a regression task. Which loss function is most appropriate?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q12",
+          "text": "A DNN is trained to classify road conditions (Clear / Congested / Dangerous) from AEV dashcam images (Vision Stream). During training, the validation loss stops decreasing while training loss continues to drop significantly. What problem is occurring?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q13",
+          "text": "The team uses a Deep Neural Network with 6 hidden layers to predict AEV energy consumption. They observe that adding more layers improves training accuracy but makes the model very slow and unstable during training. What is the most likely cause?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q14",
+          "text": "The team has two models for predicting delivery delay (binary classification): Model X: Very deep DNN (many layers) - High training accuracy, moderate validation accuracy. Model Y: Shallower DNN with Residual Connections (ResNet-style) - Slightly lower training accuracy but much better validation accuracy and generalization. Which model should be chosen for real-time deployment and why?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q15",
+          "text": "Design a suitable Deep Neural Network architecture for multi-task learning in Project Eco-Routing that simultaneously: (1) predicts delivery delay, (2) estimates customer satisfaction, and (3) detects unsafe road conditions from images.",
+          "correctAnswer": ""
+        }
+      ],
+      "word_embedding": [
+        {
+          "id": "q1",
+          "text": "What is the key advantage of FastText over Word2Vec?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q2",
+          "text": "Why do static embeddings (e.g. Word2Vec) struggle with polysemy?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q3",
+          "text": "What is the main advantage of contextual embeddings (e.g. BERT) over static embeddings?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q4",
+          "text": "In the analogy \"king - man + woman ≈ ?\", what is the expected result?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q5",
+          "text": "How can you best evaluate the quality of word embeddings?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q6",
+          "text": "What type of bias is shown if \"doctor\" is closer to \"man\" and \"nurse\" to \"woman\"?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q7",
+          "text": "What is a major limitation of GloVe compared to BERT?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q8",
+          "text": "Why is bias in word embeddings dangerous in real applications?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q9",
+          "text": "Which method is most effective for reducing bias in word embeddings?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q10",
+          "text": "Which approach is best for creating good word embeddings for Vietnamese?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q11",
+          "text": "The team trains Word Embeddings on the customer feedback corpus. The vector for \"delay\" is very close to the vectors of \"late\", \"traffic\", and \"rainy\". What does this closeness indicate?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q12",
+          "text": "When using pre-trained Word Embeddings (e.g., Word2Vec or GloVe) trained on general English data versus embeddings trained specifically on the logistics customer review corpus, which one is generally better for understanding domain-specific terms like \"satellite depot\", \"last-mile\", \"AEV\", and \"gig-shipper\"?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q13",
+          "text": "The team observes that in the trained embedding space: vector(\"courier\") - vector(\"human\") + vector(\"AEV\") is close to vector(\"autonomous\"). What capability of Word Embedding does this example demonstrate?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q14",
+          "text": "The team wants to use Word Embeddings to automatically detect negative courier behavior from call transcripts. They average all word vectors in a review to get a document vector, then train a classifier. What is a major limitation of this approach?",
+          "correctAnswer": ""
+        },
+        {
+          "id": "q15",
+          "text": "To better capture contextual meaning in customer complaints (e.g., the word \"slow\" can mean slow delivery or slow response depending on context), which advanced embedding technique should the team adopt instead of static Word2Vec/GloVe?",
+          "correctAnswer": ""
+        }
+      ]
+    },
+    "sectionC": [
+      {
+        "id": "c1",
+        "text": "In the past 2 months, I have actively read extra materials, research papers, or attended courses related to the 2 selected technical topics."
+      },
+      {
+        "id": "c2",
+        "text": "I still frequently apply or reference the foundational concepts of these 2 topics in my current projects, assignments, or daily technology discussions."
+      },
+      {
+        "id": "c3",
+        "text": "I have continued to use GenAI tools (e.g., ChatGPT, Gemini, Copilot) to explore and deepen my understanding of these technical topics over the last 2 months."
+      },
+      {
+        "id": "c4",
+        "text": "When encountering a new or difficult problem within these topics nowadays, my first instinct is still to consult an AI tool before looking elsewhere."
+      },
+      {
+        "id": "c5",
+        "text": "After 2 months of independent learning, I feel more capable of analyzing and filtering out the biased or inaccurate technical responses generated by AI."
+      },
+      {
+        "id": "c6",
+        "text": "I now double-check AI-generated code or mathematical formulas against official documentation more rigorously than I did during the course."
+      },
+      {
+        "id": "c7",
+        "text": "My trust in AI's capacity to explain highly complex computer science models has consolidated and become more stable over time."
+      },
+      {
+        "id": "c8",
+        "text": "I feel that I have become less dependent on AI for straight answers, using it more as a brainstorming partner for technical logic."
+      },
+      {
+        "id": "c9",
+        "text": "Without AI tools, I would find it significantly harder to solve the structural and algorithmic problems of these 2 selected topics today."
+      },
+      {
+        "id": "c10",
+        "text": "The AI-supported learning habits I developed during the Intelligent Systems (IS) course have successfully transferred into my self-study routines for other university subjects."
+      }
+    ]
+  }
+}

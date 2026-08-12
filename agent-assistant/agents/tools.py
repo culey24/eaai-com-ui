@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Optional
 
 from google.adk.tools import ToolContext, agent_tool
 
@@ -61,17 +62,21 @@ async def read_uploaded_data_file(file_name: str, tool_context: ToolContext):
     return text
 
 
-async def read_user_journal_submissions(tool_context: ToolContext) -> str:
+async def read_user_journal_submissions(language: Optional[str] = None, tool_context: Optional[ToolContext] = None) -> str:
     """
     Đọc toàn bộ nội dung (văn bản trích từ PDF/DOCX/...) các bài journal user đã submit trên hệ thống.
     Dùng khi người dùng hỏi về nội dung submission của mình, muốn được nhận xét, lời khuyên, hoặc
     đặt câu hỏi dựa trên ngữ cảnh bài journal đã nộp.
+
+    Args:
+        language: Ngôn ngữ hiển thị kết quả ('en' cho tiếng Anh, 'vi' cho tiếng Việt). Nếu không truyền, mặc định theo ngôn ngữ phiên chat.
     """
     import requests as _requests
-    raw_uid = tool_context.state.get("user_id", "")
+    raw_uid = tool_context.state.get("user_id", "") if tool_context else ""
     user_id = str(raw_uid).strip() if raw_uid is not None else ""
+    lang = language or (tool_context.state.get("language") if tool_context else "en") or "en"
     if not user_id or user_id == "user":
-        return "Không xác định được user_id trong phiên hiện tại."
+        return "Không xác định được user_id trong phiên hiện tại." if lang == "vi" else "User ID not identified in the current session."
     try:
         path = f"/users/{user_id}/journal-context"
         r = _requests.get(
@@ -87,11 +92,11 @@ async def read_user_journal_submissions(tool_context: ToolContext) -> str:
             status_code=r.status_code,
         )
         if r.status_code != 200:
-            return f"Không đọc được journal submissions: {r.status_code} {r.text[:300]}"
-        return r.json().get("journal_context") or "Người học chưa có bản journal nào trên server."
+            return f"Không đọc được journal submissions: {r.status_code} {r.text[:300]}" if lang == "vi" else f"Could not retrieve journal submissions: {r.status_code} {r.text[:300]}"
+        return r.json().get("journal_context") or ("Người học chưa có bản journal nào trên server." if lang == "vi" else "The student has no journal submissions on the server.")
     except _requests.RequestException as e:
         logger.error("read_user_journal_submissions: %s", e)
-        return f"Lỗi kết nối khi đọc journal submissions: {e}"
+        return f"Lỗi kết nối khi đọc journal submissions: {e}" if lang == "vi" else f"Connection error when retrieving journal submissions: {e}"
 
 
 async def call_persona_agent(query: str, tool_context: ToolContext):
@@ -132,10 +137,12 @@ async def call_provider_agent(query: str, tool_context: ToolContext):
     """
     try:
         merge_invocation_user_id_into_state(tool_context)
+        logger.info("[debug tools.py provider] state language=%s", tool_context.state.get("language") if tool_context else "N/A")
         provider_agent = create_provider_agent(query=query)
         provider_tool = agent_tool.AgentTool(agent=provider_agent)
+        request_text = "Provide explanation/information based on the query. ALWAYS respond in English."
         response = await provider_tool.run_async(
-            args={"request": "Provide informations based on the query."},
+            args={"request": request_text},
             tool_context=tool_context
         )
         return tool_context.state["provided_infos"]
@@ -157,10 +164,12 @@ async def call_supporter_agent(query: str, tool_context: ToolContext):
     """
     try:
         merge_invocation_user_id_into_state(tool_context)
+        logger.info("[debug tools.py supporter] state language=%s", tool_context.state.get("language") if tool_context else "N/A")
         supporter_agent = create_supporter_agent(query=query)
         supporter_tool = agent_tool.AgentTool(agent=supporter_agent)
+        request_text = "Provide practical support and hints based on the query. ALWAYS respond in English."
         response = await supporter_tool.run_async(
-            args={"request": "Practical support based on the query."},
+            args={"request": request_text},
             tool_context=tool_context
         )
         return tool_context.state["supported_infos"]
@@ -177,8 +186,9 @@ async def call_journal_coach_agent(query: str, tool_context: ToolContext):
         merge_invocation_user_id_into_state(tool_context)
         coach = create_journal_coach_agent(query=query)
         coach_tool = agent_tool.AgentTool(agent=coach)
+        request_text = "Provide writing coaching and feedback based on the query and context. ALWAYS respond in English."
         await coach_tool.run_async(
-            args={"request": "Writing coaching based on the query and context."},
+            args={"request": request_text},
             tool_context=tool_context,
         )
         return tool_context.state.get("journal_coach_infos", "")
@@ -195,8 +205,9 @@ async def call_suggestion_agent(query: str, tool_context: ToolContext):
         merge_invocation_user_id_into_state(tool_context)
         suggestion_agent = create_suggestion_agent(query=query)
         suggestion_tool = agent_tool.AgentTool(agent=suggestion_agent)
+        request_text = "Suggest relevant PDF slides based on the query and profile. ALWAYS respond in English."
         await suggestion_tool.run_async(
-            args={"request": "Suggest relevant PDF slides based on the query and profile."},
+            args={"request": request_text},
             tool_context=tool_context
         )
         res = tool_context.state.get("suggestion_infos", "")

@@ -122,7 +122,6 @@ def create_agent(query: Optional[str] = None) -> Agent:
             current_attempt="{current_attempt}",
             static_profile="{static_profile}",
             dynamic_profile="{dynamic_profile}",
-            language="{language}",
         ),
         before_model_callback=setup_before_model_call,
         before_agent_callback=init_session_state,

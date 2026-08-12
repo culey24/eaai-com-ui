@@ -39,3 +39,4 @@ def get_agent_server_base_url() -> str:
     if port_raw == default_port:
         return _strip_base(f"{scheme}://{host}")
     return _strip_base(f"{scheme}://{host}:{port_raw}")
+

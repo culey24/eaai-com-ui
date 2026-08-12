@@ -123,7 +123,7 @@ async function fetchChatbot(path, { method, body, timeoutMs }) {
  * Đảm bảo có phiên agent (bảng agent_sessions) và ADK đã nhận session.
  * Chatbot agentic_assistant: POST /users/:userId/sessions tạo bản ghi BE + gọi Agent Server.
  */
-async function ensureAgenticChatSession(userId) {
+async function ensureAgenticChatSession(userId, language) {
   const base = chatbotBaseUrl()
   if (!base) return null
 
@@ -136,7 +136,7 @@ async function ensureAgenticChatSession(userId) {
 
   const created = await fetchChatbot(`/users/${encodeURIComponent(userId)}/sessions`, {
     method: 'POST',
-    body: '{}',
+    body: JSON.stringify({ language: language || 'en' }),
     timeoutMs: 120_000,
   })
 
@@ -173,7 +173,8 @@ async function ensureAgenticChatSession(userId) {
  * Học viên IS-1 — phản hồi từ chatbot agentic_assistant (Google Cloud).
  * @returns {Promise<string|null>} Nội dung trợ lý; null nếu chưa cấu hình AGENTIC_CHATBOT_BASE_URL.
  */
-export async function generateIs1AgenticReply(userId, userMessageText) {
+export async function generateIs1AgenticReply(userId, userMessageText, language) {
+  console.log('[debug is1AgenticChatReply] language=%s userId=%s text=%s', language, userId, userMessageText?.slice(0, 80))
   const base = chatbotBaseUrl()
   if (!base) return null
 
@@ -182,9 +183,10 @@ export async function generateIs1AgenticReply(userId, userMessageText) {
       user_id: userId,
       session_id: sid,
       message: userMessageText ?? '',
+      language: language || 'en',
     })
 
-  let sessionId = await ensureAgenticChatSession(userId)
+  let sessionId = await ensureAgenticChatSession(userId, language)
   let reply = await fetchChatbot('/chat-with-agent', {
     method: 'POST',
     body: chatBody(sessionId),
@@ -196,7 +198,7 @@ export async function generateIs1AgenticReply(userId, userMessageText) {
       where: { userId, sessionId },
       data: { status: AgentSessionStatus.deactive },
     })
-    sessionId = await ensureAgenticChatSession(userId)
+    sessionId = await ensureAgenticChatSession(userId, language)
     reply = await fetchChatbot('/chat-with-agent', {
       method: 'POST',
       body: chatBody(sessionId),

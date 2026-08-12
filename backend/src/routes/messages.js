@@ -204,6 +204,7 @@ router.post(
         content,
         fileName,
         role,
+        lang,
         conversationId: bodyConvId,
         learnerId: bodyLearnerId,
       } = body
@@ -424,7 +425,7 @@ router.post(
           let assistantContent
           let metaSource = 'agentic_chatbot'
           try {
-            const fromAgent = await generateIs1AgenticReply(resolvedLearnerId, text)
+            const fromAgent = await generateIs1AgenticReply(resolvedLearnerId, text, lang)
             if (fromAgent != null) {
               assistantContent = fromAgent
             } else {
@@ -469,7 +470,7 @@ router.post(
         let assistantContent
         let metaSource = 'agentic_chatbot'
         try {
-          const fromAgent = await generateIs1AgenticReply(resolvedLearnerId, text)
+          const fromAgent = await generateIs1AgenticReply(resolvedLearnerId, text, lang)
           if (fromAgent != null) {
             assistantContent = fromAgent
           } else {

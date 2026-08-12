@@ -31,20 +31,50 @@ function cellC(sectionC, i) {
 
 const TOPIC_IDS = PRETEST_TOPICS.map((t) => t.id)
 
+/** score map key per survey kind (field inside studentGrading.scores) */
+const SCORE_KEY_BY_KIND = {
+  PRETEST: 'pretest_q',
+  POSTTEST: 'posttest_q',
+  POSTTEST2: 'posttest2_q',
+}
+
+/**
+ * Chuyển điểm câu hỏi (0 / 0.25 / 0.5) thành nhãn đúng/sai.
+ * @param {number|string|undefined} score
+ * @returns {'incorrect'|'partially_correct'|'correct'|''}
+ */
+export function classifyQuestionScore(score) {
+  if (score === undefined || score === null || score === '') return ''
+  const s = Number(score)
+  if (Number.isNaN(s)) return ''
+  if (s <= 0) return 'incorrect'
+  if (s >= 0.5) return 'correct'
+  return 'partially_correct'
+}
+
 /**
  * Xuất CSV một lần (PRETEST/POSTTEST schema: section A/B/C như pretestValidate).
- * @param {{ rows: Array<object>, filenamePrefix?: string, activeKind?: string }} opts
+ * Mỗi cột sectionB_<topic>_q<N> được kèm cột is_correct_<topic>_q<N> (dựa trên điểm
+ * mentor đã chấm theo username, nguồn: /api/grading/export-data → scores.pretest_q/posttest_q/posttest2_q).
+ * @param {{ rows: Array<object>, filenamePrefix?: string, activeKind?: string, scoreMap?: object }} opts
  */
-export function downloadPretestSurveyCsv({ rows, filenamePrefix = 'pretest-submissions', activeKind }) {
+export function downloadPretestSurveyCsv({ rows, filenamePrefix = 'pretest-submissions', activeKind, scoreMap }) {
   const baseHeaders = ['mssv', 'fullname', 'username', 'class_id']
   const aHeaders = SURVEY_SECTION_A_KEYS.map((k) => `sectionA_${k}`)
   const qCount = activeKind === 'POSTTEST2' ? 15 : 10
-  const bHeaders = TOPIC_IDS.flatMap((tid) =>
-    Array.from({ length: qCount }, (_, j) => `sectionB_${tid}_q${j + 1}`)
-  )
+  const bHeaders = TOPIC_IDS.flatMap((tid) => {
+    const cols = []
+    for (let j = 1; j <= qCount; j++) {
+      cols.push(`sectionB_${tid}_q${j}`)
+      cols.push(`is_correct_${tid}_q${j}`)
+    }
+    return cols
+  })
   const cHeaders = Array.from({ length: 15 }, (_, j) => `sectionC_c${j + 1}`)
   const headers = [...baseHeaders, ...aHeaders, ...bHeaders, ...cHeaders]
   const lines = [headers.map(csvEscape).join(',')]
+
+  const scoreKey = SCORE_KEY_BY_KIND[activeKind] || 'pretest_q'
 
   for (const row of rows) {
     const cells = [
@@ -57,10 +87,21 @@ export function downloadPretestSurveyCsv({ rows, filenamePrefix = 'pretest-submi
     for (const k of SURVEY_SECTION_A_KEYS) {
       cells.push(csvEscape(cellA(a, k)))
     }
+
+    // Điểm câu hỏi theo username (mentor chấm): B1-<n> cho topicFirst, B2-<n> cho topicSecond
+    const userScores = (scoreMap && row?.username ? scoreMap[String(row.username).toLowerCase()] : null) || {}
+    const qScores = userScores[scoreKey] || {}
+    const topicFirst = a?.topicFirst ?? ''
+    const topicSecond = a?.topicSecond ?? ''
+
     const b = row?.sectionB
     for (const tid of TOPIC_IDS) {
       for (let qi = 1; qi <= qCount; qi++) {
         cells.push(csvEscape(cellB(b, tid, `q${qi}`)))
+        let score = ''
+        if (tid === topicFirst) score = qScores[`B1-${qi}`]
+        else if (tid === topicSecond) score = qScores[`B2-${qi}`]
+        cells.push(csvEscape(classifyQuestionScore(score)))
       }
     }
     const c = row?.sectionC

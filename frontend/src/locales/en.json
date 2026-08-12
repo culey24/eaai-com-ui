@@ -110,7 +110,41 @@
     "sampleQuestion": "In binary classification, which loss function is most commonly used to measure the error between predicted labels and actual labels?",
     "suggestSubtitle": "Test your knowledge right away",
     "cta": "Take quiz",
-    "create": "Create Mini-Quiz"
+    "create": "Create Mini-Quiz",
+    "materials": {
+      "association_rules_mining": {
+        "title": "Association Rules Mining.pdf",
+        "pages": "Suggested Pages: 1 – 15"
+      },
+      "recommender_system": {
+        "title": "RecommenderSystems-Shortened.pdf",
+        "pages": "Suggested Pages: 10 – 25"
+      },
+      "fuzzy_logic": {
+        "title": "Chapter3_PartII-Fuzzy.pdf",
+        "pages": "Suggested Pages: 1 – 12"
+      },
+      "linear_regression": {
+        "title": "3-LinearRegression.pdf",
+        "pages": "Suggested Pages: 5 – 18"
+      },
+      "logistic_regression": {
+        "title": "4-LogisticRegression.pdf",
+        "pages": "Suggested Pages: 1 – 15"
+      },
+      "latent_dirichlet_allocation": {
+        "title": "Latent-Dirichlet-Allocation.pdf",
+        "pages": "Suggested Pages: 1 – 20"
+      },
+      "deep_neural_networks": {
+        "title": "2-DL-NLP.pdf",
+        "pages": "Suggested Pages: 1 – 25"
+      },
+      "word_embedding": {
+        "title": "2-DL-NLP.pdf",
+        "pages": "Suggested Pages: 26 – 45"
+      }
+    }
   },
   "report": {
     "title": "Report",

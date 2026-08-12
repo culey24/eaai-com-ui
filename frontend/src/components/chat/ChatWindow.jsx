@@ -32,43 +32,27 @@ const TOPIC_ID_MAP = {
 const QUIZ_TOPICS_MAP = {
   association_rules_mining: {
     pdfFile: 'Association Rules Mining.pdf',
-    pdfTitle: { en: 'Association Rules Mining.pdf', vi: 'Khai thác luật kết hợp.pdf' },
-    pages: { en: 'Suggested Pages: 1 – 15', vi: 'Trang gợi ý: 1 – 15' },
   },
   recommender_system: {
     pdfFile: 'RecommenderSystems-Shortened.pdf',
-    pdfTitle: { en: 'RecommenderSystems-Shortened.pdf', vi: 'Hệ gợi ý (Rút gọn).pdf' },
-    pages: { en: 'Suggested Pages: 10 – 25', vi: 'Trang gợi ý: 10 – 25' },
   },
   fuzzy_logic: {
     pdfFile: 'Chapter3_PartII-Fuzzy.pdf',
-    pdfTitle: { en: 'Chapter3_PartII-Fuzzy.pdf', vi: 'Logic mờ.pdf' },
-    pages: { en: 'Suggested Pages: 1 – 12', vi: 'Trang gợi ý: 1 – 12' },
   },
   linear_regression: {
     pdfFile: '3-LinearRegression.pdf',
-    pdfTitle: { en: '3-LinearRegression.pdf', vi: 'Hồi quy tuyến tính.pdf' },
-    pages: { en: 'Suggested Pages: 5 – 18', vi: 'Trang gợi ý: 5 – 18' },
   },
   logistic_regression: {
     pdfFile: '4-LogisticRegression.pdf',
-    pdfTitle: { en: '4-LogisticRegression.pdf', vi: 'Hồi quy logistic.pdf' },
-    pages: { en: 'Suggested Pages: 1 – 15', vi: 'Trang gợi ý: 1 – 15' },
   },
   latent_dirichlet_allocation: {
     pdfFile: 'Latent-Dirichlet-Allocation.pdf',
-    pdfTitle: { en: 'Latent-Dirichlet-Allocation.pdf', vi: 'LDA.pdf' },
-    pages: { en: 'Suggested Pages: 1 – 20', vi: 'Trang gợi ý: 1 – 20' },
   },
   deep_neural_networks: {
     pdfFile: '2-DL-NLP.pdf',
-    pdfTitle: { en: '2-DL-NLP.pdf', vi: 'Mạng nơ-ron sâu.pdf' },
-    pages: { en: 'Suggested Pages: 1 – 25', vi: 'Trang gợi ý: 1 – 25' },
   },
   word_embedding: {
     pdfFile: '2-DL-NLP.pdf',
-    pdfTitle: { en: '2-DL-NLP.pdf', vi: 'Nhúng từ.pdf' },
-    pages: { en: 'Suggested Pages: 26 – 45', vi: 'Trang gợi ý: 26 – 45' },
   },
 }
 
@@ -694,7 +678,7 @@ export default function ChatWindow({
                           <FileText className="w-4 h-4" /> {t('quiz.suggestedMaterials')}
                         </h4>
                         <button 
-                          onClick={() => handlePdfClick(material.pdfFile, lang === 'vi' ? material.pdfTitle.vi : material.pdfTitle.en)}
+                          onClick={() => handlePdfClick(material.pdfFile, t(`quiz.materials.${topicKey}.title`))}
                           className="w-full flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary/50 transition-colors text-left group shadow-sm"
                         >
                           <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
@@ -702,10 +686,10 @@ export default function ChatWindow({
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-primary transition-colors">
-                              {lang === 'vi' ? material.pdfTitle.vi : material.pdfTitle.en}
+                              {t(`quiz.materials.${topicKey}.title`)}
                             </p>
                             <p className="text-xs text-slate-500">
-                              {lang === 'vi' ? material.pages.vi : material.pages.en}
+                              {t(`quiz.materials.${topicKey}.pages`)}
                             </p>
                           </div>
                         </button>
@@ -884,7 +868,7 @@ export default function ChatWindow({
                           <FileText className="w-4 h-4" /> {t('quiz.suggestedMaterials')}
                         </h4>
                         <button 
-                          onClick={() => handlePdfClick(material.pdfFile, lang === 'vi' ? material.pdfTitle.vi : material.pdfTitle.en)}
+                          onClick={() => handlePdfClick(material.pdfFile, t(`quiz.materials.${topicKey}.title`))}
                           className="w-full flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary/50 transition-colors text-left group shadow-sm"
                         >
                           <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
@@ -892,10 +876,10 @@ export default function ChatWindow({
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-primary transition-colors">
-                              {lang === 'vi' ? material.pdfTitle.vi : material.pdfTitle.en}
+                              {t(`quiz.materials.${topicKey}.title`)}
                             </p>
                             <p className="text-xs text-slate-500">
-                              {lang === 'vi' ? material.pages.vi : material.pages.en}
+                              {t(`quiz.materials.${topicKey}.pages`)}
                             </p>
                           </div>
                         </button>

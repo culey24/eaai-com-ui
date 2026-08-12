@@ -110,7 +110,41 @@
     "sampleQuestion": "Trong bài toán phân loại nhị phân (Binary Classification), hàm mất mát (Loss Function) nào thường được sử dụng nhiều nhất để đo lường sai số giữa nhãn dự đoán và nhãn thực tế?",
     "suggestSubtitle": "Kiểm tra ngay kiến thức vừa học",
     "cta": "Làm bài",
-    "create": "Tạo Mini-Quiz"
+    "create": "Tạo Mini-Quiz",
+    "materials": {
+      "association_rules_mining": {
+        "title": "Khai thác luật kết hợp.pdf",
+        "pages": "Trang gợi ý: 1 – 15"
+      },
+      "recommender_system": {
+        "title": "Hệ gợi ý (Rút gọn).pdf",
+        "pages": "Trang gợi ý: 10 – 25"
+      },
+      "fuzzy_logic": {
+        "title": "Logic mờ.pdf",
+        "pages": "Trang gợi ý: 1 – 12"
+      },
+      "linear_regression": {
+        "title": "Hồi quy tuyến tính.pdf",
+        "pages": "Trang gợi ý: 5 – 18"
+      },
+      "logistic_regression": {
+        "title": "Hồi quy logistic.pdf",
+        "pages": "Trang gợi ý: 1 – 15"
+      },
+      "latent_dirichlet_allocation": {
+        "title": "LDA.pdf",
+        "pages": "Trang gợi ý: 1 – 20"
+      },
+      "deep_neural_networks": {
+        "title": "Mạng nơ-ron sâu.pdf",
+        "pages": "Trang gợi ý: 1 – 25"
+      },
+      "word_embedding": {
+        "title": "Nhúng từ.pdf",
+        "pages": "Trang gợi ý: 26 – 45"
+      }
+    }
   },
   "report": {
     "title": "Báo cáo",

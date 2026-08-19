@@ -4,6 +4,8 @@ import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
 import { isSupporterUserRole } from '../lib/roles.js'
 import { buildSharedDownloadPath } from '../lib/signedDownloadUrl.js'
+import { SECTION_B_QUESTIONS as POSTTEST_QUESTIONS } from '../data/posttest/sectionB/index.js'
+import { SECTION_B_QUESTIONS as POSTTEST2_QUESTIONS } from '../data/posttest2/sectionB/index.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -79,6 +81,108 @@ function buildSubmissionLinks(config, uploadsByPeriod) {
     final: toSubmissionLink(pickUpload(uploadsByPeriod, config.final_2, config.final_1, false)),
   }
 }
+
+/**
+ * Tự động chấm MCQ trong một khảo sát (Section B) theo đáp án chuẩn.
+ * Mỗi câu MCQ đúng = 0.5đ, tổng = min(10, sum).
+ * @param {object} sectionA - { topicFirst, topicSecond }
+ * @param {object} sectionB - { topicKey: { q1: 'A', q2: 'B', ... } }
+ * @param {object} questionsByTopic - { topicKey: [{ id:'q1', answer:'B', type:'mcq' }, ...] }
+ * @returns {{ qScores: object, total: number }}
+ */
+function autoGradeSectionB(sectionA, sectionB, questionsByTopic) {
+  const qScores = {}
+  const topics = [sectionA?.topicFirst, sectionA?.topicSecond]
+  let sum = 0
+  topics.forEach((topic, tIdx) => {
+    const qList = questionsByTopic[topic] || []
+    const answers = sectionB?.[topic] || {}
+    qList.forEach((q, qIdx) => {
+      if (q.type !== 'mcq') return
+      const key = `B${tIdx + 1}-${qIdx + 1}`
+      const userAns = String(answers[q.id] || '').toUpperCase()
+      const isCorrect = userAns !== '' && userAns === String(q.answer || '').toUpperCase()
+      const pts = isCorrect ? 0.5 : 0
+      qScores[key] = pts
+      if (key.startsWith('B')) sum += pts
+    })
+  })
+  return { qScores, total: parseFloat(Math.min(10, sum).toFixed(2)) }
+}
+
+/**
+ * POST /api/grading/auto-grade-surveys
+ * Admin: Tự động chấm toàn bộ Posttest & Posttest 2 của tất cả học viên theo đáp án chuẩn.
+ * Không ghi đè Pretest hay các cột Sub/Final đã chấm tay.
+ */
+router.post('/auto-grade-surveys', async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'admin') {
+      return res.status(403).json({ error: 'Chỉ admin' })
+    }
+
+    const students = await prisma.user.findMany({
+      where: { userRole: 'student' },
+      select: { userId: true },
+    })
+
+    const userIds = students.map((s) => s.userId)
+    if (userIds.length === 0) {
+      return res.status(200).json(jsonSafe({ ok: true, updated: 0, message: 'Không có học viên nào' }))
+    }
+
+    const surveys = await prisma.surveyResponse.findMany({
+      where: { userId: { in: userIds }, surveyKind: { in: ['POSTTEST', 'POSTTEST2'] } },
+      select: { userId: true, surveyKind: true, sectionA: true, sectionB: true },
+    })
+
+    const byUser = {}
+    for (const s of surveys) {
+      if (!byUser[s.userId]) byUser[s.userId] = {}
+      byUser[s.userId][s.surveyKind] = s
+    }
+
+    const gradings = await prisma.studentGrading.findMany({
+      where: { learnerId: { in: userIds } },
+      select: { learnerId: true, scores: true },
+    })
+    const gradingMap = new Map()
+    for (const g of gradings) gradingMap.set(g.learnerId, g.scores || {})
+
+    let updated = 0
+    for (const st of students) {
+      const userSurveys = byUser[st.userId] || {}
+      const post = userSurveys.POSTTEST
+      const post2 = userSurveys.POSTTEST2
+      if (!post && !post2) continue
+
+      const scores = { ...(gradingMap.get(st.userId) || {}) }
+
+      if (post) {
+        const { qScores, total } = autoGradeSectionB(post.sectionA, post.sectionB, POSTTEST_QUESTIONS)
+        scores.posttest = total
+        scores.posttest_q = qScores
+      }
+      if (post2) {
+        const { qScores, total } = autoGradeSectionB(post2.sectionA, post2.sectionB, POSTTEST2_QUESTIONS)
+        scores.posttest2 = total
+        scores.posttest2_q = qScores
+      }
+
+      await prisma.studentGrading.upsert({
+        where: { learnerId: st.userId },
+        create: { learnerId: st.userId, supporterId: req.auth.userId, scores, comments: {} },
+        update: { scores },
+      })
+      updated++
+    }
+
+    return res.status(200).json(jsonSafe({ ok: true, updated }))
+  } catch (err) {
+    console.error('[grading POST /auto-grade-surveys]', err)
+    return res.status(500).json({ error: 'Lỗi máy chủ' })
+  }
+})
 
 /**
  * GET /api/grading/config

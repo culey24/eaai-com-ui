@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, UserCheck, CheckCircle2, Clock, Users, ArrowRight, RefreshCw, Filter, Shield, Download } from 'lucide-react'
+import { Search, UserCheck, CheckCircle2, Clock, Users, ArrowRight, RefreshCw, Filter, Shield, Download, Sparkles } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import { ROLES } from '../../constants/roles'
@@ -17,6 +17,28 @@ export default function SupporterGradingListPage() {
   const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'graded' | 'ungraded'
   const isAdmin = user?.role === ROLES.ADMIN
   const [exporting, setExporting] = useState(false)
+  const [autoGrading, setAutoGrading] = useState(false)
+
+  const handleAutoGradeAll = async () => {
+    if (!apiToken) return
+    if (!window.confirm('Tự động chấm toàn bộ Posttest & Posttest 2 của tất cả học viên theo đáp án chuẩn?')) return
+    setAutoGrading(true)
+    try {
+      const res = await fetch(`${API_BASE}/api/grading/auto-grade-surveys`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiToken}` },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`)
+      alert(`Đã tự động chấm lại ${data.updated} học viên.`)
+      fetchLearners()
+    } catch (err) {
+      console.error('[Auto-grade all surveys err]', err)
+      alert(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tự động chấm toàn bộ.')
+    } finally {
+      setAutoGrading(false)
+    }
+  }
 
   const handleExportCsv = async () => {
     if (!apiToken) return
@@ -108,9 +130,24 @@ export default function SupporterGradingListPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleExportCsv}
-              disabled={loading || exporting}
+            {isAdmin && (
+                <button
+                  onClick={handleAutoGradeAll}
+                  disabled={loading || autoGrading}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-slate-950 text-sm font-semibold rounded-xl shadow-lg shadow-amber-500/20 transition-all"
+                  title="Tự động chấm lại Posttest & Posttest 2 của toàn bộ học viên theo đáp án chuẩn"
+                >
+                  {autoGrading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  <span>{autoGrading ? 'Đang chấm...' : 'Tự động chấm toàn bộ Posttest'}</span>
+                </button>
+              )}
+              <button
+                onClick={handleExportCsv}
+                disabled={loading || exporting}
               className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-500/20 transition-all"
             >
               {exporting ? (

@@ -29,26 +29,18 @@ export async function exportGradingResultsCsv({ apiToken }) {
     'Lớp',
     'Người chấm',
     'Điểm Sub 1',
-    'Nhận xét Sub 1',
     'Điểm Sub 2',
-    'Nhận xét Sub 2',
     'Điểm Sub 3',
-    'Nhận xét Sub 3',
     'Điểm Sub 4',
-    'Nhận xét Sub 4',
     'Điểm Final',
-    'Nhận xét Final',
     'Link Sub 1',
     'Link Sub 2',
     'Link Sub 3',
     'Link Sub 4',
     'Link Final',
     'Điểm Pretest',
-    'Nhận xét Pretest',
     'Điểm Posttest',
-    'Nhận xét Posttest',
     'Điểm Posttest 2',
-    'Nhận xét Posttest 2',
     'Điểm tổng kết',
     'Thời gian chấm'
   ]
@@ -58,7 +50,6 @@ export async function exportGradingResultsCsv({ apiToken }) {
   
   for (const row of results) {
     const sc = row.scores || {}
-    const cm = row.comments || {}
     
     const cells = [
       csvEscape(row.studentSchoolId ?? ''),
@@ -68,19 +59,14 @@ export async function exportGradingResultsCsv({ apiToken }) {
       csvEscape(row.supporterName ?? ''),
       // Sub 1
       csvEscape(sc.sub1 != null ? sc.sub1 : ''),
-      csvEscape(cm.sub1 ?? ''),
       // Sub 2
       csvEscape(sc.sub2 != null ? sc.sub2 : ''),
-      csvEscape(cm.sub2 ?? ''),
       // Sub 3
       csvEscape(sc.sub3 != null ? sc.sub3 : ''),
-      csvEscape(cm.sub3 ?? ''),
       // Sub 4
       csvEscape(sc.sub4 != null ? sc.sub4 : ''),
-      csvEscape(cm.sub4 ?? ''),
       // Final
       csvEscape(sc.final != null ? sc.final : ''),
-      csvEscape(cm.final ?? ''),
       // Link tải file submission (journal upload tương ứng)
       csvEscape(submissionLink(row, 'sub1')),
       csvEscape(submissionLink(row, 'sub2')),
@@ -89,13 +75,10 @@ export async function exportGradingResultsCsv({ apiToken }) {
       csvEscape(submissionLink(row, 'final')),
       // Pretest
       csvEscape(sc.pretest != null ? sc.pretest : ''),
-      csvEscape(cm.pretest ?? ''),
       // Posttest
       csvEscape(sc.posttest != null ? sc.posttest : ''),
-      csvEscape(cm.posttest ?? ''),
       // Posttest 2
       csvEscape(sc.posttest2 != null ? sc.posttest2 : ''),
-      csvEscape(cm.posttest2 ?? ''),
       // Total
       csvEscape(row.totalScore != null ? row.totalScore : ''),
       csvEscape(row.gradedAt ? new Date(row.gradedAt).toLocaleString('vi-VN') : '')

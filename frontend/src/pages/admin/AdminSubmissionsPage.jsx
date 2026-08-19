@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, FileText, Plus, Pencil, Trash2, Calendar, Copy, Download } from 'lucide-react'
+import { ArrowLeft, FileText, Plus, Pencil, Trash2, Calendar, Copy, Download, Link2, Unlink, Shield, ChevronDown, RefreshCw } from 'lucide-react'
 import { useJournal } from '../../context/JournalContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
@@ -25,6 +25,13 @@ export default function AdminSubmissionsPage() {
   const [formIsPosttest2, setFormIsPosttest2] = useState(false)
   const [copyingEmailsForPeriodId, setCopyingEmailsForPeriodId] = useState(null)
   const [exportingCsv, setExportingCsv] = useState(false)
+
+  // Quản lý link tải shared (thu hồi / bỏ thu hồi)
+  const [linkPanelOpen, setLinkPanelOpen] = useState(false)
+  const [linkRows, setLinkRows] = useState([])
+  const [revokedKeys, setRevokedKeys] = useState(new Set())
+  const [linkPanelLoading, setLinkPanelLoading] = useState(false)
+  const [mutatingKey, setMutatingKey] = useState('')
 
   const submissions = getSubmissions()
   const submissionIdsKey = useMemo(() => submissions.map((s) => s.id).join('|'), [submissions])
@@ -235,6 +242,94 @@ export default function AdminSubmissionsPage() {
     }
   }
 
+  const loadDownloadLinkData = async () => {
+    if (!apiToken || user?.role !== ROLES.ADMIN) return
+    setLinkPanelLoading(true)
+    try {
+      const [matrixRes, revokedRes] = await Promise.all([
+        fetch(`${API_BASE}/api/admin/journal-submissions-matrix`, {
+          headers: { Authorization: `Bearer ${apiToken}` },
+        }),
+        fetch(`${API_BASE}/api/admin/journal-download-links/revoked`, {
+          headers: { Authorization: `Bearer ${apiToken}` },
+        }),
+      ])
+      const matrix = await matrixRes.json().catch(() => ({}))
+      const revokedData = await revokedRes.json().catch(() => ({}))
+      if (!matrixRes.ok) throw new Error(matrix.error || matrix.message || `HTTP ${matrixRes.status}`)
+      const periods = Array.isArray(matrix.periods) ? matrix.periods : []
+      const rows = Array.isArray(matrix.rows) ? matrix.rows : []
+      const flat = []
+      for (const row of rows) {
+        const uid = row?.userId != null ? String(row.userId) : ''
+        const by = row?.uploadsByPeriod && typeof row.uploadsByPeriod === 'object' ? row.uploadsByPeriod : {}
+        for (const p of periods) {
+          const pid = p?.periodId != null ? String(p.periodId) : ''
+          const info = pid ? by[pid] : null
+          const upId = info?.uploadId != null ? String(info.uploadId) : ''
+          if (!uid || !upId) continue
+          flat.push({
+            key: `journal:${uid}:${upId}`,
+            userId: uid,
+            username: row?.username || '',
+            fullName: row?.fullName || '',
+            periodId: pid,
+            periodTitle: p?.title || pid,
+            uploadId: upId,
+            fileName: info?.originalFileName || '',
+            downloadUrl: info?.downloadUrl ? `${API_BASE}${info.downloadUrl}` : '',
+          })
+        }
+      }
+      const revokedSet = new Set(
+        Array.isArray(revokedData.revoked) ? revokedData.revoked.map((r) => r.downloadKey) : []
+      )
+      setLinkRows(flat)
+      setRevokedKeys(revokedSet)
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e))
+    } finally {
+      setLinkPanelLoading(false)
+    }
+  }
+
+  const toggleRevokeLink = async (row) => {
+    if (!apiToken || user?.role !== ROLES.ADMIN) return
+    setMutatingKey(row.key)
+    const isRevoked = revokedKeys.has(row.key)
+    try {
+      const r = await fetch(
+        `${API_BASE}/api/admin/journal-download-links/${isRevoked ? 'unrevoke' : 'revoke'}`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${apiToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ learnerId: row.userId, uploadId: row.uploadId }),
+        }
+      )
+      const data = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(data.error || data.message || `HTTP ${r.status}`)
+      setRevokedKeys((prev) => {
+        const next = new Set(prev)
+        if (isRevoked) next.delete(row.key)
+        else next.add(row.key)
+        return next
+      })
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : String(e))
+    } finally {
+      setMutatingKey('')
+    }
+  }
+
+  const copyDownloadLink = async (url) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      window.alert('Đã copy link tải file.')
+    } catch {
+      window.prompt('Copy link tải file:', url)
+    }
+  }
+
   const dateTimeFields = (
     <>
       <div>
@@ -364,6 +459,122 @@ export default function AdminSubmissionsPage() {
 
       <div className="flex-1 overflow-y-auto p-8">
         <div className="max-w-2xl mx-auto space-y-6">
+          {apiToken && user?.role === ROLES.ADMIN && (
+            <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !linkPanelOpen
+                  setLinkPanelOpen(next)
+                  if (next) void loadDownloadLinkData()
+                }}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700/40"
+              >
+                <span className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  Quản lý link tải file (submissions)
+                  {revokedKeys.size > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
+                      {revokedKeys.size} đã thu hồi
+                    </span>
+                  )}
+                </span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${linkPanelOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {linkPanelOpen && (
+                <div className="border-t border-slate-100 dark:border-slate-700">
+                  <div className="p-4 flex items-center justify-between gap-2">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Link ký vĩnh viễn (không cần đăng nhập) được nhúng vào CSV khi xuất. Thu hồi để chặn link ngay lập tức.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void loadDownloadLinkData()}
+                      disabled={linkPanelLoading}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 disabled:opacity-60 shrink-0"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${linkPanelLoading ? 'animate-spin' : ''}`} />
+                      Làm mới
+                    </button>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto px-4 pb-4">
+                    {linkPanelLoading ? (
+                      <p className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">Đang tải danh sách...</p>
+                    ) : linkRows.length === 0 ? (
+                      <p className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">Chưa có submission nào.</p>
+                    ) : (
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="border-b border-slate-100 dark:border-slate-700 text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            <th className="py-2 pr-3">Học viên</th>
+                            <th className="py-2 pr-3">Đợt nộp</th>
+                            <th className="py-2 pr-3">File</th>
+                            <th className="py-2 text-right">Thao tác</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60">
+                          {linkRows.map((row) => {
+                            const revoked = revokedKeys.has(row.key)
+                            const busy = mutatingKey === row.key
+                            return (
+                              <tr key={row.key} className={revoked ? 'opacity-60' : ''}>
+                                <td className="py-2 pr-3">
+                                  <div className="font-medium text-slate-800 dark:text-white">
+                                    {row.fullName || row.username}
+                                  </div>
+                                  <div className="text-xs text-slate-400">@{row.username}</div>
+                                </td>
+                                <td className="py-2 pr-3 text-slate-600 dark:text-slate-300">{row.periodTitle}</td>
+                                <td className="py-2 pr-3">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
+                                      {row.fileName || row.uploadId}
+                                    </span>
+                                    {row.downloadUrl && (
+                                      <button
+                                        type="button"
+                                        onClick={() => void copyDownloadLink(row.downloadUrl)}
+                                        title="Copy link tải"
+                                        className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 shrink-0"
+                                      >
+                                        <Copy className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-2 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => void toggleRevokeLink(row)}
+                                    disabled={busy || !row.downloadUrl}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border disabled:opacity-50 ${
+                                      revoked
+                                        ? 'border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                                        : 'border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                    }`}
+                                  >
+                                    {busy ? (
+                                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    ) : revoked ? (
+                                      <Link2 className="w-3.5 h-3.5" />
+                                    ) : (
+                                      <Unlink className="w-3.5 h-3.5" />
+                                    )}
+                                    {revoked ? 'Bỏ thu hồi' : 'Thu hồi'}
+                                  </button>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {showForm && (
             <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
               <h3 className="font-semibold text-slate-800 dark:text-white mb-4">

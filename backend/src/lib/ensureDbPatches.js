@@ -263,5 +263,22 @@ CREATE TABLE IF NOT EXISTS app_settings (
       err instanceof Error ? err.message : String(err)
     )
   }
+
+  const JOURNAL_DOWNLOAD_REVOCATIONS_TABLE = `
+CREATE TABLE IF NOT EXISTS journal_download_revocations (
+    revocation_id BIGSERIAL PRIMARY KEY,
+    download_key VARCHAR(200) NOT NULL UNIQUE,
+    reason VARCHAR(500) NOT NULL DEFAULT '',
+    revoked_by VARCHAR(10) REFERENCES users(user_id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+)`
+  try {
+    await prisma.$executeRawUnsafe(JOURNAL_DOWNLOAD_REVOCATIONS_TABLE)
+  } catch (err) {
+    console.warn(
+      '[db-patches] journal_download_revocations:',
+      err instanceof Error ? err.message : String(err)
+    )
+  }
 }
 

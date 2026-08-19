@@ -5,6 +5,7 @@ import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
 import { getStatsExcludedUsernamesNormalized } from '../lib/statsExcludedUsernames.js'
 import { isSupporterUserRole } from '../lib/roles.js'
+import { buildSharedDownloadPath, downloadKey } from '../lib/signedDownloadUrl.js'
 
 const router = Router()
 
@@ -410,6 +411,7 @@ router.get('/journal-submissions-matrix', authMiddleware, async (req, res) => {
         uploadId: upId,
         originalFileName:
           row?.originalFileName != null ? String(row.originalFileName).slice(0, 512) : '',
+        downloadUrl: buildSharedDownloadPath({ learnerId: uid, uploadId: upId }),
       }
     }
 
@@ -438,6 +440,92 @@ router.get('/journal-submissions-matrix', authMiddleware, async (req, res) => {
     )
   } catch (err) {
     console.error('[admin journal-submissions-matrix]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /api/admin/journal-download-links/revoked
+ * Admin: danh sách link tải shared đã thu hồi.
+ */
+router.get('/journal-download-links/revoked', authMiddleware, async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'admin') {
+      return res.status(403).json({ error: 'Chỉ admin' })
+    }
+    const rows = await prisma.journalDownloadRevocation.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        downloadKey: true,
+        reason: true,
+        createdAt: true,
+        revokedBy: true,
+      },
+    })
+    return res.status(200).json(jsonSafe({ revoked: rows }))
+  } catch (err) {
+    console.error('[admin journal-download-links revoked]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * POST /api/admin/journal-download-links/revoke
+ * Admin: thu hồi link tải shared của 1 file journal.
+ */
+router.post('/journal-download-links/revoke', authMiddleware, async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'admin') {
+      return res.status(403).json({ error: 'Chỉ admin' })
+    }
+    const learnerId = String(req.body?.learnerId ?? '').trim()
+    const uploadId = String(req.body?.uploadId ?? '').trim()
+    const reason = String(req.body?.reason ?? '').slice(0, 500).trim()
+    if (!learnerId || !uploadId || !/^\d+$/.test(uploadId)) {
+      return res.status(400).json({ error: 'Thiếu learnerId hoặc uploadId không hợp lệ' })
+    }
+    const key = downloadKey(learnerId, uploadId)
+    const row = await prisma.journalDownloadRevocation.upsert({
+      where: { downloadKey: key },
+      update: { reason: reason || '' },
+      create: { downloadKey: key, reason: reason || '', revokedBy: req.auth.userId },
+    })
+    return res.status(200).json(jsonSafe({ revoked: true, id: String(row.id) }))
+  } catch (err) {
+    console.error('[admin journal-download-links revoke]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * POST /api/admin/journal-download-links/unrevoke
+ * Admin: bỏ thu hồi link tải shared của 1 file journal.
+ */
+router.post('/journal-download-links/unrevoke', authMiddleware, async (req, res) => {
+  try {
+    if (req.auth.userRole !== 'admin') {
+      return res.status(403).json({ error: 'Chỉ admin' })
+    }
+    const learnerId = String(req.body?.learnerId ?? '').trim()
+    const uploadId = String(req.body?.uploadId ?? '').trim()
+    if (!learnerId || !uploadId || !/^\d+$/.test(uploadId)) {
+      return res.status(400).json({ error: 'Thiếu learnerId hoặc uploadId không hợp lệ' })
+    }
+    const key = downloadKey(learnerId, uploadId)
+    await prisma.journalDownloadRevocation.deleteMany({ where: { downloadKey: key } })
+    return res.status(200).json({ revoked: false })
+  } catch (err) {
+    console.error('[admin journal-download-links unrevoke]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),

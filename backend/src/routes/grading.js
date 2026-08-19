@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { jsonSafe } from '../lib/json.js'
 import { isSupporterUserRole } from '../lib/roles.js'
+import { buildSharedDownloadPath } from '../lib/signedDownloadUrl.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -17,6 +18,66 @@ const DEFAULT_CONFIG = {
   sub4: '',
   final_1: '',
   final_2: '',
+}
+
+/**
+ * Lấy cấu hình đợt nộp từ app_settings.
+ */
+async function getGradingConfig(prisma) {
+  const row = await prisma.appSetting.findUnique({
+    where: { settingKey: CONFIG_KEY },
+  })
+  return row && row.value ? row.value : DEFAULT_CONFIG
+}
+
+/** Upload mới nhất theo periodId (một map: periodId → upload). */
+function latestUploadByPeriod(uploads) {
+  const byPeriod = new Map()
+  for (const u of uploads) {
+    if (!byPeriod.has(u.periodId)) byPeriod.set(u.periodId, u)
+  }
+  return byPeriod
+}
+
+function pickUpload(byPeriod, periodLate, periodNormal, isSupplementaryRound = false) {
+  if (periodLate && byPeriod.has(periodLate)) {
+    const u = byPeriod.get(periodLate)
+    return {
+      ...u,
+      id: String(u.id),
+      isLate: !isSupplementaryRound,
+      isSupplementary: isSupplementaryRound,
+    }
+  }
+  if (periodNormal && byPeriod.has(periodNormal)) {
+    const u = byPeriod.get(periodNormal)
+    return { ...u, id: String(u.id), isLate: false, isSupplementary: false }
+  }
+  return null
+}
+
+/** Chuyển upload journal → link tải shared (null nếu không có file). */
+function toSubmissionLink(upload) {
+  if (!upload) return null
+  const learnerId = upload.userId != null ? String(upload.userId) : ''
+  const uploadId = String(upload.id ?? '')
+  if (!learnerId || !uploadId) return null
+  return {
+    uploadId,
+    fileName: upload.originalFileName ? String(upload.originalFileName).slice(0, 512) : '',
+    downloadUrl: buildSharedDownloadPath({ learnerId, uploadId }),
+  }
+}
+
+/** Map submission (sub1..sub4, final) → link tải file đợt tương ứng. */
+function buildSubmissionLinks(config, uploadsByPeriod) {
+  return {
+    sub1: toSubmissionLink(pickUpload(uploadsByPeriod, config.sub1_2, config.sub1_1, true)),
+    sub2: toSubmissionLink(pickUpload(uploadsByPeriod, config.sub2_2, config.sub2_1, true)),
+    sub3: toSubmissionLink(pickUpload(uploadsByPeriod, null, config.sub3, false)),
+    sub4: toSubmissionLink(pickUpload(uploadsByPeriod, null, config.sub4, false)),
+    final: toSubmissionLink(pickUpload(uploadsByPeriod, config.final_2, config.final_1, false)),
+  }
 }
 
 /**
@@ -288,6 +349,8 @@ router.get('/export-data', async (req, res) => {
       return res.status(403).json({ error: 'Không có quyền truy cập' })
     }
 
+    const config = await getGradingConfig(prisma)
+
     const students = await prisma.user.findMany({
       where: { userRole: 'student' },
       select: {
@@ -299,6 +362,26 @@ router.get('/export-data', async (req, res) => {
       },
       orderBy: [{ userClass: 'asc' }, { username: 'asc' }],
     })
+
+    // Tất cả upload journal (mới nhất trước) → map theo user, rồi theo period.
+    const allUploads = await prisma.journalUpload.findMany({
+      orderBy: { submittedAt: 'desc' },
+      select: {
+        id: true,
+        userId: true,
+        periodId: true,
+        originalFileName: true,
+      },
+    })
+    const uploadsByUser = new Map()
+    for (const u of allUploads) {
+      let m = uploadsByUser.get(u.userId)
+      if (!m) {
+        m = new Map()
+        uploadsByUser.set(u.userId, m)
+      }
+      if (!m.has(u.periodId)) m.set(u.periodId, u)
+    }
 
     const gradings = await prisma.studentGrading.findMany({
       select: {
@@ -333,6 +416,7 @@ router.get('/export-data', async (req, res) => {
         comments: g ? g.comments : {},
         gradedAt: g ? g.gradedAt.toISOString() : null,
         supporterName: g?.supporter ? `${g.supporter.fullname} (${g.supporter.username})` : 'Chưa phân công',
+        submissionLinks: buildSubmissionLinks(config, uploadsByUser.get(st.userId) || new Map()),
       }
     })
 

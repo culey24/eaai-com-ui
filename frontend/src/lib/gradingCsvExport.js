@@ -5,6 +5,12 @@ function csvEscape(s) {
   return `"${String(s).replace(/"/g, '""')}"`
 }
 
+/** Link tải shared (đã ký) của 1 submission, ghép API_BASE để mở trực tiếp. */
+function submissionLink(row, key) {
+  const u = row?.submissionLinks && row.submissionLinks[key]
+  return u && u.downloadUrl ? `${API_BASE}${u.downloadUrl}` : ''
+}
+
 export async function exportGradingResultsCsv({ apiToken }) {
   const r = await fetch(`${API_BASE}/api/grading/export-data`, {
     headers: { Authorization: `Bearer ${apiToken}` },
@@ -32,6 +38,11 @@ export async function exportGradingResultsCsv({ apiToken }) {
     'Nhận xét Sub 4',
     'Điểm Final',
     'Nhận xét Final',
+    'Link Sub 1',
+    'Link Sub 2',
+    'Link Sub 3',
+    'Link Sub 4',
+    'Link Final',
     'Điểm Pretest',
     'Nhận xét Pretest',
     'Điểm Posttest',
@@ -70,6 +81,12 @@ export async function exportGradingResultsCsv({ apiToken }) {
       // Final
       csvEscape(sc.final != null ? sc.final : ''),
       csvEscape(cm.final ?? ''),
+      // Link tải file submission (journal upload tương ứng)
+      csvEscape(submissionLink(row, 'sub1')),
+      csvEscape(submissionLink(row, 'sub2')),
+      csvEscape(submissionLink(row, 'sub3')),
+      csvEscape(submissionLink(row, 'sub4')),
+      csvEscape(submissionLink(row, 'final')),
       // Pretest
       csvEscape(sc.pretest != null ? sc.pretest : ''),
       csvEscape(cm.pretest ?? ''),

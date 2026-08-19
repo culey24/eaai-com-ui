@@ -12,6 +12,10 @@ import { extractDocumentText } from '../lib/extractDocumentText.js'
 import { jsonSafe } from '../lib/json.js'
 import { journalUploadLimiter } from '../lib/rateLimits.js'
 import { isSupporterUserRole } from '../lib/roles.js'
+import {
+  downloadKey,
+  verifyFileDownload,
+} from '../lib/signedDownloadUrl.js'
 
 const router = Router()
 
@@ -226,6 +230,60 @@ async function assertCanDownloadJournalFile(reqAuth, learnerId) {
 }
 
 /**
+ * Đọc + stream file journal đã lưu (dùng chung cho route cần JWT và route shared).
+ * Trả về response đã send; ném lỗi có .status nếu cần (403/404/500).
+ */
+async function readJournalFileAndSend(res, learnerIdRaw, uploadIdRaw) {
+  const learnerId = String(learnerIdRaw || '').trim()
+  const uploadIdStr = String(uploadIdRaw || '').trim()
+  if (!learnerId || !uploadIdStr || !/^\d+$/.test(uploadIdStr)) {
+    return res.status(400).json({ error: 'Thiếu learnerId hoặc uploadId không hợp lệ' })
+  }
+  let uploadIdBig
+  try {
+    uploadIdBig = BigInt(uploadIdStr)
+  } catch {
+    return res.status(400).json({ error: 'uploadId không hợp lệ' })
+  }
+
+  const rows = await prisma.$queryRaw`
+    SELECT ju.storage_key, ju.original_file_name, ju.period_id
+    FROM journal_uploads ju
+    WHERE ju.user_id = ${learnerId} AND ju.upload_id = ${uploadIdBig}
+    LIMIT 1
+  `
+  const row = Array.isArray(rows) && rows[0]
+  if (!row?.storage_key) {
+    return res.status(404).json({ error: 'Không tìm thấy file journal' })
+  }
+
+  let buffer
+  let contentType
+  try {
+    ;({ buffer, contentType } = await readJournalUploadWithFallback(String(row.storage_key), {
+      userId: learnerId,
+      periodId: row.period_id != null ? String(row.period_id) : '',
+    }))
+  } catch (readErr) {
+    if (readErr?.code === 'ENOENT') {
+      return res.status(404).json({
+        error:
+          'File journal không còn trên máy chủ (mất volume / đổi instance / chưa mount uploads). ' +
+          'Cấu hình volume bền cho thư mục upload hoặc GCS_BUCKET_NAME.',
+      })
+    }
+    throw readErr
+  }
+  const name = (row.original_file_name && String(row.original_file_name).slice(0, 512)) || 'journal'
+
+  res.setHeader('Content-Type', contentType || 'application/octet-stream')
+  res.setHeader('Content-Disposition', contentDispositionAttachment(name))
+  res.setHeader('Content-Length', String(buffer.length))
+  res.setHeader('Cache-Control', 'private, no-store')
+  return res.status(200).send(buffer)
+}
+
+/**
  * GET /api/journal/learner/:learnerId/file/:uploadId
  * Learner (chính mình), admin, hoặc supporter — tải binary đã lưu (supporter: mọi học viên).
  */
@@ -236,51 +294,9 @@ router.get('/learner/:learnerId/file/:uploadId', authMiddleware, async (req, res
     if (!learnerId || !uploadIdRaw || !/^\d+$/.test(uploadIdRaw)) {
       return res.status(400).json({ error: 'Thiếu learnerId hoặc uploadId không hợp lệ' })
     }
-    let uploadIdBig
-    try {
-      uploadIdBig = BigInt(uploadIdRaw)
-    } catch {
-      return res.status(400).json({ error: 'uploadId không hợp lệ' })
-    }
 
     await assertCanDownloadJournalFile(req.auth, learnerId)
-
-    const rows = await prisma.$queryRaw`
-      SELECT ju.storage_key, ju.original_file_name, ju.period_id
-      FROM journal_uploads ju
-      WHERE ju.user_id = ${learnerId} AND ju.upload_id = ${uploadIdBig}
-      LIMIT 1
-    `
-    const row = Array.isArray(rows) && rows[0]
-    if (!row?.storage_key) {
-      return res.status(404).json({ error: 'Không tìm thấy file journal' })
-    }
-
-    let buffer
-    let contentType
-    try {
-      ;({ buffer, contentType } = await readJournalUploadWithFallback(String(row.storage_key), {
-        userId: learnerId,
-        periodId: row.period_id != null ? String(row.period_id) : '',
-      }))
-    } catch (readErr) {
-      if (readErr?.code === 'ENOENT') {
-        return res.status(404).json({
-          error:
-            'File journal không còn trên máy chủ (mất volume / đổi instance / chưa mount uploads). ' +
-            'Cấu hình volume bền cho thư mục upload hoặc GCS_BUCKET_NAME.',
-        })
-      }
-      throw readErr
-    }
-    const name =
-      (row.original_file_name && String(row.original_file_name).slice(0, 512)) || 'journal'
-
-    res.setHeader('Content-Type', contentType || 'application/octet-stream')
-    res.setHeader('Content-Disposition', contentDispositionAttachment(name))
-    res.setHeader('Content-Length', String(buffer.length))
-    res.setHeader('Cache-Control', 'private, no-store')
-    return res.status(200).send(buffer)
+    return await readJournalFileAndSend(res, learnerId, uploadIdRaw)
   } catch (err) {
     const status = err?.status
     if (status === 403) {
@@ -290,6 +306,50 @@ router.get('/learner/:learnerId/file/:uploadId', authMiddleware, async (req, res
       return res.status(404).json({ error: 'Không tìm thấy' })
     }
     console.error('[journal GET file]', err)
+    return res.status(500).json({
+      error: 'Lỗi máy chủ',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * GET /api/journal/shared/:learnerId/:uploadId?sig=&exp=
+ * Tải file KHÔNG cần đăng nhập — link được ký HMAC (signedDownloadUrl).
+ * Link bị thu hồi (journal_download_revocations) → 403.
+ */
+router.get('/shared/:learnerId/:uploadId', async (req, res) => {
+  try {
+    const learnerId = String(req.params.learnerId || '').trim()
+    const uploadId = String(req.params.uploadId || '').trim()
+    const sig = req.query.sig
+    const exp = req.query.exp
+
+    if (!learnerId || !uploadId || !/^\d+$/.test(uploadId)) {
+      return res.status(400).json({ error: 'Thiếu learnerId hoặc uploadId không hợp lệ' })
+    }
+    if (!verifyFileDownload({ learnerId, uploadId, sig, exp })) {
+      return res.status(403).json({ error: 'Link tải không hợp lệ hoặc đã hết hạn' })
+    }
+
+    const revoked = await prisma.journalDownloadRevocation.findUnique({
+      where: { downloadKey: downloadKey(learnerId, uploadId) },
+      select: { id: true },
+    })
+    if (revoked) {
+      return res.status(403).json({ error: 'Link tải đã bị thu hồi' })
+    }
+
+    return await readJournalFileAndSend(res, learnerId, uploadId)
+  } catch (err) {
+    const status = err?.status
+    if (status === 403) {
+      return res.status(403).json({ error: 'Link tải không hợp lệ hoặc đã bị thu hồi' })
+    }
+    if (status === 404) {
+      return res.status(404).json({ error: 'Không tìm thấy' })
+    }
+    console.error('[journal GET shared file]', err)
     return res.status(500).json({
       error: 'Lỗi máy chủ',
       message: err instanceof Error ? err.message : String(err),

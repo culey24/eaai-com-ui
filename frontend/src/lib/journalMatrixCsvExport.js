@@ -6,6 +6,8 @@ function csvEscape(s) {
 
 /**
  * Gọi API matrix + tải CSV (link mở downloadPathPrefix với token hiện tại).
+ * Nếu API trả downloadUrl (link shared đã ký, không cần đăng nhập) thì dùng luôn;
+ * ngược lại fallback link SPA /journal-file-download (cần đăng nhập admin/supporter).
  * @param {{ apiToken: string, t: (key: string, opts?: object) => string, downloadPathPrefix?: string }} opts
  */
 export async function exportJournalSubmissionsMatrixCsv({
@@ -48,9 +50,13 @@ export async function exportJournalSubmissionsMatrixCsv({
       const info = pid ? by[pid] : null
       const uploadId = info?.uploadId != null ? String(info.uploadId) : ''
       if (uid && uploadId) {
-        const q = new URLSearchParams({ learnerId: uid, uploadId })
-        const path = `${downloadPathPrefix}?${q.toString()}`
-        cells.push(csvEscape(`${origin}${path}`))
+        if (info?.downloadUrl) {
+          cells.push(csvEscape(`${API_BASE}${String(info.downloadUrl)}`))
+        } else {
+          const q = new URLSearchParams({ learnerId: uid, uploadId })
+          const path = `${downloadPathPrefix}?${q.toString()}`
+          cells.push(csvEscape(`${origin}${path}`))
+        }
       } else {
         cells.push(csvEscape(''))
       }

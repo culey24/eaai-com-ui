@@ -130,8 +130,7 @@ export default function SupporterGradingListPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {isAdmin && (
-                <button
+            <button
                   onClick={handleAutoGradeAll}
                   disabled={loading || autoGrading}
                   className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-slate-950 text-sm font-semibold rounded-xl shadow-lg shadow-amber-500/20 transition-all"
@@ -144,7 +143,6 @@ export default function SupporterGradingListPage() {
                   )}
                   <span>{autoGrading ? 'Đang chấm...' : 'Tự động chấm toàn bộ Posttest'}</span>
                 </button>
-              )}
               <button
                 onClick={handleExportCsv}
                 disabled={loading || exporting}

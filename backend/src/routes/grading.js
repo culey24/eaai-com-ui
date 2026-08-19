@@ -117,8 +117,10 @@ function autoGradeSectionB(sectionA, sectionB, questionsByTopic) {
  */
 router.post('/auto-grade-surveys', async (req, res) => {
   try {
-    if (req.auth.userRole !== 'admin') {
-      return res.status(403).json({ error: 'Chỉ admin' })
+    const isSupporter = isSupporterUserRole(req.auth.userRole)
+    const isAdmin = req.auth.userRole === 'admin'
+    if (!isSupporter && !isAdmin) {
+      return res.status(403).json({ error: 'Không có quyền truy cập' })
     }
 
     const students = await prisma.user.findMany({

@@ -1,0 +1,26 @@
+# Thư mục cache và file tạm thời
+**/__pycache__
+**/*.pyc
+.mypy_cache
+.pytest_cache
+*.egg-info/
+
+# Thư mục môi trường ảo và dependencies đã cài đặt
+venv/
+.venv/
+
+# Git
+.git
+.gitignore
+
+# Thư mục cá nhân của IDE/Trình soạn thảo mã
+.vscode
+.idea
+
+# Log và docs (theo yêu cầu của Dockerfile)
+# Mặc dù đã bỏ qua trong Dockerfile, việc loại trừ ở đây giúp quá trình build nhanh hơn
+log
+docs
+
+# Environments
+chatbot/core/agents/.env

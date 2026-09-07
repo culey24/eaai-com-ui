@@ -1,0 +1,126 @@
+services:
+  postgres_db:
+    image: postgres:latest
+    container_name: postgres_db
+    restart: always
+    build:
+      context: .
+      dockerfile: ./databases/postgresql/Dockerfile
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./databases/postgresql/tables.sql:/docker-entrypoint-initdb.d/tables.sql
+      - ./.data/postgresql:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - chatbot
+
+  ingestor:
+    hostname: ingestor
+    container_name: ingestor
+    restart: always
+    build:
+      context: .
+      dockerfile: ./ingestor/Dockerfile
+    image: chatbot/ingestor:latest
+    env_file:
+      - ./.env
+    environment:
+      INGESTOR_SERVER_PORT: ${INGESTOR_SERVER_PORT}
+      TOKENIZERS_PARALLELISM: "false"
+    ports:
+      - "${INGESTOR_SERVER_PORT}:${INGESTOR_SERVER_PORT}"
+    volumes:
+      - ./.data/logs:/app/logs
+      - ./data/crawled_data:/data/crawled_data
+      - ./data/downloaded_data:/data/downloaded_data
+      - ./data/uploaded_data:/data/uploaded_data
+    command: uvicorn server:app --host 0.0.0.0 --port ${INGESTOR_SERVER_PORT} --reload --loop asyncio
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${INGESTOR_SERVER_PORT}/health"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+    networks:
+      - chatbot
+ 
+  back-end:
+    hostname: back-end
+    container_name: back-end
+    restart: always
+    build:
+      context: .
+      dockerfile: ./back_end/Dockerfile
+    image: chatbot/back-end:latest
+    environment:
+      BE_SERVER_PORT: ${BE_SERVER_PORT}
+      TOKENIZERS_PARALLELISM: "false"
+    ports:
+      - "${BE_SERVER_PORT}:${BE_SERVER_PORT}"
+    volumes:
+      - ./.data/logs:/app/logs
+    command: uvicorn server:app --host 0.0.0.0 --port ${BE_SERVER_PORT} --reload --loop asyncio
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${BE_SERVER_PORT}/health"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+    networks:
+      - chatbot
+ 
+  agent-server:
+    hostname: agent-server
+    container_name: agent-server
+    restart: always
+    build:
+      context: .
+      dockerfile: ./chatbot/servers/agent_server/Dockerfile
+    image: chatbot/agent-server:latest
+    environment:
+      AGENT_SERVER_PORT: ${AGENT_SERVER_PORT}
+      TOKENIZERS_PARALLELISM: "false"
+    ports:
+      - "${AGENT_SERVER_PORT}:${AGENT_SERVER_PORT}"
+    volumes:
+      - ./.data/logs:/app/logs
+    command: adk web --host 0.0.0.0 --port ${AGENT_SERVER_PORT}
+    networks:
+      - chatbot
+
+  chatbot-server:
+    hostname: chatbot-server
+    container_name: chatbot-server
+    restart: always
+    build:
+      context: .
+      dockerfile: ./chatbot/servers/chatbot_server/Dockerfile
+    image: chatbot/chatbot-server:latest
+    environment:
+      CHATBOT_SERVER_PORT: ${CHATBOT_SERVER_PORT}
+      TOKENIZERS_PARALLELISM: "false"
+    ports:
+      - "${CHATBOT_SERVER_PORT}:${CHATBOT_SERVER_PORT}"
+    volumes:
+      - ./.data/logs:/app/logs
+      - ./data/crawled_data:/data/crawled_data
+      - ./data/downloaded_data:/data/downloaded_data
+      - ./data/uploaded_data:/data/uploaded_data
+      - ./data/eval_data:/data/eval_data
+    command: uvicorn server:app --host 0.0.0.0 --port ${CHATBOT_SERVER_PORT} --reload --loop asyncio
+    networks:
+      - chatbot
+ 
+networks:
+  chatbot:
+    name: chatbot
+    driver: bridge
+    external: true
+ 

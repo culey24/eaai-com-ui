@@ -1,0 +1,463 @@
+user_id,query,expected_output
+2352137,"Còn 2 tuần nữa là thi cuối kỳ môn đại số tuyến tính, giúp tôi đưa ra kế hoạch để ôn thi",Cho tôi timeline hợp lý để ôn bài
+2352137,"Tôi muốn theo chuyên ngành AI, theo bạn tôi nên tập trung đầu tư thời gian cho những môn nào.","Đề xuất các môn mà chuyên ngành AI cần, phân tích vì sao?"
+2352137,Tôi đang học cải thiện môn kiến trúc máy tính hãy cho tôi bộ test để kiểm tra và cho biết tôi đã hiểu phần kiến thức nào và nên coi lại phần nào?,"Cho tôi bộ test cấp độ cho từng chương, phân tích kết quả và chỉ ra phần kiến thức đang thiếu hụt của tôi đồng thời đưa ra đề xuất cả thiện cho các phần đó. Học lại lý thuyết hoặc là làm thêm bài tập hoặc là cả 2"
+2352137,"Dựa trên lịch sử điểm số, cách học hiện tại của tôi đang hiệu quả ở đâu và kém ở đâu?",Dựa trên điểm số thành phần và đưa ra phân tích
+2352137,Xây dựng cho tôi roadmap kỹ năng cá nhân hóa theo từng học kỳ không?,Các kế hoạch step by step cho từng môn trong học kỳ
+2352137,Tôi muốn cả thiện GPA lên mức giỏi bạn hãy cho tôi lộ trình phù hợp.,Phân tích tôi nên dành thời gian học thêm môn mới hay là cải thiện điểm môn cũ
+2352137,Tôi theo chuyên ngành về AI vậy tôi có nên bỏ hẳn luôn các môn về phần mềm không? Nếu không tôi nên học những môn nào?,"Trả lời tôi có nên hay không nên. Nếu không nên thì đưa ra gợi ý các môn học về phần mềm nhưng vẫn áp dụng nhiều trong AI hoặc chỉ đơn giản là ""must-have knowledge"" trong ngành"
+2352137,"Hiện tài kì này tôi có khá nhiều project, hãy đánh giá giúp tôi nên nơi lỏng bớt môn nào mà vẫn có thể ôn thi lại trước 2 tuần",Xem xét môn nào dễ mà tôi có thể hy sinh thời gian và vẫn kịp để học bù trước khi thi
+2352137,Hãy phân tích các đề thi năm ngoái và cho tôi biết tôi nên bỏ qua phần kiến thức nào để tối ưu điểm số,Đưa ra dự đoán về matrix đề thi
+2352137,Cho tôi chiến lược làm bài phù hợp trong phòng thi,Phân tích và cho tôi biết những việc tôi nên làm trong phòng thi. Nếu gặp câu dễ thì như thế nào? Gặp câu khó thì như thế nào? Nên làm phần nào trước
+2352137,Bạn nghĩ tôi phù hợp học một mình hay học theo nhóm?,Trả lời tôi phù hợp cách học nào và giải thích vì sao?
+2452973,Học môn Kỹ năng mềm để làm gì?,"Đưa ra được các lợi ích khi học Kỹ năng mềm: 
+rèn luyện giao tiếp, làm việc nhóm, thuyết trình 
+và quản lý thời gian. Đây là những kỹ năng quan
+trọng để làm việc hiệu quả trong môi trường học 
+tập và nghề nghiệp sau này."
+2452973,Làm cách nào để vận dụng tốt các kiến thức Đại số Tuyến tính?,"Cần nêu được các cách để vận dụng như hiểu rõ bản chất của vector, ma trận và phép biến đổi tuyến tính. Nên luyện tập giải bài toán thực tế và liên hệ các kiến thức này với ứng dụng trong kỹ thuật, dữ liệu và AI."
+2452973,Các trang web dạy code cũng như thực hành code phổ biến?,"Liệt kê được tên các trang web dạy và học code phổ biến :
+Một số trang phổ biến gồm: W3Schools, Codecademy, freeCodeCamp để học cơ bản; LeetCode, Codeforces, HackerRank để luyện thuật toán và tư duy lập trình."
+2452973,Cách học tốt Hoá cho người ghét học Hoá,"Nêu được một số cách giúp người sợ học Hoá học tốt Hoá dần lên: Nên học theo hướng hiểu bản chất thay vì học thuộc, liên hệ hoá học với hiện tượng đời sống. Chia nhỏ kiến thức, làm bài tập cơ bản và dùng sơ đồ tư duy để dễ nhớ."
+2452973,Cần phải chuẩn bị những thứ gì khi học môn Thí nghiệm Vật lý?,"Đưa ra được những yêu cầu của môn trước giờ học thí nghiệm : Cần đọc trước lý thuyết thí nghiệm, chuẩn bị vở ghi, máy tính,nắm cách tính sai số và soạn bài vào vở. Khi làm thí nghiệm phải ghi chép cẩn thận và tuân thủ an toàn phòng lab."
+2452973,"Vật chất và ý thức, cái nào có trước, cái nào quyết định cái nào?","Trả lời đúng với Triết học Mác – Lênin: Theo triết học Mác – Lênin, vật chất có trước và quyết định ý thức. Ý thức là sự phản ánh thế giới vật chất vào bộ não con người."
+2452973,"Nếu tôi muốn theo các công việc liên quan đến Trí tuệ Nhân tạo (AI), thì các môn học cần phải tập trung là những môn nào?","Liệt kê được những môn học và kiến thức yêu cầu cho công việc liên quan đến AI: Cần tập trung vào Toán (Giải tích, Đại số tuyến tính, Xác suất), Lập trình, Cấu trúc dữ liệu và các môn liên quan đến Machine Learning, Data Science."
+2452973,Liệt kê các phần kiến thức của môn Giải tích 1 đi,"Nêu được nội dung cơ bản của môn học: Giải tích 1 gồm: giới hạn, hàm số, đạo hàm, ứng dụng đạo hàm và tích phân cơ bản. Trọng tâm là hiểu và vận dụng đạo hàm trong các bài toán thực tế."
+2452973,Cho tôi biết ma trận là gì? Có bao nhiêu loại ma trận và các ứng dụng thực tế của chúng,"Cung cấp đủ thông tin về khái niệm, phân loại cũng như ứng dụng của ma trận: Ma trận là bảng số sắp xếp theo hàng và cột. Có nhiều loại như ma trận vuông, ma trận đơn vị, ma trận nghịch đảo. Ma trận được ứng dụng trong giải hệ phương trình, đồ họa máy tính và AI."
+2452973,Người ta nói Triết học là khoa học của mọi khoa học. Vậy các môn như Giải tích hay Hoá có liên quan gì đến Triết học không? Hãy cho tôi ví dụ nếu có,"Giải thích được sự liên quan giữa câu nói với thực tế và đưa ra ví dụ: Triết học cung cấp phương pháp tư duy và cách nhìn nhận vấn đề khoa học. Ví dụ, phép biện chứng giúp hiểu sự biến đổi liên tục trong Giải tích hay sự chuyển hóa trong phản ứng Hoá học."
+2452973,Bảng tuần hoàn quá khó nhớ. Nêu các mẹo nhớ bảng tuần hoàn hoá học,"Đưa ra nhiều mẹo hữu ích hoặc nguồn có sẵn: Nên chia bảng tuần hoàn theo nhóm, chu kỳ và học theo cụm nguyên tố. Kết hợp mẹo nhớ, hình ảnh và liên hệ tính chất hoá học để dễ ghi nhớ hơn."
+2452973,Combinational Circuit và Sequential Circuit dịch ra tiếng Việt là gì? Giải thích sự khác nhau giữa chúng,"Dịch ra đúng tên tiếng Việt chuẩn dùng cho 2 loại mạch và phân biệt đúng sự khác nhau: Combinational Circuit là mạch tổ hợp, đầu ra chỉ phụ thuộc đầu vào hiện tại.
+Sequential Circuit là mạch tuần tự, đầu ra phụ thuộc cả đầu vào hiện tại và trạng thái trước đó."
+2452973,Dạng bài nào hay ra thi cuối kỳ môn Giải tích 2? Tìm cho tôi tài liệu và đề để ôn các dạng bài đó,"Liệt kê đủ các nội dung ra thi và tìm đúng tài liệu và đề: Thường gặp các dạng: tích phân, chuỗi số, phương trình vi phân. Sinh viên nên ôn đề thi các năm trước, giáo trình chính và bài tập có lời giải."
+2452973,Tôi không nhớ rõ lắm về 4 tính chất cơ bản của OOP. Hãy trả lời lại cho tôi,"Nêu được đúng bốn tính chất cơ bản của Lập trình Hướng đối tượng (OOP) : Bốn tính chất gồm: Đóng gói, Kế thừa, Đa hình và Trừu tượng. Chúng giúp chương trình dễ bảo trì, mở rộng và tái sử dụng."
+2452973,Tôi thấy cách tính sai số khi đo trong môn Thí nghiệm Vật lý quá phức tạp. Giải thích đơn giản dễ hiểu thôi,Giải thích đơn giản và đúng về sai số và cách tính sai số: Sai số là mức chênh lệch giữa giá trị đo và giá trị thực. Có sai số ngẫu nhiên và sai số hệ thống; tính sai số giúp đánh giá độ tin cậy của phép đo.
+2452973,Tôi viết báo cáo Thí nghiệm Vật lý kiểu gì cũng không được trọn điểm. Tìm cho tôi mẫu báo cáo thí nghiệm các năm trước và nêu các điều cần chú ý khi viết,"Nêu đúng cơ bản các phần cần phải viết trong báo cáo và tìm được các nguồn cần thiết: Báo cáo cần đủ các phần: mục tiêu, lý thuyết, dụng cụ, kết quả và nhận xét. Cần trình bày rõ ràng, số liệu chính xác và giải thích hợp lý sai số."
+2452973,Hãy nêu cho tôi các ứng dụng của môn Đại số Tuyến tính trong Machine Learning,"Nêu được ứng dụng của môn học trong Machine Learning: Đại số tuyến tính dùng để biểu diễn dữ liệu, huấn luyện mô hình, giảm chiều dữ liệu và tối ưu thuật toán. Hầu hết các mô hình ML đều dựa trên vector và ma trận."
+2452973,"Học không tốt môn Hệ thống số và Thiết kế Luận lý HDL có
+ ảnh hưởng gì đến công việc liên quan phần cứng không?","Giải thích được nguy cơ khi sinh viên không có
+ nền tảng tốt ở các môn Hệ thống số và Thiết kế 
+Luận lý HDL mà phải làm việc liên quan phần 
+cứng: Có ảnh hưởng lớn nếu làm việc về phần 
+cứng, vi mạch hay nhúng. Hai môn này là nền 
+tảng để hiểu cách thiết kế và vận hành hệ thống 
+số."
+2452973,Phân biệt cho tôi các vòng lặp for/ while/ do - while,"Phân biệt được 3 loại vòng lặp dựa vào tính chất 
+của chúng:
+- for dùng khi biết trước số lần lặp.
+- while kiểm tra điều kiện trước khi lặp.
+- do–while luôn chạy ít nhất một lần rồi mới 
+kiểm tra điều kiện."
+2452973,Tại sao các môn như Giáo dục Quốc phòng hay Kỹ năng mềm không tính tín chỉ?,"Giải thích được lý do 2 môn Giáo dục Quốc
+phòng và Kỹ năng mềm không tính tín chỉ: Vì
+ đây là các môn bổ trợ, trang bị kỹ năng và kiến
+ thức chung. Chúng không trực tiếp ảnh hưởng
+ đến chuyên môn nên thường không tính vào
+ tổng tín chỉ."
+2313362,Với mục tiêu là tốt nghiệp xuất sắc (3.6+) thì tôi cần học cải thiện môn nào trong các môn đã pass?,"Dựa trên bảng điểm hiện tại, bạn nên cân nhắc học cải thiện các môn có điểm ≤ 7.5 và nhiều tín chỉ, bao gồm:
+
+CO1007 (7.5)
+
+CO2007 (7.1)
+
+PH1003 / PH1007 (7.8)
+Các môn Toán và Kỹ thuật lập trình đều có điểm cao (≥ 9.0) nên không cần học cải thiện, vì hiệu quả tăng GPA thấp hơn so với công sức bỏ ra."
+2313362,Tôi học CS thì việc học đối phó môn kiến trúc máy tính có ảnh hưởng nhiều đến công việc về phần mềm/AI không?,"Điểm các môn thiên về phần mềm và toán của bạn đều cao (CO1027, MT1005, MT2013 ≥ 9.0), cho thấy nền tảng Software/AI rất tốt.
+Việc không quá xuất sắc ở các môn phần cứng/kiến trúc không ảnh hưởng lớn nếu bạn theo hướng Software Engineer hoặc AI Engineer, miễn là bạn hiểu các khái niệm cốt lõi như bộ nhớ, song song và hiệu năng."
+2313362,Có thể đánh giá học khả năng học tập của tôi dựa vào điểm số thay đổi qua từng kì không?,"Có. GPA của bạn cho thấy:
+
+Kỳ 231–232: học ổn định, nhiều điểm 8.5–9.5
+
+Kỳ 241: gián đoạn mạnh (gap year)
+
+Sau 242–251: phục hồi rất tốt, điểm chuyên ngành cao trở lại
+Điều này cho thấy bạn có khả năng hồi phục học tập tốt và thích nghi khi quay lại đúng nhịp."
+2313362,"Từ bảng điểm của tôi có thể đánh giá tôi có những điểm mạnh, điểm yếu của tôi không?","Điểm mạnh:
+Toán học (MT1003, MT1005, MT1007, MT2013: 9.0–9.5)
+Kỹ thuật lập trình & CS core (CO1027, CO2003: ≥ 8.7)
+Điểm yếu tương đối:
+
+Vật lý đại cương
+
+Một số môn hệ thống (CO2007)
+
+Tổng thể, bạn thiên về tư duy logic – trừu tượng – thuật toán hơn là vật lý/hardware."
+2313362,Tôi có thể 4.0 kì sau không? Nếu có thì bạn hãy giúp tôi plan những môn tôi nên đăng kí để được 4.0?,"Với xu hướng điểm gần đây (242–251 đều ≥ 8.3, nhiều môn ≥ 9.0), mục tiêu GPA 4.0 trong một kỳ là khả thi nếu:
+
+Giới hạn 14–16 tín chỉ
+
+Ưu tiên môn Toán, AI, Data, lập trình
+
+Tránh đăng ký đồng thời nhiều môn hệ thống nặng"
+2313362,"Với điểm số cao ở các môn Toán và Kỹ thuật lập trình, tôi có phù hợp để theo đuổi hướng Data Science hay Backend Engineer hơn?","Dựa trên bảng điểm:
+Toán + xác suất + lập trình đều mạnh
+→ Bạn phù hợp Data Science / AI Engineer hơn một chút
+Tuy nhiên, Backend Engineer vẫn là hướng rất tốt nếu bạn thích hệ thống và kiến trúc phần mềm hơn dữ liệu."
+2313362,"Với điểm xác suất thống kê khá ổn, tôi nên đăng kí môn tự chọn nào?","Nên ưu tiên các môn:
+
+Machine Learning
+
+Data Mining
+
+Applied Statistics
+
+Introduction to AI
+Các môn này tận dụng trực tiếp thế mạnh toán – xác suất của bạn và dễ đạt điểm cao."
+2313362,"Với điểm số như hiện tại, tôi có thể B/B+ bao nhiêu lần để vẫn đảm bảo được việc tốt nghiệp bằng xuất sắc?","Với GPA hiện tại đang ở mức cao và nhiều môn điểm A/A+, bạn vẫn có thể chấp nhận một số môn B+, nhưng số môn B nên giữ ở mức rất hạn chế, đặc biệt là các môn nhiều tín chỉ ở giai đoạn cuối chương trình."
+2313362,"Dựa vào kết quả học tập các môn, tôi nên theo hướng AI engineer hay Software engineer?","Với điểm mạnh Toán, xác suất và lập trình, AI Engineer là hướng phù hợp nhất.
+Software Engineer vẫn là phương án an toàn nếu bạn muốn mở rộng sang backend hoặc system-level software."
+2313362,"Dựa trên số tín chỉ đã tích lũy, tôi đã hoàn thành được bao nhiêu phần trăm chương trình đào tạo kỹ sư Computer Science?","Dựa trên các học phần đã hoàn thành và miễn trừ, bạn đã hoàn thành phần lớn các học phần đại cương và cơ sở ngành, tương đương khoảng 45–55% chương trình đào tạo CS.
+Phần còn lại chủ yếu là chuyên ngành và đồ án."
+2313362,"Tôi đã hoàn thành đủ các học phần điều kiện (GDTC, GDQP, Sinh hoạt công dân) để xét tốt nghiệp chưa?","Bạn đã hoàn thành:
+
+GDTC
+
+Các học phần được miễn (ngoại ngữ, CCGDTC)
+→ Đủ điều kiện học phần nền, còn phụ thuộc hoàn thành chuyên ngành và đồ án."
+2313362,Tôi cần đăng ký bao nhiêu tín chỉ mỗi kỳ trong các kỳ còn lại để có thể tốt nghiệp sớm một học kỳ?,"Nếu duy trì 18–20 tín chỉ/kỳ trong các kỳ còn lại và phân bổ hợp lý môn chuyên ngành, bạn có khả năng tốt nghiệp sớm 1 học kỳ mà vẫn giữ GPA cao."
+2313362,"Từ kết quả học tập trên, có thể lên cho tôi một kế hoạch cũng như sắp xếp môn học như thế nào để được 4.0 kì tiếp theo?","Chọn 2–3 môn thế mạnh (Toán/AI/Data)
+
+1 môn mức trung bình
+
+Không đăng ký môn học lại
+
+Dành thời gian đều mỗi tuần, tránh dồn cuối kỳ"
+2313362,Tôi cần nâng cao kĩ năng mềm nào để nâng cao điểm số?,"Các kỹ năng cần ưu tiên:
+
+Quản lý thời gian
+
+Tự học có hệ thống
+
+Làm bài tập sớm, không dồn deadline
+Những kỹ năng này ảnh hưởng trực tiếp đến điểm quá trình và cuối kỳ."
+2313362,Kì sau 252 tôi nên học Database hay Nhập môn AI?,"Với bảng điểm hiện tại, Nhập môn AI phù hợp hơn vì:
+
+Phù hợp thế mạnh Toán & xác suất
+
+Có khả năng đạt điểm cao
+Database có thể học sau khi nền tảng hệ thống vững hơn."
+2313362,Nếu các kì sau tôi đăng kí 18 môn mỗi kì thì tôi có thể cân bằng được công việc nghiên cứu/internship và vẫn giữ được điểm tốt không?,"Có thể, nếu:
+
+Không đăng ký quá nhiều môn hệ thống nặng
+
+Có kế hoạch học sớm từ đầu kỳ
+Với nền tảng hiện tại, bạn đủ khả năng vừa học vừa làm nếu quản lý thời gian tốt."
+2313362,Tóm tắt cách tính điểm Harmony của tất cả các môn và giúp tôi lên kế hoạch để điểm Harmony đạt tối đa,"Điểm Harmony được tính dựa trên:
+
+Điểm từng môn
+
+Số tín chỉ
+
+Trọng số theo nhóm môn
+
+Để tối ưu Harmony:
+
+Ưu tiên điểm A ở môn nhiều tín chỉ
+
+Hạn chế B ở giai đoạn cuối
+
+Tập trung môn thế mạnh (Toán, AI, lập trình)"
+2452678,"Tôi đang có điểm trung bình học kì 242 là 3.1, 243 là 3.4 thì tôi muốn điểm trung bình tổng là 3.2 thì kì tiếp theo tôi cần đạt bao nhiêu điểm trung bình kì và điểm trung bình các môn?","Tính trung bình 3 kì bằng 3.2 và tính ra điểm của kì tiếp theo, từ đó dựa vào số tín chỉ để tính điểm trung bình các môn (nếu có thể phân chia các môn 4 tín chỉ và 3 tín chỉ chi tiết thì tốt hơn)"
+2452678,Tôi đang học không tốt môn Cấu trúc rời rạc (điểm 7.2) nhưng tôi muốn học tốt hơn môn Cấu trúc Dữ liệu và Giải thuật thì tôi cần phải cải thiện những gì?,"Phân tích điểm giống (BFS/ DFS, tree, thuật toán,...) và khác (DSA thiên về mảng thuật toán, cấu trúc dữ liệu và cách hoạt động của các cấu trúc nhiều hơn) về kiến thức của 2 môn, từ đó nêu ra các phần kiến thức tôi có thể học trọng tâm của DSA và các phần tôi cần cải thiện của CTRR mà liên quan."
+2452678,Tôi đang muốn theo mảng lập trình web thì tôi cần phải học và quan tâm đến các mặt nào?,"Phân tích các mặt quan trọng của web (bảo mật, hệ dữ liệu, tối ưu web,... ) từ đó lập ra 1 đường các môn liên quan và quan trọng đã qua (Kĩ thuật lập trình -> DSA) và các môn nên quan tâm tiếp theo (Lập trình nâng cao -> Hệ cơ sở dữ liệu -> ...)."
+2452678,"Hiện tại tôi đã hoàn thành kì thứ 3 trong 8 kì học của tôi, nếu tôi muốn tốt nghiệp với loại giỏi và xuất sắc thì tôi phải đạt các kì sau trung bình bao nhiêu điểm?",Tính trung bình 8 kì bằng 3.2 và 3.6 từ đó tính ra điểm trung bình cần phải đạt của 5 kì sau để đạt tốt nghiệp loại giỏi và xuất sắc (có thể tính mở rộng thêm các môn cần bao nhiêu điểm).
+2452678,"Cho tôi các ví dụ về các Cấu trúc dữ liệu của môn DSA trong thức tế và phân tích xem vì sao lại dùng cấu trúc ấy chứ không dùng các cấu trúc gần tương tự, từ  đó gợi ý cho tôi 1 vài dự án nhỏ để tôi có thể thực hành các Cấu trúc dữ liệu ấy.","Đưa các ví dụ thực tế và phân tích (Danh sách chờ Youtube, Spotify dùng queue, giỏ hành Shopee, Tiktok dùng stack,...) và gợi ý các ý tưởng giúp luyện tập các Cấu trúc dữ liệu (Luyện code lại các thuật toán như Merge Sort, Heap Sort,...)."
+2452678,"Tôi sắp có 1 bài thi cuối kì môn Mô hình hóa Toán học, giúp tôi ôn tập và tạo 1 đề kiểm trắc nghiệm tiếng Anh 25 câu với thời lượng 80p giúp tôi ôn tập tổng hợp kiến thức.","Tóm tắt các kiến thức quan trọng thành 1 bài học (Automata, Dynamical Systems, Petri Net,...), dựa trên các kiến thức tạo 1 đề kiểm tra bao quát tổng hợp kiến thức."
+2452678,Phân tích và so sánh tổng hợp các Cấu trúc dữ liệu trong môn DSA giúp tôi.,"Đưa ra phân tích các ưu, nhược và các trường hợp nên dùng của cấu trúc ấy, tạo 1 bảng tổng hợp các tính chất có và không của các cấu trúc (Thời gian truy cập đầu, cuối, dữ liệu có chỉ số ngẫu nhiên, truy xuất dữ liệu, chiêm không gian,... )."
+2452678,Nếu tôi có  1 con điểm C của môn Kiến trúc máy tính thì các môn khác tôi cần bao nhiêu điểm để điểm trung bình kì đạt 3.1?,Dựa trên số tính chỉ của kì và của moonn KTMT để tính các môn còn lại cần bao nhiêu điểm trung bình để đạt 3.1 trung bình kì? (Tốt hơn nếu có phân tích các môn đã có điểm và các môn chưa có điểm cần bao nhiêu)
+2452678,Với bài tiểu luận của môn Triết học Mác - Lênin thì tôi cần trình bày và yêu cầu những gì để đạt được điểm cao?,"Phân tích  yêu cầu của giảng viên (đủ các phần của tiêu luận, sử dụng các nguồn tài liệu uy tín hoặc được cung cấp, trình bày đúng format,... ), nộp bài đúng thời hạn, báo cáo,... "
+2452678,"Trong môn Mô hình hóa Toán học, tôi hay nhầm lẫn giữa Deadmarking và Deadlock, phân tích và so sánh giúp tôi dễ nhớ và hiểu sâu.","Khái niệm Deadmarking và Deadlock, phân tích điểm giống và khác nhau cùng cách phân biệt cả 2 khái niệm."
+2452678,"Tôi hiện tại đang học năm 2 và muốn bắt đầu 1 dự án web cá nhân và có thể mở rộng hoặc nâng cấp nếu sau này tôi học cao hơn, gợi ý cho tôi 1 vài dự án để tôi có thể bắt đầu.","Phân tích các kĩ năng và trình độ hiện có (dựa vào chương trình học và kĩ năng người dùng cung cấp) và kiến thức các môn tiếp theo, gợi ý 3 ý tưởng tiềm năng và cho biết các ý tưởng ấy cần kĩ năng, kiến thức gì và tại sao lại phù hợp."
+2452678,Trong các môn chuyên ngành thì Harmony là gì và có ảnh hưởng gì đến điểm số?,"Khái niệm Harmony (kiểm tra kiến thức về btl, kiến thức  xuất hiện trong bài thi, làm sai -> giảm điểm cả bài thi và btl). (Có thể gợi ý cách học cho Harmony như hiểu btl, hiểu cách hoạt động các hàm,... )"
+2452678,"Tiếng Anh quan trọng như thế nào trong quá trình học, các yêu cầu về bằng cấp tiếng Anh của trường và cách học?","Vai trò của tiếng Anh (học môn chuyên ngành, làm báo cáo, tìm tài liệu,... ), yêu cầu đầu vào và yêu cầu bằng tiếng Anh trong năm đầu tiên,..."
+2452678,"Tôi muốn nâng cao điểm các môn đại cương Vật lý 1 (6.9 điểm), Giải tích 1 (7.6 điẻm),... thì nên học thế nào","Tầm quan  trọng các môn đại cương (nền tảng, dễ lấy điểm cao,... ), cách học (học công thức, lý thuyết, luyện bài tập,... ). (Có thể gợi ý các nguồn học uy tín)"
+2452678,"Tôi hiện tại đang còn 4 tín chỉ dư và muốn đăng kí thêm 1 môn dễ lấy điểm cao, cho tôi vài gợi ý.","Dựa vào chương trình học, gợi ý các môn như yêu cầu (các môn đại cương, nhiều lý thuyết,... ) và phân tích vì sao môn ấy lại dễ lấy điểm cao, gợi ý cách học."
+2452678,Tôi muốn đạt học bổng trong kì sau thì cần những điều kiện gì và học bổng gồm những loại nào?,"Các loại học bổng (hb khuyến khích, OISP, doanh nghiệp,... ), các điều kiện cần cho hbkk (điểm nằm trong top của khoa, điểm rèn luyện,... )."
+2452678,Tôi đang học không tốt môn Giải tích 1 (7.6 điểm) thì tôi cần chú ý điều gì đẻ học môn Giải tích 2?,"So sánh Giải tích 1 và 2, cải thiện phần có liên quan cảu Giải tích 1 và học kiến thức quan trọng của Giải tích 2."
+2452678,"Trong bài tập lớn môn Mô hình hóa Toán học có cho tôi chọn việc sử dụng các ngôn ngữ C++, Python và Java để làm code, ưu và nhược điểm cả 3 là gì?","Ưu và nhược điểm cả 3 (C++ ngôn ngữ học chính gợi ý ưu tiên, Python dễ học, dễ bắt đầu, Java có thể áp dụng rộng), gợi ý cách làm cho 1 mình hoặc nhóm nhiều người (tùy theo yêu cầu)."
+2452019,"Tôi đang thấy điểm môn cấu trúc rời rạc khá thấp, bạn hãy cho tôi biết các phương pháp học hiệu quả ( biết rằng nội dung tôi học khó nhất là phần graph và mấy thuật toán tìm đường như Hamilton )",Nói về thuật toán tìm kiếm đường đi Hamilton và giới thiệu thêm các đường đi khác như Euler
+2452019,Nói thêm về Hamilton trong môn cấu trúc rời rạc,Chi tiết về định nghĩ Hamilton
+2452019,"Tôi nghĩ môn dsa của tôi cần học cải thiện, về phần AVLtree và RBT thì bạn có lưu ý gì không, tôi nghĩ tôi không hiểu rõ về thuật toán của chúng khi tái cân bằng sau khi thêm 1 node mới ",Nói chi tiết về 2 phần AVL và RBTtree cùng với cách chúng tái cân bằng ( kèm theo code mẫu )
+2452019,Tính gpa trung bình cho tôi,"dựa trên công thức tính gpa, tính gpa"
+2452019,mongodb là gì,"giới thiệu về mongodb, các ứng dụng của nó, loại của nó là gì ( SQL hay gì ) , phù hợp với dự án như thế nào "
+2452019,con trỏ kép trong c++,"định nghĩa con trỏ kép, cách khai báo và định nghĩa, lưu ý ( khi xóa , tạo để tránh core dump ) "
+2452019,"Tôi chưa hiểu lắm về các lệnh R I J, về cấu trúc của nó trong mã nhị phân trong môn kiến trúc máy tính ","với từng loại lệnh, hãy nêu ra function format và những lưu ý quan trọng như lệnh R luôn có opcode = 0 "
+2452019,nói thêm về các loại tree,giới thiệu các loại tree cùng với tính chất cơ bản ( ví dụ như m-ary tree hay avl tree )
+2452019,hash là gì,giải thích thuật ngữ hash cùng với 1 vài phương pháp xử lý khi trùng
+2452019,Các phương pháp xử lý khi hash mà gặp Collision,giới thiệu từng phương pháp như open address và lợi hại của chúng
+2452019,Trong triết học thì chủ nghĩa duy tâm chủ quan và khách quan khác nhau chỗ nào,sự khác nhau của 2 chủ nghĩa duy tâm ( nhấn mạnh vào sự tin vào ý chí thế giới )
+2452019,Trong mô hình toán hóa học thì làm thế nào để chuyển từ NFA sang DFA,Chỉ ra phương pháp chuyển đổi 1 cách chi tiết và 1 ví dụ
+2452019,NFA và DFA khác nhau chỗ nào,nêu ra sự khác nhau ( nhấn mạnh đặc điểm 1 tín hiệu đầu vào chỉ cho 1 trạng thái mới )
+2452019,Cách minimize DFA,nêu ra các phương thức ( gợi ý phương thức đơn gián nhất ) và cho 1 số ví dụ
+2452019,"Trong hóa đại cương, các góc liên kết là gì ",nêu ra định nghĩa các góc liên kết và các trường hợp đặc biệt ảnh hưởng đến các góc liên kết
+2452019,entropy là gì,nêu ra định nghĩa của entropy và 1 số công thức liên quan đến nó
+2452019,Bạn hãy tổng hợp và phân tích toàn bộ về entropy nhiệt lượng và khi nào phản ứng tự xảy ra,nêu ra định nghĩa về entropy và nhiệt lượng cùng với trạng thái khi nhiệt lượng bé hơn 0 và entropy lớn hơn không. Kèm theo công thức liên kết giữa nhiệt lượng và entropy trong khi xác định phản ứng có tự xảy ra hay không
+2452019,"Tôi thấy điểm digital system của tôi khá thấp, tôi nghĩ là tôi kém về phần mạch điện. Bạn có phương pháp nào để tôi có thể mắc mạch điện 1 cách chính xác không ","Đề xuất các phương án ( đặc biệt nhấn mạnh việc thử IC xem có hoạt động hay không ), 1 số cấu trúc IC quan trọng, lưu ý IC thực tế có thể sai nếu mắc theo lý thuyết "
+2452019,Bạn có thể đưa ra 1 vài công thức logic của digital system không,"1 số công thức ứng dụng and or như luật hấp thụ, loại bỏ biến thừa và nguyên lý De Morgan"
+2413506,Tại sao sinh viên IT lại phải học Hóa đại cương?,"Hóa đại cương rèn tư duy mô hình hóa, phân tích hệ thống và xử lý dữ liệu thực nghiệm. Những kỹ năng này gián tiếp hỗ trợ IT, đặc biệt trong khoa học dữ liệu, mô phỏng và nghiên cứu liên ngành."
+2413506,Môn Đại số tuyến tính vì sao đặc biệt quan trọng với ngành AI?,"Đại số tuyến tính là nền tảng toán học của AI: vector, ma trận, không gian chiều cao. Toàn bộ deep learning thực chất là các phép biến đổi tuyến tính kết hợp phi tuyến."
+2413506,Liệu các môn phần cứng như Hệ thống số có cần thiết cho sinh viên IT không?,"Hệ thống số giúp hiểu cách dữ liệu được biểu diễn và xử lý ở mức thấp. Điều này quan trọng để tối ưu phần mềm, hiểu giới hạn phần cứng và làm việc với embedded, edge AI."
+2413506,Kiến trúc máy tính đóng vai trò gì trong đào tạo IT hiện đại?,"Kiến trúc máy tính giúp sinh viên hiểu mối quan hệ giữa phần mềm và phần cứng: cache, pipeline, song song. Từ đó viết code hiệu quả hơn, đặc biệt trong hệ thống lớn và AI hiệu năng cao."
+2413506,Vì sao Cấu trúc dữ liệu và Giải thuật là môn nền tảng của ngành IT?,"Cấu trúc dữ liệu và giải thuật rèn tư duy tối ưu và phân tích độ phức tạp. Đây là “ngôn ngữ chung” của mọi nhánh IT, từ backend, hệ thống đến AI và nghiên cứu thuật toán."
+2413506,Tại sao nhiều sinh viên IT gặp khó khăn với các môn phần cứng?,"Môn phần cứng trừu tượng, ít trực quan, yêu cầu tư duy logic mức thấp. Sinh viên quen tư duy phần mềm thường thiếu nền tảng điện – số, dẫn đến khó tiếp cận ban đầu."
+2413506,Điểm kém các môn phần cứng có phản ánh năng lực IT tổng thể không?,"Điểm kém phần cứng không đồng nghĩa năng lực IT kém. Nó chỉ phản ánh sự không phù hợp tạm thời với một mảng cụ thể, không phủ định năng lực lập trình, toán hay nghiên cứu."
+2413506,Sinh viên thiên về AI/Software có cần học sâu phần cứng không?,"Sinh viên AI/Software không cần học quá sâu phần cứng, nhưng cần hiểu nguyên lý cốt lõi. Điều này giúp thiết kế hệ thống hợp lý và tránh những giả định sai về hiệu năng."
+2413506,Học tốt Toán rời rạc giúp ích gì cho lập trình và AI?,"Toán rời rạc cung cấp nền tảng logic, đồ thị, quan hệ và suy luận hình thức. Đây là cơ sở cho thuật toán, cấu trúc dữ liệu, verification và nhiều mô hình AI."
+2413506,Vai trò của Xác suất – Thống kê trong Machine Learning là gì?,"Machine Learning bản chất là mô hình hóa bất định. Xác suất – thống kê giúp hiểu dữ liệu, đánh giá mô hình, tránh overfitting và diễn giải kết quả một cách khoa học."
+2413506,Vì sao môn Hệ điều hành lại khó nhưng bắt buộc?,"Hệ điều hành đòi hỏi tư duy đồng thời, tài nguyên và trạng thái. Nó khó vì gần phần cứng, nhưng giúp sinh viên hiểu sâu cách chương trình thực sự chạy."
+2413506,Mạng máy tính có cần thiết với sinh viên không theo hướng Network không?,"Ngay cả sinh viên không theo Network vẫn cần kiến thức mạng. Phần mềm hiện đại đều phân tán, client-server, cloud; thiếu nền tảng mạng sẽ hạn chế khả năng thiết kế hệ thống."
+2413506,Môn Compiler/Ngôn ngữ hình thức có còn giá trị trong thời đại AI?,"Compiler và ngôn ngữ hình thức rèn tư duy trừu tượng và phân tích cú pháp. Kiến thức này rất hữu ích cho AI, NLP, static analysis và phát triển công cụ lập trình."
+2413506,Tại sao tư duy thuật toán quan trọng hơn việc biết nhiều ngôn ngữ lập trình?,Ngôn ngữ chỉ là công cụ. Thuật toán quyết định hiệu quả và khả năng mở rộng. Một người giỏi thuật toán có thể học ngôn ngữ mới rất nhanh.
+2413506,Sinh viên IT có cần giỏi Vật lý hay không?,"Không cần giỏi sâu vật lý, nhưng cần tư duy vật lý: mô hình hóa, xấp xỉ, giới hạn. Điều này hữu ích trong hệ thống, AI, đồ họa và mô phỏng."
+2413506,Làm thế nào để cải thiện điểm các môn không phải thế mạnh?,"Cần học theo mục tiêu “đủ dùng”, tập trung khái niệm cốt lõi, học qua ví dụ và liên hệ với thế mạnh của bản thân. Không nên cố đạt điểm tuyệt đối ở mọi môn."
+2413506,"Khi nào sinh viên nên xác định rõ hướng đi: AI, SE hay Systems?","Khoảng năm 2–3 là thời điểm phù hợp. Khi đã học đủ nền tảng, sinh viên nên chọn hướng để đầu tư sâu thay vì dàn trải."
+2413506,GPA có quan trọng hơn dự án và nghiên cứu không?,"GPA quan trọng cho học thuật chính quy. Dự án và nghiên cứu quan trọng cho năng lực thực tế. Với AI/PhD, cả hai đều cần, nhưng chất lượng nghiên cứu có giá trị quyết định."
+2413506,Sinh viên IT nên đánh giá năng lực bản thân dựa trên tiêu chí nào?,"Năng lực IT nên đánh giá qua khả năng giải quyết vấn đề, tư duy hệ thống, học nhanh và làm dự án thực tế, không chỉ qua điểm số từng môn riêng lẻ."
+2413506,Vì sao Giải tích (Calculus) vẫn là môn bắt buộc dù sinh viên IT hiếm khi tự tay đạo hàm?,"Giải tích rèn tư duy về liên tục, tối ưu và hội tụ. Trong AI, gradient descent, backpropagation và phân tích loss đều dựa trên giải tích, kể cả khi thư viện đã tự động hóa việc tính toán."
+2452237,Tôi cần ôn tập những kiến thức cốt lõi nào từ Kỹ thuật lập trình trước khi học Cấu trúc dữ liệu và Giải thuật?,"Con trỏ và Cấp phát động: Hiểu cách quản lý bộ nhớ để xây dựng danh sách liên kết, cây, Đệ quy: Nền tảng để giải quyết các bài toán trên Cây (Tree) và các thuật toán Chia để trị."
+2452237,Giải thích cho tôi về Tree trong môn Cấu trúc dữ liệu và giải thuật.,"Cây là một cấu trúc dữ liệu không tuần tự (non-linear), dùng để biểu diễn các đối tượng theo quan hệ phân cấp (cha - con)."
+2452237,Tôi bị nhầm lẫn giữa Logic hình thức trong Cấu trúc rời rạc và Logic trong môn Hệ thống số. Phân biệt giúp tôi.,"Logic trong Cấu trúc rời rạc: Suy luận toán học, chứng minh định lý, Logic mệnh đề, logic vị từ, bảng chân trị. 
+Logic trong Hệ thống số: Thiết kế mạch điện, tối ưu phần cứng, Cổng logic (AND, OR, NOT), bìa Karnaugh (K-map)."
+2452237,Làm thế nào để ứng dụng kiến thức môn Giải tích 1 và 2 vào các thuật toán trong Khoa học máy tính?,"Tối ưu hóa: Sử dụng đạo hàm (Gradient Descent) để huấn luyện các mô hình Machine Learning.
+"
+2452237,"Giải thích đơn giản khái niệm ""Độ phức tạp thuật toán"" trong môn Cấu trúc dữ liệu và giải thuật cho tôi.","Là thước đo để đánh giá hiệu suất của một thuật toán khi kích thước dữ liệu đầu vào (n) tăng lên. Thường ký hiệu bằng Big O (ví dụ O(n), O(n^2))."
+2452237,Tôi nên ôn tập kiến thức nền tảng nào của môn Cấu trúc rời rạc để cải thiện mức điểm 6.5?,"Lý thuyết đồ thị: Tập trung vào thuật toán tìm đường đi ngắn nhất và cây bao trùm.
+Quan hệ và Tập hợp: Nắm chắc tính chất phản xạ, đối xứng, bắc cầu (nền tảng cho Cơ sở dữ liệu)."
+2452237,Tích hợp kiến thức môn Hóa đại cương và Kỹ thuật lập trình như thế nào trong một dự án mô phỏng phản ứng hóa học?,"Hướng đối tượng (OOP): Tạo class Element, Molecule và Reaction.
+Thuật toán: Sử dụng hệ phương trình vi phân để tính toán nồng độ các chất theo thời gian."
+2452237,Tôi có thể sử dụng tư duy hệ thống từ môn Vật lý 1 và 2 để hỗ trợ việc học giải thuật như thế nào?,"Định luật bảo toàn: Giúp hiểu về tính bất biến (Invariants) trong vòng lặp.
+"
+2452237,Khái niệm về OOP,OOP là phương pháp lập trình dựa trên việc tổ chức mã nguồn thành các đối tượng chứa cả dữ liệu và hành động để mô phỏng thực tế và tăng khả năng tái sử dụng.
+2452237,Giải thích đơn giản khái niệm Không gian Vector trong môn Đại số tuyến tính cho tôi,"Là một tập hợp các đối tượng (gọi là vector) mà ở đó bạn có thể thực hiện hai phép toán chính: Cộng hai vector và Nhân vector với một số thực, mà kết quả vẫn nằm trong tập hợp đó."
+2452237,Cho tôi một ví dụ thực tế về việc áp dụng tư tưởng Triết học Mác-Lênin vào việc phân tích các hiện tượng kinh tế - xã hội hiện nay,"Quy luật quan hệ sản xuất phù hợp với trình độ lực lượng sản xuất: Giải thích tại sao chuyển đổi số (lực lượng sản xuất mới) buộc các mô hình quản lý kinh tế cũ phải thay đổi.
+"
+2452237,Tích hợp kiến thức môn Kỹ năng mềm vào việc quản lý thời gian và học tập các môn đại cương như thế nào?,"Ma trận Eisenhower: Phân loại môn học (Quan trọng/Khẩn cấp) để ưu tiên ôn tập.
+Kỹ năng làm việc nhóm: Chia nhỏ khối lượng bài tập lớn của các môn đại cương cho nhóm bạn cùng học."
+2452237,Phân biệt cho tôi giữa NFA và DFA.,"DFA (Deterministic): Với mỗi trạng thái và ký tự nhập vào, chỉ có duy nhất một bước chuyển tiếp.
+NFA (Non-deterministic): Có thể có nhiều bước chuyển hoặc thậm chí không có bước chuyển nào cho cùng một ký tự đầu vào."
+2452237,Giải thích cho tôi ILP là gì trong môn mô hình hóa toán học,Là bài toán tối ưu hóa tuyến tính nhưng có thêm điều kiện ràng buộc: Các biến quyết định phải là số nguyên. ILP thường dùng trong bài toán lập lịch hoặc vận tải.
+2452237,Giải thích các khái niệm về dynamic system trong mô hình hóa toán học cho tôi với,Hệ thống mà trạng thái của nó thay đổi theo thời gian dựa trên một quy luật xác định (thường biểu diễn bằng phương trình sai phân hoặc vi phân).
+2452237,Cách để cải thiện điểm số môn triết học là gì,"Sơ đồ tư duy: Kết nối các chương (Vật chất - Ý thức, 2 Nguyên lý, 3 Quy luật) thành một hệ thống."
+2452237,Nói cho tôi về đạo hàm riêng trong giải tích 2.,"Là đạo hàm của hàm nhiều biến (ví dụ f(x, y)) theo một biến duy nhất (ví dụ x), trong khi xem các biến còn lại (y) là hằng số."
+2452237,Giải thích cho tôi về đạo hàm cơ bản trong giải tích 1,"Là tốc độ thay đổi tức thời của hàm số tại một điểm, hay về mặt hình học, nó là hệ số góc của tiếp tuyến tại điểm đó."
+2452237,Các dạng của entropy trong vật lý 1 là gì vậy,"Entropy nhiệt động lực học: Thước đo độ hỗn loạn của một hệ hệ kín, entropy trong quá trình thuận nghịch/không thuận nghịch: Biến thiên entropy."
+2452237,Nói cho tôi về cách hoạt động của bộ nhớ trong kiến trúc máy tính là gì?,"Bộ nhớ hoạt động theo cấu trúc phân cấp (Hierarchy). CPU tìm dữ liệu từ nhanh đến chậm: Thanh ghi (Register) -> Cache (L1, L2, L3) -> RAM -> Ổ cứng."
+2452794,Lệnh loại R trong kiến trúc máy tính MIPS là gì,"Trong kiến trúc MIPS, lệnh loại R (Register-type) là nhóm các lệnh thực hiện các phép toán số học hoặc logic giữa các thanh ghi với nhau."
+2452794,Nói cho tôi về ưu điểm của array trong cấu trúc dữ liệu và giải thuật,Mảng là một cấu trúc dữ liệu lưu trữ một tập hợp các phần tử có cùng kiểu dữ liệu tại các vị trí nhớ liên tiếp trong bộ máy tính.
+2452794,Vô cùng bé là gì trong giải tích 1,Một hàm số a(x) được gọi là vô cùng bé (VCB) khi x->x0 (hoặc x->vô cực) nếu giới hạn của nó bằng 0.
+2452794,Khái niệm về gia tốc trong vật lý 1,"Trong Vật lý 1 (Cơ học), gia tốc  là đại lượng vật lý đặc trưng cho sự biến thiên của vectơ vận tốc theo thời gian. Hiểu đơn giản, nếu vận tốc cho biết vị trí thay đổi nhanh hay chậm, thì gia tốc cho biết vận tốc thay đổi nhanh hay chậm như thế nào."
+2452794,Cách để không rớt môn ở đại học,"Để không bị rớt môn ở đại học, bạn cần đi học đầy đủ để nắm bắt trọng tâm bài thi và chủ động hoàn thành tốt các bài tập/tiểu luận. Ngoài ra bạn cũng nên đọc thêm các tài liệu tham khảo nổi tiếng để có cái nhìn tổng quát về từng môn học."
+2452794,Thuật ngữ regular language trong lý thuyết automata là gì,"Một ngôn ngữ được gọi là chính quy nếu nó có thể được biểu diễn bằng 1 trong 3 cách:Vẽ được: Sơ đồ Automata hữu hạn (DFA hoặc NFA), viết được: Biểu thức chính quy (Regular Expression), sinh ra được: Ngữ pháp chính quy (Regular Grammar)."
+2452794,Ứng dụng của cấu trúc rời rạc trong khoa học máy tính,"Cấu trúc rời rạc là nền tảng tư duy cốt lõi của ngành máy tính, đóng vai trò như một bộ công cụ giúp chuyển hóa các vấn đề thực tế thành ngôn ngữ mà máy móc có thể xử lý. Trong lập trình, logic toán học chính là cầu nối để thiết kế các câu lệnh điều kiện và xây dựng mạch điện tử cho CPU."
+2452794,Cách cải thiện điểm môn kĩ thuật lập trình,"Thay vì chỉ nhìn code trong giáo trình, hãy trực tiếp code và debug từng lỗi nhỏ, bởi chính việc sửa lỗi sẽ giúp hiểu sâu về cách chương trình hoạt động. "
+2452794,AI ứng dụng được gì trong y tế,"Thực tế nhất là trong chẩn đoán hình ảnh, AI có thể quét hàng nghìn tấm phim X-quang hay MRI để phát hiện các khối u siêu nhỏ với độ chính xác cực cao, giúp bác sĩ không bỏ sót những dấu hiệu bệnh lý giai đoạn đầu. Trong lĩnh vực dược phẩm, AI rút ngắn thời gian nghiên cứu thuốc mới từ hàng thập kỷ xuống còn vài tháng bằng cách mô phỏng cách các phân tử tương tác với nhau."
+2452794,Thuật toán tham lam là gì trong DSA,"Thuật toán tham lam là một chiến lược giải quyết bài toán bằng cách luôn chọn phương án tốt nhất ngay tại thời điểm hiện tại, với hy vọng rằng chuỗi các lựa chọn ""tốt nhất cục bộ"" đó sẽ dẫn đến kết quả ""tối ưu toàn cục""."
+2452794,Chủ nghĩa duy vật và chủ nghĩa duy tâm là một trong triết học phải không,"Không. Đây chính là hai trường phái đối lập nhau hoàn toàn, tạo nên cuộc tranh luận xuyên suốt lịch sử triết học về bản chất của thế giới."
+2452794,Liên hệ giữa con trỏ và bộ nhớ máy tính,"Con trỏ thực chất cũng là một biến, nhưng thay vì lưu trữ giá trị như con số hay ký tự, nó lại lưu trữ địa chỉ vùng nhớ của một biến khác. Khi điều khiển con trỏ, bạn có thể đọc hoặc thay đổi trực tiếp nội dung bên trong ô nhớ đó mà không cần thông qua tên biến trung gian."
+2452794,Khác biệt giữa đạo hàm và vi phân trong giải tích 1,"Đạo hàm trả lời câu hỏi ""Thay đổi nhanh thế nào?"" (tốc độ), còn vi phân trả lời câu hỏi ""Thay đổi bao nhiêu?"" (giá trị). Đạo hàm là một con số (hoặc hàm số) đơn thuần, trong khi vi phân luôn đi kèm với ký hiệu dx để chỉ rõ sự thay đổi cực nhỏ của biến."
+2452794,Computer vision là gì,"Computer Vision (Thị giác máy tính) là một lĩnh vực của trí tuệ nhân tạo nhằm huấn luyện máy tính khả năng ""nhìn"" và hiểu được nội dung của hình ảnh hoặc video giống như con người.Máy tính sau khi huấn luyện có thể phân tích hình ảnh, video như con người làm."
+2452794,Thuật ngữ mux là gì trong môn hệ thống số,"Về bản chất, MUX là một mạch logic có nhiệm vụ chọn một trong nhiều đường tín hiệu đầu vào để truyền đến một đầu ra duy nhất. Để quyết định xem đầu vào nào được phép đi qua, MUX sử dụng các đường điều khiển."
+2452794,Các điểm cần lưu ý khi học môn DSA,"Để chinh phục môn DSA (Cấu trúc dữ liệu và Giải thuật), hãy hiểu bản chất trước khi code và quản lý được độ phức tạp của chương trình."
+2452794,RAM là gì,"RAM là bộ nhớ tạm thời của máy tính, lưu trữ dữ liệu và lệnh mà CPU cần truy cập nhanh để xử lý các ứng dụng và tác vụ hiện tại; nó có tốc độ đọc/ghi dữ liệu rất nhanh nhưng dữ liệu sẽ mất đi khi thiết bị tắt nguồn, giúp máy xử lý đa nhiệm mượt mà hơn."
+2452794,Hệ động lực là gì,"Trong toán học và vật lý, Hệ động lực (Dynamical System) là một mô tả toán học về cách một trạng thái của một hệ thống thay đổi theo thời gian,giúp chúng ta nghiên cứu các hiện tượng từ ổn định, tuần hoàn cho đến những hệ thống cực kỳ phức tạp và hỗn loạn"
+2452794,Giải thích về nguyên hàm trong giải tích 2,"Về bản chất, nếu đạo hàm là quá trình ""phân tích"" để tìm ra tốc độ thay đổi, thì nguyên hàm chính là quá trình ""khôi phục"". Khi bạn biết tốc độ biến thiên của một đại lượng, nguyên hàm sẽ giúp bạn tìm lại chính đại lượng đó."
+2452794,Tôi có nên sử dụng AI cho bài tập lớn không,"Bạn nên sử dụng AI như một trợ lý hỗ trợ lên ý tưởng, lập dàn ý, giải thích các khái niệm nhưng bạn không nên phụ thuộc hoàn toàn vào AI mà nên làm chủ nó."
+2452678,Tại sao DFA với NFA chỉ biểu diễn được cho regular language,"Đưa định nghĩa về DFA, NFA và lý do nó chỉ biểu diễn được cho regular language"
+2452678,Turning machine khác DFA ở chỗ nào,"Đưa ra điểm khác và giống của turning machine với dfa, 1 số ví dụ cụ thể về giống hoặc khác"
+2452678,Cách biến đổi từ NFA sang Rex,"Định nghĩa GTG, thuật toán biến đổi NFA về Rex, ví dụ cụ thể"
+2452678,AI xuất hiện khi nào,"Thời gian AI khởi nguồn, người đầu tiên làm ra AI và thông tin về AI đó"
+2452678,Một số hệ thống có AI nhúng hiện nay,1 vài hệ thống nổi bật và tác dụng của nó
+2452678,Tôi muốn theo AI vision thì cần học kĩ những môn cơ sở nào,"1 vài môn cơ sở nổi bật giúp ích cho AI vision và ứng dụng thực tế của nó trong đó, ví dụ"
+2452678,Nếu tôi bị 1 điểm D thì khi tốt nghiệp tôi có thể có điểm tổng trên 3.6 ko,"Yêu cầu để được trên 3.6, cách khắc phục điểm D"
+2452678,Làm sao để nâng band ielts từ 6.0 lên 7.0,"Tiêu chuẩn các kĩ năng của 7.0 ielts, phương pháp ôn luyện, thời gian tối thiểu cần để đạt được"
+2452678,Có bao nhiêu kiến trúc máy tính,"Vài kiến trúc tiêu biểu, đặc điểm của chúng, thông tin về sự ra đời của chúng"
+2452678,Làm tua bin ở xe đạp như thế nào á,"Các bộ phận tua bin, nguyên lý hoạt động, cách tự chế tạo"
+2452678,Tại sao ở Ea Súp là vùng cao nhưng khí hậu lại nóng hơn so với những chỗ khác ở Tây Nguyên,"Nhiệt độ trung bình hàng năm của Ea Súp, nguyên nhân nơi đó nóng hơn"
+2452678,"Tại sao nguyên cái tỉnh Đắk Lắk mà chỉ có ở Ea Súp là không trồng được cà phê, sầu riêng,.","Nguyên nhân về đất đai, khí hậu, những cây trồng được"
+2452678,"Tôi thấy ngành nào cũng cần học Triết, vì sao á","Nguồn gôc, định nghĩa, công dụng của Triết học trong các ngành khoa học khác"
+2452678,Điểm khác và giống của các ngôn ngữ lập trình phổ biến hiện nay,"1 số nnlt phổ biến, nguyên lý hoạt động, ưu điểm, khuyết điểm, mục đích sử dụng của từng cái, từ đó phân biệt được từng cái"
+2452678,Cho tôi 1 số ứng dụng của petri net 1-safe,"Vài ứng dụng tiêu biểu, cách thức hoạt động"
+2452930,Sử dụng biểu đồ quyết định nhị phân cho petri net có điểm lợi gì so với phương pháp truyền thống,Đưa ra được ưu điểm về việc tránh bùng nổ trạng thái và hiệu quả khi kiểm tra các tính chất của mạng
+2452930,Bổ đề bơm giúp giải quyết được vấn đề gì trong ngôn ngữ hình thức,Kiểm tra tính chính quy hoặc tính phi ngữ cảnh của một ngôn ngữ
+2452930,Vì sao khi tiến hành thí nghiệm đo nồng độ của dung dịch CH3COOH dựa trên phương pháp chuẩn độ Axit - Base với NaOH thì không nên sử dụng chất chỉ thị Metyl da cam,Vì khoảng đổi màu của Metyl da cam nằm trong vùng axit trong khi điểm tương đương của phản ứng nằm trong vùng base
+2452930,Tôi muốn thực hiện topological sort thì cần đảm bảo những tính chất nào của dồ thị,Đồ thị phải là một đồ thị có hướng và không có chu trình (DAG)
+2452930,Để thiết lập bộ đếm chuỗi fibonacci chỉ dùng JK flip flop thì ta cần thực hiện phương pháp gì để xác định đầu vào cho từng flip flop,Sử dụng bảng kích với chuỗi fibonacci mong muốn để xác định giá trị J và K cho từng flip flop sau đó sử dụng K-Map để tối ưu lại hàm đầu vào
+2452930,Feature Pyramid Network là gì?,Là kiến trúc mạng nơ ron giúp giải quyết vấn đề nhận diện vật thể ở nhiều kích thước khác nhau thông qua việc liên kết các feature map bằng kết nối ngang
+2452930,Điều kiện firing của transition trong một 1-safe petri net là gì?,Tất cả các vị trí đầu vào phải chứa token và tất cả các vị trí đầu ra phải rỗng
+2452930,Ưu điểm khi chọn Splay Tree để làm một cấu trúc dữ liệu,Giúp truy cập lại các dữ liệu có tần suất truy cập nhiều dùng nhanh hơn bằng cách xoay các dự liệu vừa truy cập lên làm rễ.
+2452930,Khi sử dụng phương pháp MMSE để lọc nhiễu cho tín hiệu mà giữa tín hiệu gốc và nhiễu bị tương quan âm thì sẽ gặp phải vấn đề gì?,Tương quan âm sẽ khiến bộ lọc bị sai lệch và có thể dẫn đến triệt tiêu tín hiệu
+2452930,"Khi hiện thực hash table, gom cụm sơ cấp và gom cụm thứ cấp là gì?","Gom cụm sơ cấp là vấn đề gặp phải khi sử dụng linear probing làm cho các ô bị chiếm gom thành một cụm lón nằm gần nhau, gom cụm thứ cấp là vấn đề gặp phải khi sử dụng quadratic probing làm cho các ô bị chiếm gom thành từng cụm nằm rải rác."
+2452930,Vì sao lại cần NFA khi máy tính kỹ thuật số là tất định?,"Vì thế giới thực tế là không tất định và cần tiên đoán, xây dựng NFA để con người dễ dàng thiết kế và năng suất hơn việc thiết kế DFA"
+2452930,"Tôi đang giải quyết vấn đề về dịch tễ học và truyền nhiễm, mô hình động học nào phù hợp để tôi giải quyết vấn đề trên?",Sử dụng mô hình ngăn với ví dụ tiêu biểu là SIR hoặc tiến bộ hơn là SEIR
+2452930,Kiến trúc thượng tầng tác động lại cơ sở hạ tầng như thế nào,"Nếu kiến trúc thượng tầng phù hợp thì sẽ thúc đẩy cơ sở hạ tầng, tuy nhiên nếu kiến trúc thượng tầng lạc hậu thì sẽ kìm hãm cơ sở hạ tầng"
+2452930,Thông lượng điện trường bên trong và bên ngoài 1 quả cầu dẫn điện khác nhau thế nào,Thông lượng bên trong quả cầu dẫn điện bằng 0 và bên ngoài quả cầu dẫn diện bằng Q/epsilon0 với epsilon 0 là hằng số điện môi
+2452930,Định luật 2 nhiệt động lực học nói về điều gì?,"Định luật 2 của nhiệt động lực học xác định nhiệt chỉ có thể truyền theo một chiều duy nhất từ nơi nóng sang nơi lạnh, phủ định sự tồn tại của động cơ vĩnh cửu loại 2 và khẳng định trong một hệ cô lập entropy sẽ luôn có xu hướng tăng theo thời gian"
+2452930,Tôi muốn xác định vết nứt trên bề mặt bê tông thì tôi nên sử dụng phương pháp computer vision nào mà không cần dùng đến deep learning,"Có thể sử dụng phương pháp phát hiện cạnh Canny, phương pháp phân ngưỡng thích nghi hoặc phương pháp bộ lọc Frangi"
+2452930,Cấu trúc dữ liệu nên dùng khi thiết kế cache memory,Sử dụng cấu trúc Hash map và Doubly linked lists để hiện thực chiến thuật Least recently used
+2452930,Giải thích sự khác nhau giữa Dynamical systems Stochastic systems,Dynamical system là hệ tất định còn Stochastic system là hệ thống ngẫu nhiên
+2452930,Sự khác biệt giữa dead markings và deadlocks,"Dead markings là trạng thái mà tại đó hệ không có bất kỳ transition nào đủ điều kiện để bắn, trong khi một hệ được gọi là deadlock khi nó tồn tại ít nhất một dead marking có thể tới được."
+2452930,Sử dụng phương pháp ILP trên reachable set để tìm kiếm deadlock thực chất là làm?,"Khi sử dụng ILP trên reachable set để kiếm chứng deadlock, thực chất là ta đang thực hiện phép biến đổi từ bài toán kiểm chứng sang bài toán giải hệ bất phương trình, thay vì phải duyệt qua hàng triệu reachable markings thì ta chỉ cần tìm xem có nghiệm nào thỏa mãn hệ bất phương trình mà tại đó xảy ra dealock hay không."
+2510020,Sự khác nhau giữa kiểu dữ liệu float và double trong C++?,"Sự khác nhau cơ bản về dung lượng lưu trữ, trường hợp nào thì nên sử dụng loại nào?  "
+2510020,Sự khác nhau giữa các câu lệnh rẽ nhánh trong C++?,Có bao nhiêu loại câu lệnh rẽ nhánh? syntax và logic của từng loại câu lệnh rẽ nhánh? Trường hợp nào nên sử dụng loại rẽ nhánh nào là hợp lý?
+2510020,Làm sao để khi nhìn vào được đề bài mà có thể suy ra được cấu trúc và các thành phần của flowchart?,Cách phân tích từng dữ kiện trong đề bài và biến chúng thành nội dung từng phần trong flowchart; Cách để nhận biết flowchart của mình đã đúng với yêu cầu của đề bài hay chưa
+2510020,Sự khác nhau giữa các loại vòng lặp trong C++?,Có bao nhiêu loại vòng lặp? Các đặc điểm và tính chất của từng loại vòng lặp có gì khác nhau? Nên sử dụng vòng lặp nào cho những trường hợp cụ thể nào?
+2510020,Giúp tôi hiểu thêm về đệ quy.,Đệ quy là gì? Tại sao cần thuật toán đệ quy? Đệ quy thường được sử dụng trong những trường hợp nào? Ví dụ mẫu trong việc sử dụng đệ quy cho ứng dụng thực tế.
+2510020,Phương pháp để học lập trình C++ hiệu quả?,"Tổng thời gian nên dành để học mỗi ngày? Lộ trình? Bắt đầu học từ đâu? Có những trang web, forum nào để hỗ trợ học và giải đáp thắc mắc?"
+2510020,Định nghĩa về hàm mất mát trong hồi quy tuyến tính?,"Định nghĩa về hàm hồi quy tuyến tính, ứng dụng của hàm trong thực tế? Nguồn gốc và cách thành lập hàm?"
+2510020,Ứng dụng của ngôn ngữ C++ trong các dự án thực tế?,Ưu và nhược điểm của C++? Các ứng dụng của C++?Lộ trình học C++?
+2510020,Phát hiện biên ảnh bằng đạo hàm là thế nào?,Khái niệm của đạo hàm và biên ảnh? Tại sao đạo hàm lại được ứng dụng vào trong việc phát hiện biên ảnh? Các kĩ thuật phát hiện biên ảnh nổi tiếng hiện nay.
+2510020,Phương trình vi phân bậc 2 là gì?,Định nghĩa và khái niệm của phương trình vi phân bậc 2? Ứng dụng của phương trình vi phân bậc 2 trong cuộc sống? Các mẹo để làm bài khi gặp phương trình vi phân bậc 2?
+2510020,Cách để đo độ phức tạp của thuật toán trong C++?,Độ phức tạp của thuật toán là gì? Cách tính độ phức tạp của thuật toán? Làm sao để giảm thiểu độ phức tạp của thuật toán?
+2510020,Các thư viện cơ bản thường được dùng trong C++?,Giới thiệu các thư viện cơ bản hay được sử dụng? Chức năng của các thư viện đó? Nên dùng khi nào?
+2510020,Lồng faraday là gì?,Định nghĩa của lồng Faraday? Các ứng dụng thực tế của lồng Faraday? Làm sao để tạo ra lồng Faraday?
+2510020,Mạch đếm tuần tự là gì?,Khái niệm về mạch đếm tuần tự? Chức năng và ứng dụng trong cuộc sống của mạch đếm tuần tự? Làm sao để tạo ra mạch đếm tuần tự?
+2510020,Chứng minh công thức tầm xa cực đại trong chuyển động ném xiên,Các công thức liên quan đến chuyển động ném? Định nghĩa của chuyển động ném? Từ các công thức liên quan suy ra công thức tầm xa cực đại?
+2510020,mạch BCD là mạch gì?,BCD là mạch gì? Tại sao lại cần mạch BCD? Ứng dụng của BCD trong cuộc sống? Các ưu và nhược điểm của mạch BCD?
+2510020,Cổng logic nào được xem là cổng vạn năng?,Có bao nhiêu loại cổng logic? Gồm các cổng nào? Trong đó cổng nào là cổng vạn năng? Cách để thực hiện việc biến cổng vạn năng đấy thành các cổng logic khác.
+2510020,Mạch dếm vòng và mạch đếm Johnson khác gì nhau?,"Giải thích đặc điểm và chức năng của từng loại mạch đếm, ứng dụng của từng loại mạch đếm trong cuộc sống?"
+2510020,Tại sao hệ nhị phân là ngôn ngữ bậc thấp của máy tính mà không phải các hệ khác?,Hệ nhị phân là gì? Có bao nhiêu hệ đếm số hiện nay? Ứng dụng và các điểm nổi bật của hệ nhị phân trong việc xây dựng các phần mềm máy tính?
+2510020,Tại sao trong tính toán logic người ta thường ưu tiên biến đổi thành số bù 2 để tính?,"Cách biến đổi số ở các hệ sang hệ nhị phân, cách để biến đổi số nhị phan sang bù 2, bù 2 có ưu điểm gì mà phải biến đổi về để thực hiện tính toán nhị phân?"
+2452483,"Nếu phải chọn giữa AI Engineer và Backend Engineer, tiêu chí nào giúp tôi quyết định đúng hướng trong 3 năm tới?","Nêu sự khác nhau giữa 2 mảng ngành đó, nếu ra những tiêu chí để chọn, những kĩ năng cần có để có thể đáp ứng tốt các yêu cầu của các chuyên ngành, có thể đưa ra lộ trình học thêm ( nếu có)"
+2452483,"Splay Tree có ưu điểm gì so với AVL/Red-Black Tree, và tại sao nó lại “tự cân bằng” dù không lưu balance/height?","Các cơ chế splay: zig zig zig zag... nêu ra sự khác nhau về độ phức tạp, đưa ý tưởng của splay (đưa node gần root ->tối ưu truy cập lại)"
+2452483,"Sự khác nhau giữa Stack và Heap trong C/C++ là gì, và lỗi “segmentation fault” thường liên quan chỗ nào?","Nêu định nghĩa stack/heap, cấp phát, lifetime, tốc độ. Nêu các lỗi thường gặp như stack overflow, use-after-free,.. Các lý do gây ra segment. Ví dụ minh họa code+các debug"
+2452483,"Vì sao Dijkstra không dùng được khi có cạnh âm, và Bellman-Ford xử lý khác như nào?","Nêu lý do tại sao cạnh âm sẽ phá ""greedy property"", so sánh độ phức tạp của Dijkstra và Bellman-Ford "
+2452483,"Trong OOP, tại sao virtual destructor quan trọng, và nếu quên thì sẽ dính bug kiểu gì?","Nêu tính đa hình của OOP, nếu lý do và ví dụ code"
+2452483,"Trong Petri Net, deadlock và dead marking khác nhau thế nào, và có thể có dead marking mà không deadlock không?","Nêu định nghĩa deadlock và deadmarrking, nếu mối quan hệ giữa chúng, nêu ví dụ"
+2452483,"NFA khác DFA ở điểm gì về bản chất, và vì sao NFA vẫn được dùng trong thực tế?","Nêu định nghĩa và sự khác nhau giữa NFA và DFA, nêu các lý do NFA được sử dụng trong thực tế và kèm ví dụ thực tế"
+2452483,"Trong DFA minimization, vì sao partition refinement đảm bảo ra DFA nhỏ nhất?",Nêu nguyên lý tách lớp tương đương (Myhill–Nerode) và vì sao không thể gộp thêm state sau khi ổn định
+2452483,Hãy so sánh Red-Black Tree và AVL: tại sao AVL query nhanh hơn nhưng update thường chậm hơn?,"Giải thích AVL cân bằng chặt hơn (height nhỏ) nên search tốt, nhưng rotate/update nhiều hơn RB"
+2452483,"Trong hashing, sự khác nhau giữa separate chaining và open addressing về hiệu năng thực tế là gì?","So sánh collision handling, cache locality, load factor threshold và trường hợp nên dùng mỗi loại"
+2452483,"Nếu tôi muốn làm research AI, nên bắt đầu bằng kỹ năng nào: Toán, đọc paper, code, hay viết báo cáo?","Nêu điểm mạnh điểm yêu của từng phương pháp, nêu lời khuyên cụ thể và các tiêu chí phụ kèm theo"
+2452483,"Hãy chỉ ra khác nhau giữa “time complexity” và “runtime thực tế”, và tại sao Big-O đôi khi nói không đúng performance?",Nêu khái niệm big-O và cá yêu tố ảnh hương đến runtime thực tế
+2452483,"Nếu tôi muốn làm project ngon để CV mạnh, tôi nên chọn dạng nào: (A) app thực tế (B) thuật toán khó (C) research paper clone? Lý do?",Nêu các tiêu chí (của hướng nghề) độ chứng minh thực lực của từng dạng và đưa ra gợi ý cụ thể
+2452483,"Trong kiến trúc máy tính, cache L1/L2/L3 khác nhau thế nào và vì sao cache miss lại làm chương trình chậm mạnh?","Nêu đặc điểm từng tầng cache, nguyên lý locality, và giải thích penalty khi cache miss kèm ví dụ truy xuất mảng."
+2452483,"Trong phân tích giải thuật, tại sao QuickSort trung bình O(n log n) nhưng worst-case O(n^2), và cách giảm nguy cơ worst-case?","Giải thích lý do worst-case do pivot lệch, và nêu kỹ thuật random pivot/median-of-three để hạn chế."
+2452483,"Trong automata, vì sao DFA có thể chuyển thành regex bằng state elimination, và thuật toán đó làm gì?","Trình bày ý tưởng state elimination, cập nhật biểu thức trên cạnh khi loại trạng thái, và kết luận regex thu được tương đương DFA."
+2452483,"Trong Triết Mác–Lênin, “phủ định của phủ định” nghĩa là gì và áp dụng để giải thích sự phát triển xã hội như thế nào?","Nêu định nghĩa phủ định của phủ định, đặc trưng kế thừa–phát triển, và đưa 1 ví dụ đời sống/xã hội minh hoạ."
+2452483,"Trong IELTS Speaking, làm sao nâng từ band 4.0 -> 7.0 dựa trên 4 tiêu chí chấm điểm?","Nêu 4 tiêu chí (fluency, lexical, grammar, pronunciation) và liệt kê cách luyện cụ thể từng tiêu chí theo checklist"
+2452483,"Nếu tôi học căng nhiều môn (Toán + CS + đại cương), làm sao sắp lịch vừa hiệu quả vừa không bị burn-out?",Đưa 1 routine học theo Pomodoro/Deep work + nguyên tắc xen kẽ môn + ngủ/ăn/đi bộ giúp giữ năng lượng.
+2452483,"Trong Triết học, tại sao nói “mâu thuẫn là nguồn gốc của vận động và phát triển”?","Giải thích khái niệm mâu thuẫn biện chứng, 2 mặt đối lập thống nhất–đấu tranh, và ví dụ minh hoạ rõ ràng."
+2452978,"Tôi có điểm C+ môn Cấu trúc rời rạc (6.8) và Vật lý 1 (6.6), chúng có cản trở bằng Xuất sắc của tôi không?","Không. Quy chế chỉ hạ bằng nếu tôi bị quá số tín chỉ điểm D/F hoặc bị kỷ luật. Điểm C+ chỉ làm giảm GPA tổng, nhưng tôi hoàn toàn có thể dùng các môn thế mạnh như Toán (Giải tích 2 đang là 9.3) để kéo lại. Tôi cần tập trung vào các môn 4 tín chỉ sắp tới để tối ưu điểm số."
+2452978,"Với GPA tích lũy hiện tại là 3.41, tôi cần làm gì để đạt được bằng Xuất sắc (>= 3.6)?","Để đạt mức 3.6, tôi cần ""cày"" điểm trung bình các kỳ còn lại lên mức 3.7 - 3.8. Điều này có nghĩa là đa số các môn chuyên ngành 3-4 tín chỉ sắp tới tôi phải đạt điểm A hoặc A+. Nếu mục tiêu là bằng Giỏi, tôi chỉ cần duy trì phong độ hiện tại (~3.2 mỗi kỳ)."
+2452978,Tôi cần điều kiện gì để săn học bổng khuyến khích học tập ở kỳ sau?,Tôi cần hội đủ 2 yếu tố: GPA kỳ đó phải nằm trong top của khoa (thường là >= 3.8 hoặc 4.0 tùy khóa) và Điểm rèn luyện phải từ loại Tốt trở lên (>= 80).
+2452978,Tại sao tôi nên chọn Hash Table thay vì Array khi làm Web?,"Trong thực tế (như lưu session người dùng), Array bắt tôi phải duyệt từ đầu đến cuối ($O(n)$), rất chậm nếu dữ liệu lớn. Hash Table cho phép tôi truy cập gần như tức thời ($O(1)$) nhờ hàm băm. Đây là sự đánh đổi: tôi dùng thêm bộ nhớ để lấy tốc độ."
+2452978,Tôi cần lưu ý gì về sự khác biệt giữa cây AVL và cây Đỏ Đen (Red-Black Tree)?,"AVL: Cân bằng rất chặt chẽ, giúp tôi tìm kiếm cực nhanh. Red-Black: Cân bằng ""lỏng"" hơn, nhưng lại nhanh hơn khi tôi cần thêm hoặc xóa phần tử liên tục."
+2452978,Môn Hệ thống số (9.2) và Kiến trúc máy tính (7.8) giúp ích gì cho lộ trình Web của tôi?,"Chúng giúp tôi hiểu cách dữ liệu được lưu trữ và truyền đi ở tầng thấp nhất. Khi làm Web Backend sau này, việc hiểu về Cache và cách CPU xử lý lệnh giúp tôi viết code tối ưu hơn, tránh các nút thắt cổ chai về hiệu năng."
+2452978,"Tôi thường nhầm giữa Deadlock và Deadmarking trong Mô hình hóa, phân biệt thế nào?","Deadlock (Bế tắc): Là khi các tiến trình trong hệ thống của tôi đứng im vì đợi nhau. Deadmarking: Là thuật ngữ trong mạng Petri, khi tại một trạng thái, không còn ""token"" nào có thể kích hoạt bước chuyển tiếp theo."
+2452978,Cách chuyển từ NFA sang DFA để không bị sai sót?,"Dùng phương pháp Subset Construction, gom các tập trạng thái mà NFA có thể đạt được sau khi đọc một ký tự thành một trạng thái duy nhất trong DFA. Tôi phải đặc biệt cẩn thận với các bước nhảy $\epsilon$ (epsilon-closure)."
+2452978,"Với điểm Giải tích 2 là 9.3, tôi ứng dụng được gì vào mảng AI/Machine Learning?",Đây là nền tảng cực lớn. Đạo hàm riêng (Partial Derivative) giúp tôi hiểu cách thuật toán Gradient Descent tìm ra điểm tối ưu cho mô hình AI. Tôi có lợi thế toán học rất tốt để theo đuổi hướng nghiên cứu sâu này.
+2452978,Entropy trong Hóa đại cương (9.4) giúp tôi hiểu gì về CNTT?,"Entropy là thước đo độ hỗn loạn. Trong CNTT, nó giúp tôi hiểu về độ nén dữ liệu và bảo mật thông tin. Với điểm Hóa cao, tôi đã có tư duy tốt về các hệ thống phức tạp."
+2452978,Tôi cần chuẩn bị gì cho bài thi cuối kỳ Mô hình hóa Toán học?,"Tôi sẽ dành 80 phút chia làm 3 giai đoạn: 15 phút đầu làm câu lý thuyết dễ, 45 phút tiếp theo giải các bài toán Petri Net/Automata phức tạp, và 20 phút cuối để soát lỗi logic."
+2452978,Tại sao tôi cần nắm vững Cache Memory trong Kiến trúc máy tính?,"Vì nó quyết định tốc độ ứng dụng của tôi. Hiểu về các cấp độ L1, L2, L3 giúp tôi biết cách tối ưu hóa dữ liệu để CPU truy cập nhanh nhất, tránh việc phải lấy dữ liệu từ RAM thường xuyên."
+2452978,"Điểm Cấu trúc rời rạc (6.8) của tôi hơi thấp, nó ảnh hưởng thế nào đến việc học DSA?","Nó ảnh hưởng đến tư duy về Đồ thị (Graph) và Cây (Tree). Trong DSA (tôi đang đạt 8.8), tôi cần hiểu sâu về thuật toán duyệt. Tôi sẽ ôn lại lý thuyết đồ thị và các bài toán đếm để hiểu rõ cách tính độ phức tạp $O(n)$."
+2452978,Con trỏ kép (Double Pointer) trong C++ quan trọng như thế nào với tôi?,"Nó cực kỳ quan trọng khi tôi làm việc với cây (Tree) hoặc danh sách liên kết. Nếu không dùng con trỏ kép, tôi không thể thay đổi địa chỉ của Root hay Head bên trong một hàm con, dẫn đến lỗi logic nghiêm trọng trong DSA."
+2452978,Lộ trình phát triển dự án Web cá nhân của tôi trong 2 năm tới?,Năm 2: Web quản lý cá nhân đơn giản. Năm 3: Tích hợp cơ sở dữ liệu và bảo mật. Năm 4: Ứng dụng AI (như chatbot hoặc gợi ý sản phẩm) vào trang Web đó để làm đồ án tốt nghiệp.
+2452978,Ưu và nhược điểm khi tôi dùng Python làm bài tập lớn Mô hình hóa?,"Ưu điểm: Tôi code rất nhanh nhờ các thư viện như NetworkX hay Matplotlib. Nhược điểm: Tốc độ thực thi có thể chậm hơn C++, nhưng với quy mô bài tập lớn trên trường, sự tiện lợi của Python là lựa chọn thông minh hơn cho tôi."
+2452978,"Tôi nên chọn dự án Web nào để thực hành kiến thức DSA? Tôi sẽ làm một ứng dụng ""Visualizer Thuật toán"".",Tôi dùng Web để vẽ các node đồ thị và cho phép người dùng xem cách thuật toán Dijkstra tìm đường đi ngắn nhất chạy từng bước một. Điều này giúp tôi nắm vững cả Web và DSA.
+2452978,Làm thế nào để bài tiểu luận Triết học của tôi đạt điểm A?,"Tôi sẽ không viết lý thuyết suông. Tôi sẽ liên hệ các quy luật triết học với ngành CNTT. Ví dụ: Sự phát triển của phần cứng từ bóng chân không đến chip silicon là minh chứng cho quy luật ""Phủ định của phủ định"". Cách tiếp cận này giúp tôi ghi điểm tuyệt đối với giảng viên."
+2452978,Điểm rèn luyện và Ngày công tác xã hội có thực sự quan trọng với tôi?,Có. Đây là điều kiện bắt buộc để xét tốt nghiệp và học bổng. Tôi không muốn vì thiếu vài ngày công tác xã hội mà bị chậm bằng hoặc mất học bổng dù điểm số của tôi rất cao.
+2452978,"Tôi đã được miễn các môn Anh văn (12đ), tôi có nên chủ quan không?",Không. Việc miễn điểm chỉ giúp tôi rảnh thời gian hơn. Tôi cần tận dụng thời gian đó để đọc tài liệu chuyên ngành (Documentation) bằng tiếng Anh trên các trang như Stack Overflow hoặc GitHub để không bị lạc hậu so với bạn bè quốc tế.
+2452332,Tôi bị nhầm lẫn giữa Linked List và Array trong môn Cấu trúc Dữ liệu và Giải Thuật (20251). Phân biệt giúp tôi.,"Linked List là gì? Array là gì? So sánh về bộ nhớ và tốc độ truy xuất? Khi nào nên dùng Linked List, khi nào dùng Array?"
+2452332,"Với nền tảng Đại số Tuyến tính tốt, tôi có lợi thế gì khi học môn Cấu trúc Dữ liệu và Giải Thuật?",Mối liên hệ giữa Đại số tuyến tính và Cấu trúc dữ liệu? Tư duy vector hóa áp dụng vào Mảng như thế nào? Lợi thế về tư duy logic thuật toán?
+2452332,Tôi cần ôn tập lại kiến thức gì của môn Kỹ thuật Lập trình để làm tốt bài tập lớn môn Cấu trúc Dữ liệu và Giải Thuật?,Kiến thức con trỏ (Pointer) là gì? Quản lý bộ nhớ động là gì? Tại sao hai kiến thức này quan trọng cho Cấu trúc dữ liệu?
+2452332,Đề xuất một thử thách nâng cao về Mạch tuần tự trong môn Kiến trúc Máy tính (20251).,Mạch tuần tự là gì? Ý tưởng dự án về CPU đơn giản? Các công cụ mô phỏng cần thiết? Mục tiêu học tập đạt được?
+2452332,Tôi nên ôn tập kiến thức nền tảng nào của môn Cấu trúc Rời rạc để cải thiện điểm số thấp (6.5) và phục vụ cho môn Cấu trúc Dữ liệu?,Lý thuyết đồ thị là gì? Cây (Tree) là gì? Tại sao kiến thức này là xương sống của Cấu trúc dữ liệu? Kế hoạch ôn tập cấp tốc?
+2452332,Giải thích đơn giản khái niệm 'Độ phức tạp Big O' trong môn Cấu trúc Dữ liệu và Giải Thuật cho tôi.,"Big O là gì? Các cấp độ phức tạp phổ biến (O(1), O(n), O(n^2))? Ví dụ minh họa thực tế? Tại sao cần quan tâm đến Big O?"
+2452332,Tích hợp kiến thức môn Đại số Tuyến tính và Giải tích 2 vào việc học Kiến trúc Máy tính như thế nào?,Kiến thức toán học hỗ trợ gì cho phần cứng? Xử lý song song và Vector là gì? Ứng dụng trong GPU và CPU hiện đại?
+2452332,Làm thế nào để ứng dụng kiến thức môn Kỹ năng mềm vào bài tập nhóm môn Triết học Mác - Lênin?,Kỹ năng làm việc nhóm là gì? Đặc thù bài tập môn Triết? Cách phân chia công việc và giải quyết mâu thuẫn trong nhóm?
+2452332,Tôi bị nhầm lẫn giữa Pipeline và Cache Memory trong môn Kiến trúc Máy tính. Phân biệt giúp tôi.,Pipeline là gì? Cache Memory là gì? Sự khác biệt về mục đích (Tốc độ vs Độ trễ)? Ví dụ so sánh đời sống?
+2452332,Cho tôi một ví dụ thực tế về Mạch tổ hợp (Combinational Logic) đã học trong Hệ thống số  áp dụng vào Kiến trúc máy tính.,Mạch tổ hợp là gì? ALU là gì? Mối quan hệ giữa cổng logic và phép tính máy tính? Ứng dụng thực tế trong CPU?
+2452332,Môn Hóa đại cương (20251) có liên quan gì đến ngành Khoa học Máy tính của tôi không?,Tư duy mô hình hóa trong Hóa học? Vật liệu bán dẫn là gì? Mối liên hệ giữa Hóa học và phần cứng máy tính (Chip/Pin)?
+2452332,Tôi muốn xây dựng một ứng dụng Quản lý sinh viên đơn giản. Cần kết hợp kiến thức môn nào?,Cấu trúc dữ liệu đóng vai trò gì? Kỹ thuật lập trình hỗ trợ gì? Nhập môn điện toán giúp gì về tư duy hệ thống? Các bước thực hiện?
+2452332,Tại sao môn Giải tích 2 lại quan trọng nếu sau này tôi muốn theo hướng AI/Machine Learning?,Gradient Descent là gì? Đạo hàm riêng ứng dụng ra sao trong AI? Mối quan hệ giữa Toán học và Mô hình học máy?
+2452332,Đề xuất một chủ đề tiểu luận môn Triết học Mác - Lênin (20251) liên quan đến ngành máy tính.,Các cặp phạm trù triết học là gì? AI và Ý thức có quan hệ gì? Gợi ý tên đề tài tiểu luận? Hướng triển khai nội dung?
+2452332,Tôi bị nhầm lẫn giữa Stack và Queue trong môn Cấu trúc Dữ liệu. Phân biệt giúp tôi.,Stack (LIFO) là gì? Queue (FIFO) là gì? Sự khác biệt về cơ chế hoạt động? Ví dụ ứng dụng thực tế của từng loại?
+2452332,Cần ôn tập gì từ môn Vật lý 1 để hiểu rõ hơn về hoạt động của ổ cứng trong Kiến trúc máy tính?,Từ trường là gì? Nguyên lý ghi đọc từ tính? Cấu tạo ổ cứng HDD? Mối liên hệ Vật lý - Phần cứng lưu trữ?
+2452332,Làm thế nào để cải thiện tư duy logic cho môn Cấu trúc Dữ liệu khi điểm Cấu trúc Rời rạc của tôi thấp,Logic mệnh đề là gì? Quy nạp toán học là gì? Cách rèn luyện tư duy thuật toán? Tài liệu bổ trợ cần thiết?
+2452332,Cho tôi một nhiệm vụ nghiên cứu mở rộng liên quan đến Số chấm động (Floating Point) trong môn Kiến trúc Máy tính.,Chuẩn IEEE 754 là gì? Vấn đề sai số trong máy tính? Ý tưởng bài tập lập trình minh họa? Tại sao quan trọng trong tài chính?
+2452332,Tích hợp kiến thức Hệ thống số  và Kỹ thuật lập trình để tối ưu code như thế nào?,Bitwise Operator là gì? Tại sao thao tác bit lại nhanh hơn? Các ví dụ tối ưu code cụ thể? Ứng dụng trong lập trình nhúng?
+2452332,"Tôi nên chuẩn bị tâm lý gì cho kỳ học 20252 với các môn hệ điều hành, hệ cơ sở dữ liệu?",Đặc thù của từng môn học? Mức độ khó/dễ? Chiến lược phân bổ thời gian hợp lý? Lời khuyên để đạt GPA cao?
+2452678,"GPA học kỳ 242 của tôi là 3.1 và học kỳ 243 là 3.4. Tôi muốn biết nếu đặt mục tiêu GPA tích lũy sau học kỳ tiếp theo là 3.2 thì học kỳ tới tôi cần đạt GPA bao nhiêu, trong trường hợp mỗi học kỳ có số tín chỉ khác nhau",Thu thập GPA và số tín chỉ từng học kỳ đã học → tính GPA tích lũy hiện tại → suy ra GPA học kỳ tiếp theo cần đạt → trình bày rõ mức độ “dễ/khó” của mục tiêu
+2452678,Nếu trong học kỳ tới tôi học nhiều môn 4 tín chỉ hơn so với 3 tín chỉ thì điều đó ảnh hưởng thế nào đến GPA học kỳ và GPA tích lũy,Phân tích tác động của phân bố tín chỉ → mô phỏng các kịch bản điểm → chỉ ra rủi ro và mức điểm an toàn
+2452678,"Tôi đang học yếu môn Cấu trúc rời rạc, đặc biệt là phần chứng minh, hệ thức truy hồi và đồ thị, nhưng tôi lại muốn học tốt môn Cấu trúc dữ liệu và Giải thuật",Xác định các phần CTRR liên quan trực tiếp đến DSA → loại bỏ phần ít liên quan → sắp xếp thứ tự học ưu tiên
+2452678,"Khi học DSA, tôi thường bị nhầm lẫn giữa các độ phức tạp thời gian và không biết khi nào nên dùng thuật toán nào",Hệ thống hóa tư duy Big-O → đưa ra ví dụ điển hình → tạo checklist lựa chọn thuật toán
+2452678,Tôi gặp khó khăn khi làm các bài chứng minh trong Cấu trúc rời rạc và không biết giảng viên thường chấm điểm theo tiêu chí nào,Phân tích cấu trúc một bài proof đạt điểm cao → chỉ ra lỗi phổ biến → hướng dẫn cách trình bày logic
+2452678,"Trong môn Kiến trúc máy tính, tôi thường sai các bài về pipeline hazard, cache mapping và addressing mode",Xây lộ trình học từ khái niệm → ví dụ → bài tổng hợp → checklist cần thuộc và cần hiểu
+2452678,Tôi cảm thấy mình đang học Kiến trúc máy tính theo kiểu học thuộc mà không hiểu bản chất,Chuyển kiến thức sang mô hình trực quan → giải thích theo luồng dữ liệu → bài tập suy luận
+2452678,"Tôi làm được các câu SQL truy vấn nhưng lại yếu ở các phần normalization, transaction và concurrency",Phân biệt rõ kiến thức thi cử và kiến thức thực tế → đề xuất dạng bài luyện phù hợp
+2452678,Tôi không biết khi nào nên tạo index trong cơ sở dữ liệu và khi nào không nên dùng,Phân tích tình huống thực tế → chỉ ra trade-off giữa tốc độ và chi phí
+2452678,Tôi muốn theo lập trình web nhưng chưa rõ mình đang thiếu nền tảng gì,Đánh giá kiến thức hiện tại → xác định các mảng nền tảng còn thiếu → đề xuất thứ tự học
+2452678,Trong 6 tháng tới tôi chỉ có thể tập trung tối đa vào 3 mảng chính để theo web,Lọc 3 mảng quan trọng nhất → giải thích lý do chọn → gợi ý nội dung cần học
+2452678,"Tôi muốn hiểu rõ các môn đã học như Kỹ thuật lập trình, DSA, CSDL liên quan thế nào đến web backend",Ánh xạ môn học → kỹ năng backend → ví dụ ứng dụng thực tế
+2452678,"Hiện tại tôi đã hoàn thành 3 trong tổng số 8 học kỳ, tôi muốn tốt nghiệp loại Giỏi",Phân tích GPA hiện tại → tính GPA trung bình cần đạt cho các kỳ còn lại
+2452678,Tôi muốn đặt mục tiêu tốt nghiệp loại Xuất sắc nhưng lo các học kỳ sau có nhiều tín chỉ nặng,Đánh giá rủi ro theo từng học kỳ → đề xuất chiến lược phân bổ điểm
+2452678,Tôi chưa hình dung rõ các cấu trúc dữ liệu trong DSA được dùng thế nào trong các hệ thống thật,Mapping từng cấu trúc dữ liệu với hệ thống thực tế → giải thích lý do sử dụng
+2452678,Tôi muốn luyện DSA bằng các dự án nhỏ thay vì chỉ làm bài tập thuật toán rời rạc,Gợi ý các mini-project bắt buộc dùng đúng cấu trúc dữ liệu → mô tả mục tiêu dự án
+2452678,Tôi sợ mình chọn sai cấu trúc dữ liệu khi giải quyết một bài toán thực tế,So sánh các cấu trúc gần giống → chỉ ra trường hợp nên dùng và không nên dùng
+2452678,"Khi làm tiểu luận môn Triết học Mác – Lênin, bài của tôi thường bị nhận xét là lan man, thiếu chiều sâu",Đưa ra khung dàn ý chuẩn → yêu cầu học thuật → checklist chấm điểm
+2452678,"Trong môn Mô hình hóa Toán học, tôi hay nhầm lẫn giữa deadlock, dead marking, reachability và invariant",So sánh khái niệm theo bảng → ví dụ minh họa → mẹo phân biệt nhanh
+2452678,Tôi muốn có một đề trắc nghiệm tiếng Anh 80 phút để ôn tập tổng hợp môn Mô hình hóa Toán học,Sinh đề 25 câu theo tỷ lệ kiến thức → cung cấp đáp án và giải thích chi tiết
+2453303,Làm sao để học tốt các môn cơ sở ngành và chuyên ngành máy tính,Đưa ra lộ trình học tập chi tiết về môn học dựa trên nội dung giáo trình.
+2453303,Tôi chưa hiểu petri net hoạt động trong thực tế như thế nào,"Ví dụ trực quan, giải thích cặn kẽ cho người dùng thấy được rõ ràng petri net trong thực tế"
+2453303,"Khi nào dùng array, linked list và vector trong C++","Trình bày cách cấp phát bộ nhớ của từng cấu trúc, so sánh khả năng truy cập ngẫu nhiên, phân tích chi phí khi chèn/xóa phần tử và đánh giá mức độ tốn bộ nhớ."
+2453303,Tại sao AVL cân bằng chặt hơn Red-Black Tree,"Trình bày điều kiện cân bằng của từng loại cây, so sánh số lần xoay cần thiết và ảnh hưởng đến tốc độ tìm kiếm và cập nhật."
+2453303,Vì sao độ phức tạp Big-O chỉ phản ánh xu hướng tăng mà không cho thời gian chạy chính xác,"Giải thích khái niệm tiệm cận, việc bỏ qua hằng số và bậc thấp, và lý do Big-O dùng để so sánh thuật toán chứ không đo thời gian thực tế."
+2453303,Vì sao phải dùng mã bù 2 để biểu diễn số âm?,"Giải thích hạn chế của dấu–trị tuyệt đối, cách tạo bù 2 và lợi ích trong phép cộng trừ."
+2453303,Bộ đếm (counter) hoạt động thế nào?,"Giải thích nguyên lý đếm, phân loại và ứng dụng."
+2453303,Vì sao cần tối giản biểu thức logic bằng Karnaugh map?,"Trình bày mục tiêu giảm cổng, tiết kiệm phần cứng và tăng hiệu quả."
+2453303,Đệ quy khác vòng lặp thế nào?,"So sánh cách hoạt động, bộ nhớ stack và khi nào nên dùng."
+2453303,Vật chất theo triết học Mác – Lênin là gì?,"Trình bày định nghĩa, tính khách quan và vai trò trong nhận thức kèm trích dẫn."
+2453303,Mệnh đề là gì trong logic toán học?,"Trình bày khái niệm, giá trị đúng–sai và ví dụ."
+2453303,Sự khác nhau giữa Petri net thường và 1-safe Petri net?,"So sánh số token tối đa ở mỗi place, khả năng biểu diễn và mức độ phức tạp."
+2453303,Bắn (fire) một transition làm thay đổi hệ thống ra sao?,"Mô tả việc lấy token khỏi input place, thêm token vào output place và cập nhật marking."
+2453303,So sánh biểu diễn đồ thị bằng ma trận kề và danh sách kề,"Phân tích mức độ tốn bộ nhớ, tốc độ duyệt cạnh và hoàn cảnh nên dùng mỗi cách."
+2453303,Mô hình Markov khác gì mô hình tuyến tính thông thường?,"Trình bày đặc điểm phụ thuộc vào trạng thái hiện tại, yếu tố xác suất và ứng dụng."
+2453303,Vì sao cần viết code dễ đọc?,"Phân tích vai trò của đặt tên, comment và bảo trì lâu dài kèm hướng dẫn cách comment."
+2453303,Đạo hàm biểu diễn điều gì về mặt hình học?,Trình bày hệ số góc tiếp tuyến và tốc độ thay đổi.
+2452883,Sự khác biệt cơ bản giữa Tập rõ (Crisp) và Tập mờ (Fuzzy) là gì,"Tập rõ: 0 hoặc 1 (Trắng/Đen) → Tập mờ: Khoảng [0, 1] (Xám) → Chấp nhận sự vừa đúng vừa sai"
+2452883,Neuro-Fuzzy là gì,Kết hợp Neural Network (Học) + Fuzzy (Suy luận) → Tự chỉnh luật mờ từ dữ liệu
+2452883,Hạn chế của Fuzzy Logic,Phụ thuộc kinh nghiệm người đặt luật → Khó tinh chỉnh nếu luật quá phức tạp
+2452883,Topological data analys là gì,Dữ liệu có hình dáng → TDA nghiên cứu hình dáng đó → Tìm đặc trưng lỗ hổng/kết nối
+2452883,Point Cloud là gì trong TDA,Tập hợp các điểm dữ liệu rời rạc → Đầu vào của TDA → Coi như các đỉnh của đồ thị
+2452883,Filtration  hoạt động thế nào,Vẽ hình cầu quanh mỗi điểm → Tăng dần bán kính → Quan sát sự kết nối dần dần các điểm
+2452883,Phức đơn hình là gì,"Nối các điểm gần nhau → Tạo thành đoạn thẳng, tam giác, tứ diện → Khung  của dữ liệu"
+2452883,Persistent Homology là gì,Theo dõi sự ra đời (birth) và mất đi (death) của lỗ hổng → Khi bán kính thay đổi.
+2452883,Thuật toán Mapper dùng để làm gì,Chiếu dữ liệu xuống chiều thấp → Phân cụm cục bộ → Dựng lại thành đồ thị giản lược
+2452883,TDA xử lý nhiễu tốt không,Tốt → Các đặc trưng topo lớn ít bị ảnh hưởng bởi nhiễu nhỏ (thanh barcode ngắn)
+2452883,Tôi muốn dùng TDA để phân loại ảnh chữ viết tay (MNIST) nhưng không biết TDA có ưu thế gì so với CNN thông thường,So sánh cơ chế học: Đặc trưng hình học (TDA) vs Đặc trưng pixel (CNN) → Chỉ ra ưu điểm của TDA: Bất biến với phép xoay/biến dạng → Đề xuất mô hình lai (Hybrid model) kết hợp cả hai
+2452883,TDA xử lý tính invariance như thế nào,"Xoay, lật, co dãn dữ liệu→  Các đặc trưng Topo (số lỗ, thành phần liên thông) vẫn giữ nguyên →  Nhận diện vật thể tốt."
+2452883,Hessian Matrix dùng làm gì,"Đạo hàm bậc 2→  Cho biết độ cong của hàm số →  Xác định điểm cực tiểu, cực đại hay điểm yên ngựa "
+2452883,Jacobian Matrix là gì,"Đạo hàm của vector theo vector: nếu đầu ra kích thước m x 1 và đầu vào kích thước n x 1, thì jacobian là ma trận m x n chứa tất cả các đạo hàm riêng"
+2452883,Tích Kronecker xuất hiện khi nào,Khi vector hóa ma trận → Đạo hàm của AXB theo X → Kết quả là tích Kronecker
+2452883,Gradient tự nhiên là gì,Không gian tham số bị cong → Nhân thêm nghịch đảo ma trận Fisher → Sửa hướng đi cho đúng độ cong
+2452883,Đạo hàm số phức,Khi xử lý tín hiệu phức → Coi biến z và biến z_liên_hợp là độc lập → Đạo hàm theo z_liên_hợp để tìm hướng giảm Loss
+2452883,Đạo hàm qua phân rã SVD,Dùng khi tối ưu hóa trị riêng → Cần xử lý cẩn thận trường hợp trị riêng bị trùng nhau (chia cho 0)
+2452883,Đạo hàm của Trị riêng,"Nếu A đổi một chút (dA) → Trị riêng đổi thế nào? → Công thức: d(lambda) = u^T * dA * v (với u, v là vector riêng trái/phải"
+2452883,Đạo hàm của định thức ma trận khối,"Sử dụng Schur Complement → Det(Block) = Det(A) * Det(D - C * inv(A) * B) → Đạo hàm cực phức tạp, phải áp dụng quy tắc đạo hàm định thức cho từng khối con"
+2452509,Hãy trình bày cho tôi khái quát về Triết học và chỉ ra cho tôi ứng dụng của triết học trong thực tế đời sống.,Có một cái nhìn bao quát về triết học và các ứng dụng thực tế của triết vào đời sống
+2452509,Tại sao một khoa kĩ thuật như khoa Khoa học và Kĩ thuật máy tính lại học về Triết học Mác Lênin ?,Nêu lên được một số lý do và lợi ích của việc học Triết có thể giúp ích cho các khối ngành kĩ thuật
+2452509,"Với Hoá đại cương, tôi hay bị nhầm giữa nồng độ mol và nồng độ molan có cách nào phân biệt hay không ?",Đưa lại định nghĩa cụ thể của từng phần kèm thêm bảng so sánh và mục đích sử dụng 2 khái niệm trên
+2452509,"Cách thức giải bài tập Automata hữu hạn, làm cách nào để tôi có thể chuyển từ NFA qua DFA.","Nêu được khái niệm của NFA và DFA, rồi cung cấp từng bước cụ thể để có thể chuyển đổi"
+2452509,Hãy cho tôi biết về luật của cây đỏ đen (Red black tree) trong Cấu trúc dữ liệu và giải thuật.,"Liệt kê ra được những quy luật để tồn tại cây đỏ đen, có thể giải thích chi tiết về mục đích của luật đó làm cây đỏ đen cân bằng."
+2452509,Để học tốt về môn Kiến trúc máy tính thì tôi cần trang bị những kĩ năng gì ?,Nói về môn Kiến trúc máy tính một cách tổng quan sau đó đưa ra những lý thuyết và kĩ năng cần thiết để học tốt môn học kèm với các đường dẫn tham khảo cần thiết
+2452509,Cách để giúp tôi tính độ phức tạp về thời gian và độ phức tạp về bộ nhớ khi tôi được cung cấp một thuật toán bất kì.,Cung cấp cho tôi khái niệm của độ phức tạp thời gian và độ tạp bộ nhớ kết hợp với cho ví dụ cụ thể. Sau đó cung cấp cho tôi các bước để xác định độ phức tạp thời gian lẫn bộ nhớ
+2452509,"Dựa vào file pdf giáo trình Mác Lênin tôi vừa gửi, hãy tổng hợp cho tôi kiến thức của từng chương trong giáo trình trên.","Nêu lên được tổng quan của từng chương, sau đó đi khái quát vô từng chương từng mục trong giáo trình và không được tự thêm tài liệu từ nguồn khác vào."
+2452509,"Kì này tôi có môn Hệ điều hành, thì tôi cần chuẩn bị những kiến thức gì để học tốt môn này.",Nêu tổng quan về môn Hệ điều hành và cung cấp cho tôi những kiến thức cần thiết + lộ trình tham khảo rõ ràng
+2452509,Tôi muốn biết thêm về ứng dụng thực tế về cấu trúc dữ liệu stack và queue.,Cung cấp về tính chất của 2 kiểu dữ liệu stack và queue từ những tính chất đó nêu ra được công dụng thực tế của chúng thông qua các ví dụ cụ thể
+2452509,"Trong môn Cấu trúc dữ liệu và Giải thuật, tôi đã được học rất nhiều các cách sắp xếp (sorting), vậy làm thế nào để tôi có thể xác định là khi nào cần sử dụng loại sort nào ?",Lập một bảng so sánh các tính chất của các loại sorting rồi đề xuất các loại sorting phù hợp với từng trường hợp cụ thể.
+2452509,Cách nào để làm nhanh các dạng bài tập về tối ưu hoá ILP trong phòng thi.,Chỉ ra những tính chất đặc biệt trong bài tối ưu hoá và áp dụng những tính chất đó để xây dụng một hệ thống các bước làm cụ thể để làm một bài tối ưu ILP một cách nhanh nhất.
+2452509,Cho tôi một số bài tập về biến đổi các dòng lệnh mã máy trên Assembly thành mã nhị phân và ngược lại để tôi luyện tập.,Cung cấp khoảng 5 câu hỏi từ mã Assembly sang mã nhị phần và ngược lại + cung cấp đáp án và lời giải chi tiết cho mỗi câu
+2452509,Sự khác nhau của hệ thống động lực rời rạc và hệ động lực liên tục là gì ?,"Cung cấp khái niệm + tính chất của hệ động lực rời rạc và liên tục từ đó có thể phân biệt, tìm ra điểm khác nhau thông qua các ví dụ cụ thể"
+2452509,Cho tôi các bước tiến hành thí nghiệm chuẩn độ một cách chi tiết.,"Nêu được mục đích của việc chuẩn độ, danh sách các dụng cụ chuẩn bị để làm thí nghiệm và các thao tác thực hiện chi tiết từng bước một"
+2452509,Cho tôi biết về Petri net 1-safe để tôi có thể làm bài tập lớn của mình.,"Cung cấp các khái niệm về petri net 1-safe, gợi ý về cách xây dụng petri net 1-safe trên các ngôn ngữ lập trình"
+2452509,Cách để triển khai thuật toán Bộ lọc Wiener bằng ngôn ngữ hợp ngữ MIPS,Khái niệm về bộ lọc Wiener và các bước cần thiết để xây dựng bộ lọc Wiener bằng ngôn ngữ hợp ngữ MIPS
+2452509,Nếu tôi đang có một Finite Automata thì làm sao để tôi có thể chuyển thành Regular Expression.,"Nêu cho tôi các cách để có thể chuyển đổi từ Finite Automata sang Regular Expression và các bước thực hiện chi tiết kèm theo ví dụ cụ thể, trực quan."
+2453437,"Tôi bắt đầu học môn hệ điều hành, tui sẽ gửi bạn file, bạn hãy cho tui  sơ đồ tư duy về môn này để nắm rõ các kiến thức cốt lõi","Đọc file và nêu ra các ý chính gồm các nhánh con phụ, giải thích cơ bản về những thứ đó. Những mạnh thành phần cốt lõi"
+2453437,Phân tích so sánh ngành Data Science,"Nêu ra những tính cách cần có của từng ngành, lập bảng thồng kê mức lương, cơ hội phát triển"
+2453437,Tôi có định hướng lên thạc sĩ tôi nên học thạc sĩ chuyên ngành nào?,"Phân tích thị trường xu hướng, nêu các yêu cầu cần có, lợi ích và khó khăn của từng ngnahf"
+2453437,Cách bắt đầu học một thuật toán hiệu quả,"xem video hướng dẫn, công thức, phân tích công thức để hiểu thêm về nó. "
+2453437,Tôi không hiểu gì về môn  Triết hết thì làm sao để đi thi trong 2 ngày tới,"Đọc sách nắm các kiến thức cơ bản và phát triển để làm bài, kèm thêm giải đề để hệ thống kiến thức"
+2453437,Cách tôi áp dụng các môn tôi đã học vào cuộc sống,Đưa ra sự liên kết của các môn với cuộc sống.
+2453437,"Tôi đang muốn học các môn Hệ điều hành, Xác suất thống kê, Cơ sở dữ liệu và Kinh tế chính trị nhưng tôi chỉ rảnh các ngày thứ 3, 4, 5 thì nên xếp lịch thế nào cho hợp lí?","Phân tích các môn (đại cương, tính toán, suy luận,... ) và sắp xếp thời gian hợp lí (môn đại cương học lúc nào cũng được, môn suy luận học buổi chiều cần đầu óc tỉnh táo,... )."
+2453437,Tôi đang sắp học môn Xác suất thống kê thì có giúp tôi chơi chứng khoán hay bài bạc giỏi hơn không?,Phân tích môn xstk và phân tích các điểm có thể áp dụng  vào thực tế.
+2453437,Tôi đang học khá tệ môn Kiến trúc máy tính (7.3 điểm) và môn tiếp theo là Hệ điều hành thì tôi cần cải thiện gì để học tốt hơn?,"Phân tích kiến thức môn Hệ điều hành và phân tích sự liên quan với ktmt, chỉ ra các kiến thức trọng tâm của môn hđh và cần cải thiện từ môn ktmt."
+2453437,Tôi đang có nền tảng tốt về môn DSA (8.5 điểm) thì tiếp theo tôi có thể học các môn nào phù hợp?,"Nêu ra các phần kiến thức tôi đã học ở môn DSA và giới thiệu các môn để tôi học ở các kì tiếp theo, phân tích xem vì sao lại phù hợp học tiếp."

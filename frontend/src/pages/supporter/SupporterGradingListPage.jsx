@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, UserCheck, CheckCircle2, Clock, Users, ArrowRight, RefreshCw, Filter, Shield, Download, Sparkles } from 'lucide-react'
+import { Search, UserCheck, CheckCircle2, Clock, Users, ArrowRight, RefreshCw, Filter, Shield, Download, Sparkles, FileText } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE } from '../../config/api'
 import { ROLES } from '../../constants/roles'
 import { exportGradingResultsCsv } from '../../lib/gradingCsvExport'
+import { exportFreeTextGradesCsv } from '../../lib/freeTextGradesCsvExport'
 
 
 export default function SupporterGradingListPage() {
@@ -17,6 +18,7 @@ export default function SupporterGradingListPage() {
   const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'graded' | 'ungraded'
   const isAdmin = user?.role === ROLES.ADMIN
   const [exporting, setExporting] = useState(false)
+  const [exportingFt, setExportingFt] = useState(false)
   const [autoGrading, setAutoGrading] = useState(false)
 
   const handleAutoGradeAll = async () => {
@@ -50,6 +52,19 @@ export default function SupporterGradingListPage() {
       alert(err instanceof Error ? err.message : 'Có lỗi xảy ra khi xuất file CSV.')
     } finally {
       setExporting(false)
+    }
+  }
+
+  const handleExportFreeTextCsv = async () => {
+    if (!apiToken) return
+    setExportingFt(true)
+    try {
+      await exportFreeTextGradesCsv({ apiToken })
+    } catch (err) {
+      console.error('[Export CSV free-text grades err]', err)
+      alert(err instanceof Error ? err.message : 'Có lỗi xảy ra khi xuất file CSV chấm tự luận.')
+    } finally {
+      setExportingFt(false)
     }
   }
 
@@ -155,6 +170,21 @@ export default function SupporterGradingListPage() {
               )}
               <span>{exporting ? 'Đang xuất...' : 'Xuất CSV kết quả'}</span>
             </button>
+            {isAdmin && (
+              <button
+                onClick={handleExportFreeTextCsv}
+                disabled={loading || exportingFt}
+                title="Tải CSV các câu tự luận (Pre-test Phần B) kèm điểm supporter đã chấm trên production"
+                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
+              >
+                {exportingFt ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FileText className="w-4 h-4" />
+                )}
+                <span>{exportingFt ? 'Đang xuất...' : 'Xuất CSV chấm Tự luận'}</span>
+              </button>
+            )}
             <button
               onClick={fetchLearners}
               disabled={loading}

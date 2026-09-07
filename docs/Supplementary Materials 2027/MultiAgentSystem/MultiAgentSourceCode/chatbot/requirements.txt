@@ -1,0 +1,11 @@
+google-adk==1.8.0
+google-cloud-aiplatform
+litellm
+psycopg2-binary
+colorlog
+fastapi
+uvicorn
+google-generativeai
+openai
+pandas
+httpx

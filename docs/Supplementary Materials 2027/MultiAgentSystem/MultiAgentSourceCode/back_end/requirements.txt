@@ -1,0 +1,7 @@
+psycopg2-binary
+requests
+uvicorn
+pandas
+numpy
+dotenv
+fastapi

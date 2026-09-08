@@ -17,12 +17,12 @@ async function fetchJson(url, apiToken) {
 /**
  * Xuất CSV dài (1 dòng = 1 câu tự luận Phần B của 1 học viên) kèm điểm
  * supporter đã chấm trong DB production.
- * Nguồn: /api/admin/survey-submissions?kind=PRETEST (bài nộp)
+ * Nguồn: /api/grading/pretest-submissions (bài nộp, supporter/admin)
  *      + /api/grading/export-data (scores.pretest_q, người chấm, thời gian chấm).
  */
 export async function exportFreeTextGradesCsv({ apiToken }) {
   const [surveyData, gradingData] = await Promise.all([
-    fetchJson(`${API_BASE}/api/admin/survey-submissions?kind=PRETEST`, apiToken),
+    fetchJson(`${API_BASE}/api/grading/pretest-submissions`, apiToken),
     fetchJson(`${API_BASE}/api/grading/export-data`, apiToken),
   ])
 

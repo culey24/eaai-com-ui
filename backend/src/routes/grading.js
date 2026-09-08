@@ -444,6 +444,62 @@ router.get('/learners', async (req, res) => {
 })
 
 /**
+ * GET /api/grading/pretest-submissions
+ * Supporter/Admin: danh sách bài nộp Pre-test (payload đầy đủ) phục vụ
+ * xuất CSV điểm chấm tự luận (scores.pretest_q ghép qua /export-data).
+ */
+router.get('/pretest-submissions', async (req, res) => {
+  try {
+    const isSupporter = isSupporterUserRole(req.auth.userRole)
+    const isAdmin = req.auth.userRole === 'admin'
+    if (!isSupporter && !isAdmin) {
+      return res.status(403).json({ error: 'Không có quyền truy cập' })
+    }
+
+    const rows = await prisma.surveyResponse.findMany({
+      where: { surveyKind: 'PRETEST' },
+      include: {
+        user: {
+          select: {
+            userId: true,
+            username: true,
+            fullname: true,
+            userClass: true,
+            studentSchoolId: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 2000,
+    })
+
+    const CLASS_LABELS = { IS_1: 'IS-1', IS_2: 'IS-2', IS_3: 'IS-3' }
+    const submissions = rows.map((r) => ({
+      id: String(r.id),
+      userId: r.userId,
+      surveyKind: r.surveyKind,
+      username: r.user.username,
+      fullname: r.user.fullname,
+      mssv: r.user.studentSchoolId != null ? String(r.user.studentSchoolId).trim() : '',
+      classCode:
+        r.user.userClass == null
+          ? null
+          : CLASS_LABELS[String(r.user.userClass)] || String(r.user.userClass),
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+      sectionA: r.sectionA,
+      sectionB: r.sectionB,
+      sectionC: r.sectionC,
+    }))
+
+    return res.status(200).json(jsonSafe({ kind: 'PRETEST', submissions, total: submissions.length }))
+  } catch (err) {
+    console.error('[grading GET /pretest-submissions]', err)
+    return res.status(500).json({ error: 'Lỗi máy chủ' })
+  }
+})
+
+/**
  * GET /api/grading/export-data
  * Lấy toàn bộ kết quả chấm điểm của tất cả học viên phục vụ xuất CSV
  */

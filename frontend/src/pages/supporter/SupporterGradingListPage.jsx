@@ -170,21 +170,19 @@ export default function SupporterGradingListPage() {
               )}
               <span>{exporting ? 'Đang xuất...' : 'Xuất CSV kết quả'}</span>
             </button>
-            {isAdmin && (
-              <button
-                onClick={handleExportFreeTextCsv}
-                disabled={loading || exportingFt}
-                title="Tải CSV các câu tự luận (Pre-test Phần B) kèm điểm supporter đã chấm trên production"
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
-              >
-                {exportingFt ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <FileText className="w-4 h-4" />
-                )}
-                <span>{exportingFt ? 'Đang xuất...' : 'Xuất CSV chấm Tự luận'}</span>
-              </button>
-            )}
+            <button
+              onClick={handleExportFreeTextCsv}
+              disabled={loading || exportingFt}
+              title="Tải CSV các câu tự luận (Pre-test Phần B) kèm điểm supporter đã chấm trên production"
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
+            >
+              {exportingFt ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+              <span>{exportingFt ? 'Đang xuất...' : 'Xuất CSV chấm Tự luận'}</span>
+            </button>
             <button
               onClick={fetchLearners}
               disabled={loading}
